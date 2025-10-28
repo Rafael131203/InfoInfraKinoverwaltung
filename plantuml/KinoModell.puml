@@ -15,12 +15,13 @@
 
 
 
-Film "0..m" <-- "1" Vorstellung
-Kinosaal "0..m" <-- "1" Vorstellung
-Ticket --> "1" Film
-Sitzreihe "1..m" <--> "1" Sitzplatz
-Kinosaal --> "1..m" Sitzreihe
-Ticket <-- "0..m" Warenkorb
+Film "1" <-- "0..m" Vorstellung
+Kinosaal "1" <-- "0..m" Vorstellung
+Vorstellung "1" <-- "0..m" Ticket
+Sitzreihe "1" *-- "1..m" Sitzplatz
+Kinosaal *-- "1..m" Sitzreihe
+Warenkorb "0..1" <-- "0..m" Ticket
+Sitzplatz "1" <-- Ticket
 
 class Film {
 titel: String
@@ -38,7 +39,8 @@ name: String
 class Vorstellung {
 datum: Date
 zeit: Int
-
+status: String
+'z.B. geplant, läuft, beendet
 }
 
 class Sitzreihe{
@@ -53,8 +55,9 @@ preis: Int
 }
 
 class Ticket{
-vorstellung: Vorstellung
 id: Int
+status: String
+'z.B. reserviert, bezahlt, storniert
 }
 
 class Warenkorb{
@@ -68,10 +71,5 @@ LOGE
 PARKETT
 }
 
-'enum TimeUnit {
-'DAYS
-'HOURS
-'MINUTES
-'}
 
 @enduml
