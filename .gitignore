@@ -39,3 +39,6 @@ modules.xml
 vcs.xml
 workspace.xml
 
+.vs
+**/bin/
+**/obj/

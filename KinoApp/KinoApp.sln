@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoAppWeb", "KinoAppWeb\KinoAppWeb.csproj", "{0C698173-46C2-447C-A4B2-750602F7DD3D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15} = {29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoAppCore", "KinoAppCore\KinoAppCore.csproj", "{42328115-49FD-4F8E-820F-9C66AF0D33A4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15} = {29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoAppDB", "KinoAppDB\KinoAppDB.csproj", "{3D5C3349-B038-4725-8920-A51ADFA25EE6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15} = {29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4} = {42328115-49FD-4F8E-820F-9C66AF0D33A4}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoAppService", "KinoAppService\KinoAppService.csproj", "{BB92E324-549C-40EC-8401-F212837F7D5D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15} = {29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}
+		{3D5C3349-B038-4725-8920-A51ADFA25EE6} = {3D5C3349-B038-4725-8920-A51ADFA25EE6}
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4} = {42328115-49FD-4F8E-820F-9C66AF0D33A4}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KinoAppShared", "KinoAppShared\KinoAppShared.csproj", "{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0C698173-46C2-447C-A4B2-750602F7DD3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C698173-46C2-447C-A4B2-750602F7DD3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C698173-46C2-447C-A4B2-750602F7DD3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C698173-46C2-447C-A4B2-750602F7DD3D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42328115-49FD-4F8E-820F-9C66AF0D33A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D5C3349-B038-4725-8920-A51ADFA25EE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D5C3349-B038-4725-8920-A51ADFA25EE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D5C3349-B038-4725-8920-A51ADFA25EE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D5C3349-B038-4725-8920-A51ADFA25EE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB92E324-549C-40EC-8401-F212837F7D5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB92E324-549C-40EC-8401-F212837F7D5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB92E324-549C-40EC-8401-F212837F7D5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB92E324-549C-40EC-8401-F212837F7D5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29AF9D82-7BFC-4D0E-A682-7BBE3856FC15}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D2C02EA-F93F-4AD1-8EC1-E2E86F1685BF}
+	EndGlobalSection
+EndGlobal
