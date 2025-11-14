@@ -33,41 +33,45 @@ namespace SeeSharper.Models.Kino
     
     
     /// <summary>
-    /// The default implementation of the Mitarbeiter class
+    /// Denotes a class to implement the vorstellung reference
     /// </summary>
-    [XmlNamespaceAttribute("http://www.example.org/kino")]
-    [XmlNamespacePrefixAttribute("kino")]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Mitarbeiter")]
-    public partial class Mitarbeiter : Benutzer, IMitarbeiter, IModelElement
+    public class FilmVorstellungCollection : ObservableOppositeOrderedSet<IFilm, IVorstellung>
     {
         
-        private static IClass _classInstance;
-        
         /// <summary>
-        /// Gets the Class model for this type
+        /// Creates a new instance
         /// </summary>
-        public new static IClass ClassInstance
+        /// <param name="parent">the parent Film</param>
+        public FilmVorstellungCollection(IFilm parent) : 
+                base(parent)
         {
-            get
-            {
-                if ((_classInstance == null))
-                {
-                    _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Mitarbeiter")));
-                }
-                return _classInstance;
-            }
+        }
+        
+        private void OnItemDeleted(object sender, EventArgs e)
+        {
+            this.Remove(((IVorstellung)(sender)));
         }
         
         /// <summary>
-        /// Gets the Class for this model element
+        /// Sets the opposite of the given item
         /// </summary>
-        public override IClass GetClass()
+        /// <param name="item">the item</param>
+        /// <param name="newParent">the new parent or null, if the item is removed from the collection</param>
+        protected override void SetOpposite(IVorstellung item, IFilm newParent)
         {
-            if ((_classInstance == null))
+            if ((newParent != null))
             {
-                _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Mitarbeiter")));
+                item.Deleted += this.OnItemDeleted;
+                item.Film = newParent;
             }
-            return _classInstance;
+            else
+            {
+                item.Deleted -= this.OnItemDeleted;
+                if ((item.Film == this.Parent))
+                {
+                    item.Film = newParent;
+                }
+            }
         }
     }
 }
