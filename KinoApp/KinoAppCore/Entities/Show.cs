@@ -9,7 +9,7 @@ public sealed class Show
     public decimal BasePrice { get; private set; }
 
     // Navigation
-    public ICollection<Ticket> Tickets { get; private set; } = new List<Ticket>();
+    public ICollection<ITicket> Tickets { get; private set; } = new List<ITicket>();
 
     private Show() { }
 

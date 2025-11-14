@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     
@@ -323,7 +323,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveDatumAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("datum")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Vorstellung.ClassInstance)).Resolve("datum")));
         }
         
         /// <summary>
@@ -354,7 +354,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveStatusAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("status")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Vorstellung.ClassInstance)).Resolve("status")));
         }
         
         /// <summary>
@@ -416,7 +416,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveFilmReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("film")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Vorstellung.ClassInstance)).Resolve("film")));
         }
         
         /// <summary>
@@ -460,7 +460,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveKinosaalReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("kinosaal")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Vorstellung.ClassInstance)).Resolve("kinosaal")));
         }
         
         /// <summary>

@@ -8,7 +8,10 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageReference Include="NMF-Basics" Version="2.0.457" />
+    <PackageReference Include="NMF-EcoreInterop" Version="2.0.457" />
+    <PackageReference Include="NMF-Repository" Version="2.0.461" />
   </ItemGroup>
 
 	<ItemGroup>
