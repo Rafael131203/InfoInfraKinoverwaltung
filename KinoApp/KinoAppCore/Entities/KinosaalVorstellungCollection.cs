@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     

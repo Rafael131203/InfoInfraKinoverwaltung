@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     
@@ -210,7 +210,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveKategorieAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("kategorie")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzreihe.ClassInstance)).Resolve("kategorie")));
         }
         
         /// <summary>
@@ -241,7 +241,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveNummerAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("nummer")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzreihe.ClassInstance)).Resolve("nummer")));
         }
         
         /// <summary>
@@ -272,7 +272,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveSitzplatzReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("sitzplatz")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzreihe.ClassInstance)).Resolve("sitzplatz")));
         }
         
         /// <summary>

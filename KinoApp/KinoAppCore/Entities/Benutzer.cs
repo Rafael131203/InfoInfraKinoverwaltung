@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     
@@ -167,7 +167,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveNameAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Benutzer.ClassInstance)).Resolve("name")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Benutzer.ClassInstance)).Resolve("name")));
         }
         
         /// <summary>
@@ -198,7 +198,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveEmailAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Benutzer.ClassInstance)).Resolve("email")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Benutzer.ClassInstance)).Resolve("email")));
         }
         
         /// <summary>

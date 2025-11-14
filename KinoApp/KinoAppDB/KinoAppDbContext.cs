@@ -17,24 +17,24 @@ public class KinoAppDbContext : DbContext
     {
         base.OnModelCreating(b);
 
-        // Unique seat per show
-        b.Entity<Ticket>()
-            .HasIndex(x => new { x.ShowId, x.SeatId })
-            .IsUnique();
+        //// Unique seat per show
+        //b.Entity<Ticket>()
+        //    .HasIndex(x => new { x.ShowId, x.SeatId })
+        //    .IsUnique();
 
-        // PostgreSQL optimistic concurrency on xmin
-        b.Entity<Ticket>()
-            .Property(nameof(Ticket.xmin))
-            .IsRowVersion()
-            .HasColumnName("xmin")
-            .ValueGeneratedOnAddOrUpdate();
+        //// PostgreSQL optimistic concurrency on xmin
+        //b.Entity<Ticket>()
+        //    .Property(nameof(Ticket.xmin))
+        //    .IsRowVersion()
+        //    .HasColumnName("xmin")
+        //    .ValueGeneratedOnAddOrUpdate();
 
-        // Relationships
-        b.Entity<Ticket>()
-            .HasOne(t => t.Show)
-            .WithMany(s => s.Tickets)
-            .HasForeignKey(t => t.ShowId)
-            .OnDelete(DeleteBehavior.Cascade);
+        //// Relationships
+        //b.Entity<Ticket>()
+        //    .HasOne(t => t.Show)
+        //    .WithMany(s => s.Tickets)
+        //    .HasForeignKey(t => t.ShowId)
+        //    .OnDelete(DeleteBehavior.Cascade);
 
         // Constraints
         b.Entity<Show>()
