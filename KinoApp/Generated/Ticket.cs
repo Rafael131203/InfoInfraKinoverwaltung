@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
@@ -382,7 +382,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>
@@ -413,7 +413,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveStatusAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("status")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("status")));
         }
         
         /// <summary>
@@ -444,7 +444,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveWarenkorbReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("warenkorb")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("warenkorb")));
         }
         
         /// <summary>
@@ -488,7 +488,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveVorstellungReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("vorstellung")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("vorstellung")));
         }
         
         /// <summary>
@@ -532,7 +532,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveSitzplatzReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("sitzplatz")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("sitzplatz")));
         }
         
         /// <summary>

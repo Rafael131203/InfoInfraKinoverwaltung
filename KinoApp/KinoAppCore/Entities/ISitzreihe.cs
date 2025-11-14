@@ -68,6 +68,19 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// The id property
+        /// </summary>
+        [DisplayNameAttribute("id")]
+        [CategoryAttribute("Sitzreihe")]
+        [XmlElementNameAttribute("id")]
+        [XmlAttributeAttribute(true)]
+        Nullable<int> Id
+        {
+            get;
+            set;
+        }
+        
+        /// <summary>
         /// The sitzplatz property
         /// </summary>
         [LowerBoundAttribute(1)]
@@ -101,5 +114,15 @@ namespace KinoAppCore.Entities
         /// Gets fired before the Nummer property changes its value
         /// </summary>
         event EventHandler<ValueChangedEventArgs> NummerChanging;
+        
+        /// <summary>
+        /// Gets fired when the Id property changed its value
+        /// </summary>
+        event EventHandler<ValueChangedEventArgs> IdChanged;
+        
+        /// <summary>
+        /// Gets fired before the Id property changes its value
+        /// </summary>
+        event EventHandler<ValueChangedEventArgs> IdChanging;
     }
 }

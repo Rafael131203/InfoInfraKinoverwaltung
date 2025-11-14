@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
@@ -309,7 +309,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveGebuchtAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("gebucht")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("gebucht")));
         }
         
         /// <summary>
@@ -340,7 +340,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveNummerAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("nummer")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("nummer")));
         }
         
         /// <summary>
@@ -371,7 +371,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrievePreisAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("preis")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("preis")));
         }
         
         /// <summary>
@@ -433,7 +433,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveSitzplatzReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("Sitzplatz")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("Sitzplatz")));
         }
         
         /// <summary>

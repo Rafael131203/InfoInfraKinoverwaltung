@@ -57,6 +57,14 @@ namespace KinoAppCore.Entities
         
         private static Lazy<ITypedElement> _statusAttribute = new Lazy<ITypedElement>(RetrieveStatusAttribute);
         
+        /// <summary>
+        /// The backing field for the Id property
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
+        private Nullable<int> _id;
+        
+        private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
+        
         private static Lazy<ITypedElement> _filmReference = new Lazy<ITypedElement>(RetrieveFilmReference);
         
         /// <summary>
@@ -127,6 +135,34 @@ namespace KinoAppCore.Entities
                     this._status = value;
                     this.OnStatusChanged(e);
                     this.OnPropertyChanged("Status", e, _statusAttribute);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// The id property
+        /// </summary>
+        [DisplayNameAttribute("id")]
+        [CategoryAttribute("Vorstellung")]
+        [XmlElementNameAttribute("id")]
+        [XmlAttributeAttribute(true)]
+        public Nullable<int> Id
+        {
+            get
+            {
+                return this._id;
+            }
+            set
+            {
+                if ((this._id != value))
+                {
+                    Nullable<int> old = this._id;
+                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
+                    this.OnIdChanging(e);
+                    this.OnPropertyChanging("Id", e, _idAttribute);
+                    this._id = value;
+                    this.OnIdChanged(e);
+                    this.OnPropertyChanged("Id", e, _idAttribute);
                 }
             }
         }
@@ -256,6 +292,16 @@ namespace KinoAppCore.Entities
         public event EventHandler<ValueChangedEventArgs> StatusChanging;
         
         /// <summary>
+        /// Gets fired when the Id property changed its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanged;
+        
+        /// <summary>
+        /// Gets fired before the Id property changes its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanging;
+        
+        /// <summary>
         /// Gets fired before the Film property changes its value
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> FilmChanging;
@@ -331,6 +377,37 @@ namespace KinoAppCore.Entities
         protected virtual void OnStatusChanging(ValueChangedEventArgs eventArgs)
         {
             EventHandler<ValueChangedEventArgs> handler = this.StatusChanging;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
+        
+        private static ITypedElement RetrieveIdAttribute()
+        {
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("id")));
+        }
+        
+        /// <summary>
+        /// Raises the IdChanged event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanged(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanged;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
+        
+        /// <summary>
+        /// Raises the IdChanging event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanging(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -460,6 +537,10 @@ namespace KinoAppCore.Entities
             {
                 return this.Status;
             }
+            if ((attribute == "ID"))
+            {
+                return this.Id;
+            }
             return base.GetAttributeValue(attribute, index);
         }
         
@@ -490,6 +571,11 @@ namespace KinoAppCore.Entities
                 this.Status = ((Vorstellungsstatus)(value));
                 return;
             }
+            if ((feature == "ID"))
+            {
+                this.Id = ((int)(value));
+                return;
+            }
             base.SetFeature(feature, value);
         }
         
@@ -507,6 +593,10 @@ namespace KinoAppCore.Entities
             if ((attribute == "STATUS"))
             {
                 return Observable.Box(new StatusProxy(this));
+            }
+            if ((attribute == "ID"))
+            {
+                return Observable.Box(new IdProxy(this));
             }
             return base.GetExpressionForAttribute(attribute);
         }
@@ -755,6 +845,37 @@ namespace KinoAppCore.Entities
                 set
                 {
                     this.ModelElement.Status = value;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Represents a proxy to represent an incremental access to the id property
+        /// </summary>
+        private sealed class IdProxy : ModelPropertyChange<IVorstellung, Nullable<int>>
+        {
+            
+            /// <summary>
+            /// Creates a new observable property access proxy
+            /// </summary>
+            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
+            public IdProxy(IVorstellung modelElement) : 
+                    base(modelElement, "id")
+            {
+            }
+            
+            /// <summary>
+            /// Gets or sets the value of this expression
+            /// </summary>
+            public override Nullable<int> Value
+            {
+                get
+                {
+                    return this.ModelElement.Id;
+                }
+                set
+                {
+                    this.ModelElement.Id = value;
                 }
             }
         }

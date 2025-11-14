@@ -28,26 +28,26 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
     /// <summary>
-    /// The default implementation of the Sitzplatz class
+    /// The default implementation of the Sitzreihe class
     /// </summary>
     [XmlNamespaceAttribute("http://www.example.org/kino")]
     [XmlNamespacePrefixAttribute("kino")]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Sitzplatz")]
-    public partial class Sitzplatz : ModelElement, ISitzplatz, IModelElement
+    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Sitzreihe")]
+    public partial class Sitzreihe : ModelElement, ISitzreihe, IModelElement
     {
         
         /// <summary>
-        /// The backing field for the Gebucht property
+        /// The backing field for the Kategorie property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private Nullable<bool> _gebucht;
+        private Nullable<Platzkategorie> _kategorie;
         
-        private static Lazy<ITypedElement> _gebuchtAttribute = new Lazy<ITypedElement>(RetrieveGebuchtAttribute);
+        private static Lazy<ITypedElement> _kategorieAttribute = new Lazy<ITypedElement>(RetrieveKategorieAttribute);
         
         /// <summary>
         /// The backing field for the Nummer property
@@ -56,14 +56,6 @@ namespace KinoAppCore.Entities
         private Nullable<int> _nummer;
         
         private static Lazy<ITypedElement> _nummerAttribute = new Lazy<ITypedElement>(RetrieveNummerAttribute);
-        
-        /// <summary>
-        /// The backing field for the Preis property
-        /// </summary>
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private Nullable<int> _preis;
-        
-        private static Lazy<ITypedElement> _preisAttribute = new Lazy<ITypedElement>(RetrievePreisAttribute);
         
         /// <summary>
         /// The backing field for the Id property
@@ -76,37 +68,47 @@ namespace KinoAppCore.Entities
         private static Lazy<ITypedElement> _sitzplatzReference = new Lazy<ITypedElement>(RetrieveSitzplatzReference);
         
         /// <summary>
-        /// The backing field for the Sitzplatz_ property
+        /// The backing field for the Sitzplatz property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private ITicket _sitzplatz_;
+        private ObservableCompositionOrderedSet<ISitzplatz> _sitzplatz;
         
         private static IClass _classInstance;
         
         /// <summary>
-        /// The gebucht property
+        /// Creates a new instance
         /// </summary>
-        [DisplayNameAttribute("gebucht")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("gebucht")]
+        public Sitzreihe()
+        {
+            this._sitzplatz = new ObservableCompositionOrderedSet<ISitzplatz>(this);
+            this._sitzplatz.CollectionChanging += this.SitzplatzCollectionChanging;
+            this._sitzplatz.CollectionChanged += this.SitzplatzCollectionChanged;
+        }
+        
+        /// <summary>
+        /// The kategorie property
+        /// </summary>
+        [DisplayNameAttribute("kategorie")]
+        [CategoryAttribute("Sitzreihe")]
+        [XmlElementNameAttribute("kategorie")]
         [XmlAttributeAttribute(true)]
-        public Nullable<bool> Gebucht
+        public Nullable<Platzkategorie> Kategorie
         {
             get
             {
-                return this._gebucht;
+                return this._kategorie;
             }
             set
             {
-                if ((this._gebucht != value))
+                if ((this._kategorie != value))
                 {
-                    Nullable<bool> old = this._gebucht;
+                    Nullable<Platzkategorie> old = this._kategorie;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnGebuchtChanging(e);
-                    this.OnPropertyChanging("Gebucht", e, _gebuchtAttribute);
-                    this._gebucht = value;
-                    this.OnGebuchtChanged(e);
-                    this.OnPropertyChanged("Gebucht", e, _gebuchtAttribute);
+                    this.OnKategorieChanging(e);
+                    this.OnPropertyChanging("Kategorie", e, _kategorieAttribute);
+                    this._kategorie = value;
+                    this.OnKategorieChanged(e);
+                    this.OnPropertyChanged("Kategorie", e, _kategorieAttribute);
                 }
             }
         }
@@ -115,7 +117,7 @@ namespace KinoAppCore.Entities
         /// The nummer property
         /// </summary>
         [DisplayNameAttribute("nummer")]
-        [CategoryAttribute("Sitzplatz")]
+        [CategoryAttribute("Sitzreihe")]
         [XmlElementNameAttribute("nummer")]
         [XmlAttributeAttribute(true)]
         public Nullable<int> Nummer
@@ -140,38 +142,10 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// The preis property
-        /// </summary>
-        [DisplayNameAttribute("preis")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("preis")]
-        [XmlAttributeAttribute(true)]
-        public Nullable<int> Preis
-        {
-            get
-            {
-                return this._preis;
-            }
-            set
-            {
-                if ((this._preis != value))
-                {
-                    Nullable<int> old = this._preis;
-                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnPreisChanging(e);
-                    this.OnPropertyChanging("Preis", e, _preisAttribute);
-                    this._preis = value;
-                    this.OnPreisChanged(e);
-                    this.OnPropertyChanged("Preis", e, _preisAttribute);
-                }
-            }
-        }
-        
-        /// <summary>
         /// The id property
         /// </summary>
         [DisplayNameAttribute("id")]
-        [CategoryAttribute("Sitzplatz")]
+        [CategoryAttribute("Sitzreihe")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
         public Nullable<int> Id
@@ -196,38 +170,31 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// The Sitzplatz property
+        /// The sitzplatz property
         /// </summary>
-        [DisplayNameAttribute("Sitzplatz")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("Sitzplatz")]
-        [XmlAttributeAttribute(true)]
-        public ITicket Sitzplatz_
+        [LowerBoundAttribute(1)]
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
+        [BrowsableAttribute(false)]
+        [XmlElementNameAttribute("sitzplatz")]
+        [XmlAttributeAttribute(false)]
+        [ContainmentAttribute()]
+        [ConstantAttribute()]
+        public IOrderedSetExpression<ISitzplatz> Sitzplatz
         {
             get
             {
-                return this._sitzplatz_;
+                return this._sitzplatz;
             }
-            set
+        }
+        
+        /// <summary>
+        /// Gets the child model elements of this model element
+        /// </summary>
+        public override IEnumerableExpression<IModelElement> Children
+        {
+            get
             {
-                if ((this._sitzplatz_ != value))
-                {
-                    ITicket old = this._sitzplatz_;
-                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnSitzplatz_Changing(e);
-                    this.OnPropertyChanging("Sitzplatz_", e, _sitzplatzReference);
-                    this._sitzplatz_ = value;
-                    if ((old != null))
-                    {
-                        old.Deleted -= this.OnResetSitzplatz_;
-                    }
-                    if ((value != null))
-                    {
-                        value.Deleted += this.OnResetSitzplatz_;
-                    }
-                    this.OnSitzplatz_Changed(e);
-                    this.OnPropertyChanged("Sitzplatz_", e, _sitzplatzReference);
-                }
+                return base.Children.Concat(new SitzreiheChildrenCollection(this));
             }
         }
         
@@ -238,7 +205,7 @@ namespace KinoAppCore.Entities
         {
             get
             {
-                return base.ReferencedElements.Concat(new SitzplatzReferencedElementsCollection(this));
+                return base.ReferencedElements.Concat(new SitzreiheReferencedElementsCollection(this));
             }
         }
         
@@ -251,21 +218,21 @@ namespace KinoAppCore.Entities
             {
                 if ((_classInstance == null))
                 {
-                    _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Sitzplatz")));
+                    _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Sitzreihe")));
                 }
                 return _classInstance;
             }
         }
         
         /// <summary>
-        /// Gets fired when the Gebucht property changed its value
+        /// Gets fired when the Kategorie property changed its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> GebuchtChanged;
+        public event EventHandler<ValueChangedEventArgs> KategorieChanged;
         
         /// <summary>
-        /// Gets fired before the Gebucht property changes its value
+        /// Gets fired before the Kategorie property changes its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> GebuchtChanging;
+        public event EventHandler<ValueChangedEventArgs> KategorieChanging;
         
         /// <summary>
         /// Gets fired when the Nummer property changed its value
@@ -278,16 +245,6 @@ namespace KinoAppCore.Entities
         public event EventHandler<ValueChangedEventArgs> NummerChanging;
         
         /// <summary>
-        /// Gets fired when the Preis property changed its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> PreisChanged;
-        
-        /// <summary>
-        /// Gets fired before the Preis property changes its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> PreisChanging;
-        
-        /// <summary>
         /// Gets fired when the Id property changed its value
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> IdChanged;
@@ -297,28 +254,18 @@ namespace KinoAppCore.Entities
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> IdChanging;
         
-        /// <summary>
-        /// Gets fired before the Sitzplatz_ property changes its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> Sitzplatz_Changing;
-        
-        /// <summary>
-        /// Gets fired when the Sitzplatz_ property changed its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> Sitzplatz_Changed;
-        
-        private static ITypedElement RetrieveGebuchtAttribute()
+        private static ITypedElement RetrieveKategorieAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("gebucht")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("kategorie")));
         }
         
         /// <summary>
-        /// Raises the GebuchtChanged event
+        /// Raises the KategorieChanged event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnGebuchtChanged(ValueChangedEventArgs eventArgs)
+        protected virtual void OnKategorieChanged(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.GebuchtChanged;
+            EventHandler<ValueChangedEventArgs> handler = this.KategorieChanged;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -326,12 +273,12 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// Raises the GebuchtChanging event
+        /// Raises the KategorieChanging event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnGebuchtChanging(ValueChangedEventArgs eventArgs)
+        protected virtual void OnKategorieChanging(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.GebuchtChanging;
+            EventHandler<ValueChangedEventArgs> handler = this.KategorieChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -340,7 +287,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveNummerAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("nummer")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("nummer")));
         }
         
         /// <summary>
@@ -369,40 +316,9 @@ namespace KinoAppCore.Entities
             }
         }
         
-        private static ITypedElement RetrievePreisAttribute()
-        {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("preis")));
-        }
-        
-        /// <summary>
-        /// Raises the PreisChanged event
-        /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnPreisChanged(ValueChangedEventArgs eventArgs)
-        {
-            EventHandler<ValueChangedEventArgs> handler = this.PreisChanged;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
-        }
-        
-        /// <summary>
-        /// Raises the PreisChanging event
-        /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnPreisChanging(ValueChangedEventArgs eventArgs)
-        {
-            EventHandler<ValueChangedEventArgs> handler = this.PreisChanging;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
-        }
-        
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>
@@ -433,46 +349,42 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveSitzplatzReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("Sitzplatz")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("sitzplatz")));
         }
         
         /// <summary>
-        /// Raises the Sitzplatz_Changing event
+        /// Forwards CollectionChanging notifications for the Sitzplatz property to the parent model element
         /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnSitzplatz_Changing(ValueChangedEventArgs eventArgs)
+        /// <param name="sender">The collection that raised the change</param>
+        /// <param name="e">The original event data</param>
+        private void SitzplatzCollectionChanging(object sender, NotifyCollectionChangedEventArgs e)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.Sitzplatz_Changing;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
+            this.OnCollectionChanging("Sitzplatz", e, _sitzplatzReference);
         }
         
         /// <summary>
-        /// Raises the Sitzplatz_Changed event
+        /// Forwards CollectionChanged notifications for the Sitzplatz property to the parent model element
         /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnSitzplatz_Changed(ValueChangedEventArgs eventArgs)
+        /// <param name="sender">The collection that raised the change</param>
+        /// <param name="e">The original event data</param>
+        private void SitzplatzCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.Sitzplatz_Changed;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
+            this.OnCollectionChanged("Sitzplatz", e, _sitzplatzReference);
         }
         
         /// <summary>
-        /// Handles the event that the Sitzplatz_ property must reset
+        /// Gets the relative URI fragment for the given child model element
         /// </summary>
-        /// <param name="sender">The object that sent this reset request</param>
-        /// <param name="eventArgs">The event data for the reset event</param>
-        private void OnResetSitzplatz_(object sender, EventArgs eventArgs)
+        /// <returns>A fragment of the relative URI</returns>
+        /// <param name="element">The element that should be looked for</param>
+        protected override string GetRelativePathForNonIdentifiedChild(IModelElement element)
         {
-            if ((sender == this.Sitzplatz_))
+            int sitzplatzIndex = ModelHelper.IndexOfReference(this.Sitzplatz, element);
+            if ((sitzplatzIndex != -1))
             {
-                this.Sitzplatz_ = null;
+                return ModelHelper.CreatePath("sitzplatz", sitzplatzIndex);
             }
+            return base.GetRelativePathForNonIdentifiedChild(element);
         }
         
         /// <summary>
@@ -485,7 +397,14 @@ namespace KinoAppCore.Entities
         {
             if ((reference == "SITZPLATZ"))
             {
-                return this.Sitzplatz_;
+                if ((index < this.Sitzplatz.Count))
+                {
+                    return this.Sitzplatz[index];
+                }
+                else
+                {
+                    return null;
+                }
             }
             return base.GetModelElementForReference(reference, index);
         }
@@ -498,17 +417,13 @@ namespace KinoAppCore.Entities
         /// <param name="index">The index of this attribute</param>
         protected override object GetAttributeValue(string attribute, int index)
         {
-            if ((attribute == "GEBUCHT"))
+            if ((attribute == "KATEGORIE"))
             {
-                return this.Gebucht;
+                return this.Kategorie;
             }
             if ((attribute == "NUMMER"))
             {
                 return this.Nummer;
-            }
-            if ((attribute == "PREIS"))
-            {
-                return this.Preis;
             }
             if ((attribute == "ID"))
             {
@@ -518,30 +433,34 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// Gets the Model element collection for the given feature
+        /// </summary>
+        /// <returns>A non-generic list of elements</returns>
+        /// <param name="feature">The requested feature</param>
+        protected override System.Collections.IList GetCollectionForFeature(string feature)
+        {
+            if ((feature == "SITZPLATZ"))
+            {
+                return this._sitzplatz;
+            }
+            return base.GetCollectionForFeature(feature);
+        }
+        
+        /// <summary>
         /// Sets a value to the given feature
         /// </summary>
         /// <param name="feature">The requested feature</param>
         /// <param name="value">The value that should be set to that feature</param>
         protected override void SetFeature(string feature, object value)
         {
-            if ((feature == "SITZPLATZ"))
+            if ((feature == "KATEGORIE"))
             {
-                this.Sitzplatz_ = ((ITicket)(value));
-                return;
-            }
-            if ((feature == "GEBUCHT"))
-            {
-                this.Gebucht = ((bool)(value));
+                this.Kategorie = ((Platzkategorie)(value));
                 return;
             }
             if ((feature == "NUMMER"))
             {
                 this.Nummer = ((int)(value));
-                return;
-            }
-            if ((feature == "PREIS"))
-            {
-                this.Preis = ((int)(value));
                 return;
             }
             if ((feature == "ID"))
@@ -559,17 +478,13 @@ namespace KinoAppCore.Entities
         /// <param name="attribute">The requested attribute in upper case</param>
         protected override NMF.Expressions.INotifyExpression<object> GetExpressionForAttribute(string attribute)
         {
-            if ((attribute == "GEBUCHT"))
+            if ((attribute == "KATEGORIE"))
             {
-                return Observable.Box(new GebuchtProxy(this));
+                return Observable.Box(new KategorieProxy(this));
             }
             if ((attribute == "NUMMER"))
             {
                 return Observable.Box(new NummerProxy(this));
-            }
-            if ((attribute == "PREIS"))
-            {
-                return Observable.Box(new PreisProxy(this));
             }
             if ((attribute == "ID"))
             {
@@ -579,17 +494,17 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// Gets the property expression for the given reference
+        /// Gets the property name for the given container
         /// </summary>
-        /// <returns>An incremental property expression</returns>
-        /// <param name="reference">The requested reference in upper case</param>
-        protected override NMF.Expressions.INotifyExpression<NMF.Models.IModelElement> GetExpressionForReference(string reference)
+        /// <returns>The name of the respective container reference</returns>
+        /// <param name="container">The container object</param>
+        protected override string GetCompositionName(object container)
         {
-            if ((reference == "SITZPLATZ_"))
+            if ((container == this._sitzplatz))
             {
-                return new SitzplatzProxy(this);
+                return "sitzplatz";
             }
-            return base.GetExpressionForReference(reference);
+            return base.GetCompositionName(container);
         }
         
         /// <summary>
@@ -599,23 +514,23 @@ namespace KinoAppCore.Entities
         {
             if ((_classInstance == null))
             {
-                _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Sitzplatz")));
+                _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Sitzreihe")));
             }
             return _classInstance;
         }
         
         /// <summary>
-        /// The collection class to to represent the children of the Sitzplatz class
+        /// The collection class to to represent the children of the Sitzreihe class
         /// </summary>
-        public class SitzplatzReferencedElementsCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
+        public class SitzreiheChildrenCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
         {
             
-            private Sitzplatz _parent;
+            private Sitzreihe _parent;
             
             /// <summary>
             /// Creates a new instance
             /// </summary>
-            public SitzplatzReferencedElementsCollection(Sitzplatz parent)
+            public SitzreiheChildrenCollection(Sitzreihe parent)
             {
                 this._parent = parent;
             }
@@ -628,10 +543,7 @@ namespace KinoAppCore.Entities
                 get
                 {
                     int count = 0;
-                    if ((this._parent.Sitzplatz_ != null))
-                    {
-                        count = (count + 1);
-                    }
+                    count = (count + this._parent.Sitzplatz.Count);
                     return count;
                 }
             }
@@ -641,7 +553,7 @@ namespace KinoAppCore.Entities
             /// </summary>
             protected override void AttachCore()
             {
-                this._parent.Sitzplatz_Changed += this.PropagateValueChanges;
+                this._parent.Sitzplatz.AsNotifiable().CollectionChanged += this.PropagateCollectionChanges;
             }
             
             /// <summary>
@@ -649,7 +561,7 @@ namespace KinoAppCore.Entities
             /// </summary>
             protected override void DetachCore()
             {
-                this._parent.Sitzplatz_Changed -= this.PropagateValueChanges;
+                this._parent.Sitzplatz.AsNotifiable().CollectionChanged -= this.PropagateCollectionChanges;
             }
             
             /// <summary>
@@ -658,14 +570,10 @@ namespace KinoAppCore.Entities
             /// <param name="item">The item to add</param>
             public override void Add(IModelElement item)
             {
-                if ((this._parent.Sitzplatz_ == null))
+                ISitzplatz sitzplatzCasted = item.As<ISitzplatz>();
+                if ((sitzplatzCasted != null))
                 {
-                    ITicket sitzplatzCasted = item.As<ITicket>();
-                    if ((sitzplatzCasted != null))
-                    {
-                        this._parent.Sitzplatz_ = sitzplatzCasted;
-                        return;
-                    }
+                    this._parent.Sitzplatz.Add(sitzplatzCasted);
                 }
             }
             
@@ -674,7 +582,7 @@ namespace KinoAppCore.Entities
             /// </summary>
             public override void Clear()
             {
-                this._parent.Sitzplatz_ = null;
+                this._parent.Sitzplatz.Clear();
             }
             
             /// <summary>
@@ -684,7 +592,7 @@ namespace KinoAppCore.Entities
             /// <param name="item">The item that should be looked out for</param>
             public override bool Contains(IModelElement item)
             {
-                if ((item == this._parent.Sitzplatz_))
+                if (this._parent.Sitzplatz.Contains(item))
                 {
                     return true;
                 }
@@ -698,10 +606,20 @@ namespace KinoAppCore.Entities
             /// <param name="arrayIndex">The starting index</param>
             public override void CopyTo(IModelElement[] array, int arrayIndex)
             {
-                if ((this._parent.Sitzplatz_ != null))
+                IEnumerator<IModelElement> sitzplatzEnumerator = this._parent.Sitzplatz.GetEnumerator();
+                try
                 {
-                    array[arrayIndex] = this._parent.Sitzplatz_;
-                    arrayIndex = (arrayIndex + 1);
+                    for (
+                    ; sitzplatzEnumerator.MoveNext(); 
+                    )
+                    {
+                        array[arrayIndex] = sitzplatzEnumerator.Current;
+                        arrayIndex = (arrayIndex + 1);
+                    }
+                }
+                finally
+                {
+                    sitzplatzEnumerator.Dispose();
                 }
             }
             
@@ -712,9 +630,10 @@ namespace KinoAppCore.Entities
             /// <param name="item">The item that should be removed</param>
             public override bool Remove(IModelElement item)
             {
-                if ((this._parent.Sitzplatz_ == item))
+                ISitzplatz sitzplatzItem = item.As<ISitzplatz>();
+                if (((sitzplatzItem != null) 
+                            && this._parent.Sitzplatz.Remove(sitzplatzItem)))
                 {
-                    this._parent.Sitzplatz_ = null;
                     return true;
                 }
                 return false;
@@ -726,37 +645,167 @@ namespace KinoAppCore.Entities
             /// <returns>A generic enumerator</returns>
             public override IEnumerator<IModelElement> GetEnumerator()
             {
-                return Enumerable.Empty<IModelElement>().Concat(this._parent.Sitzplatz_).GetEnumerator();
+                return Enumerable.Empty<IModelElement>().Concat(this._parent.Sitzplatz).GetEnumerator();
             }
         }
         
         /// <summary>
-        /// Represents a proxy to represent an incremental access to the gebucht property
+        /// The collection class to to represent the children of the Sitzreihe class
         /// </summary>
-        private sealed class GebuchtProxy : ModelPropertyChange<ISitzplatz, Nullable<bool>>
+        public class SitzreiheReferencedElementsCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
+        {
+            
+            private Sitzreihe _parent;
+            
+            /// <summary>
+            /// Creates a new instance
+            /// </summary>
+            public SitzreiheReferencedElementsCollection(Sitzreihe parent)
+            {
+                this._parent = parent;
+            }
+            
+            /// <summary>
+            /// Gets the amount of elements contained in this collection
+            /// </summary>
+            public override int Count
+            {
+                get
+                {
+                    int count = 0;
+                    count = (count + this._parent.Sitzplatz.Count);
+                    return count;
+                }
+            }
+            
+            /// <summary>
+            /// Registers event hooks to keep the collection up to date
+            /// </summary>
+            protected override void AttachCore()
+            {
+                this._parent.Sitzplatz.AsNotifiable().CollectionChanged += this.PropagateCollectionChanges;
+            }
+            
+            /// <summary>
+            /// Unregisters all event hooks registered by AttachCore
+            /// </summary>
+            protected override void DetachCore()
+            {
+                this._parent.Sitzplatz.AsNotifiable().CollectionChanged -= this.PropagateCollectionChanges;
+            }
+            
+            /// <summary>
+            /// Adds the given element to the collection
+            /// </summary>
+            /// <param name="item">The item to add</param>
+            public override void Add(IModelElement item)
+            {
+                ISitzplatz sitzplatzCasted = item.As<ISitzplatz>();
+                if ((sitzplatzCasted != null))
+                {
+                    this._parent.Sitzplatz.Add(sitzplatzCasted);
+                }
+            }
+            
+            /// <summary>
+            /// Clears the collection and resets all references that implement it.
+            /// </summary>
+            public override void Clear()
+            {
+                this._parent.Sitzplatz.Clear();
+            }
+            
+            /// <summary>
+            /// Gets a value indicating whether the given element is contained in the collection
+            /// </summary>
+            /// <returns>True, if it is contained, otherwise False</returns>
+            /// <param name="item">The item that should be looked out for</param>
+            public override bool Contains(IModelElement item)
+            {
+                if (this._parent.Sitzplatz.Contains(item))
+                {
+                    return true;
+                }
+                return false;
+            }
+            
+            /// <summary>
+            /// Copies the contents of the collection to the given array starting from the given array index
+            /// </summary>
+            /// <param name="array">The array in which the elements should be copied</param>
+            /// <param name="arrayIndex">The starting index</param>
+            public override void CopyTo(IModelElement[] array, int arrayIndex)
+            {
+                IEnumerator<IModelElement> sitzplatzEnumerator = this._parent.Sitzplatz.GetEnumerator();
+                try
+                {
+                    for (
+                    ; sitzplatzEnumerator.MoveNext(); 
+                    )
+                    {
+                        array[arrayIndex] = sitzplatzEnumerator.Current;
+                        arrayIndex = (arrayIndex + 1);
+                    }
+                }
+                finally
+                {
+                    sitzplatzEnumerator.Dispose();
+                }
+            }
+            
+            /// <summary>
+            /// Removes the given item from the collection
+            /// </summary>
+            /// <returns>True, if the item was removed, otherwise False</returns>
+            /// <param name="item">The item that should be removed</param>
+            public override bool Remove(IModelElement item)
+            {
+                ISitzplatz sitzplatzItem = item.As<ISitzplatz>();
+                if (((sitzplatzItem != null) 
+                            && this._parent.Sitzplatz.Remove(sitzplatzItem)))
+                {
+                    return true;
+                }
+                return false;
+            }
+            
+            /// <summary>
+            /// Gets an enumerator that enumerates the collection
+            /// </summary>
+            /// <returns>A generic enumerator</returns>
+            public override IEnumerator<IModelElement> GetEnumerator()
+            {
+                return Enumerable.Empty<IModelElement>().Concat(this._parent.Sitzplatz).GetEnumerator();
+            }
+        }
+        
+        /// <summary>
+        /// Represents a proxy to represent an incremental access to the kategorie property
+        /// </summary>
+        private sealed class KategorieProxy : ModelPropertyChange<ISitzreihe, Nullable<Platzkategorie>>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public GebuchtProxy(ISitzplatz modelElement) : 
-                    base(modelElement, "gebucht")
+            public KategorieProxy(ISitzreihe modelElement) : 
+                    base(modelElement, "kategorie")
             {
             }
             
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override Nullable<bool> Value
+            public override Nullable<Platzkategorie> Value
             {
                 get
                 {
-                    return this.ModelElement.Gebucht;
+                    return this.ModelElement.Kategorie;
                 }
                 set
                 {
-                    this.ModelElement.Gebucht = value;
+                    this.ModelElement.Kategorie = value;
                 }
             }
         }
@@ -764,14 +813,14 @@ namespace KinoAppCore.Entities
         /// <summary>
         /// Represents a proxy to represent an incremental access to the nummer property
         /// </summary>
-        private sealed class NummerProxy : ModelPropertyChange<ISitzplatz, Nullable<int>>
+        private sealed class NummerProxy : ModelPropertyChange<ISitzreihe, Nullable<int>>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public NummerProxy(ISitzplatz modelElement) : 
+            public NummerProxy(ISitzreihe modelElement) : 
                     base(modelElement, "nummer")
             {
             }
@@ -793,47 +842,16 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// Represents a proxy to represent an incremental access to the preis property
-        /// </summary>
-        private sealed class PreisProxy : ModelPropertyChange<ISitzplatz, Nullable<int>>
-        {
-            
-            /// <summary>
-            /// Creates a new observable property access proxy
-            /// </summary>
-            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public PreisProxy(ISitzplatz modelElement) : 
-                    base(modelElement, "preis")
-            {
-            }
-            
-            /// <summary>
-            /// Gets or sets the value of this expression
-            /// </summary>
-            public override Nullable<int> Value
-            {
-                get
-                {
-                    return this.ModelElement.Preis;
-                }
-                set
-                {
-                    this.ModelElement.Preis = value;
-                }
-            }
-        }
-        
-        /// <summary>
         /// Represents a proxy to represent an incremental access to the id property
         /// </summary>
-        private sealed class IdProxy : ModelPropertyChange<ISitzplatz, Nullable<int>>
+        private sealed class IdProxy : ModelPropertyChange<ISitzreihe, Nullable<int>>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public IdProxy(ISitzplatz modelElement) : 
+            public IdProxy(ISitzreihe modelElement) : 
                     base(modelElement, "id")
             {
             }
@@ -850,37 +868,6 @@ namespace KinoAppCore.Entities
                 set
                 {
                     this.ModelElement.Id = value;
-                }
-            }
-        }
-        
-        /// <summary>
-        /// Represents a proxy to represent an incremental access to the Sitzplatz property
-        /// </summary>
-        private sealed class SitzplatzProxy : ModelPropertyChange<ISitzplatz, ITicket>
-        {
-            
-            /// <summary>
-            /// Creates a new observable property access proxy
-            /// </summary>
-            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public SitzplatzProxy(ISitzplatz modelElement) : 
-                    base(modelElement, "Sitzplatz")
-            {
-            }
-            
-            /// <summary>
-            /// Gets or sets the value of this expression
-            /// </summary>
-            public override ITicket Value
-            {
-                get
-                {
-                    return this.ModelElement.Sitzplatz_;
-                }
-                set
-                {
-                    this.ModelElement.Sitzplatz_ = value;
                 }
             }
         }

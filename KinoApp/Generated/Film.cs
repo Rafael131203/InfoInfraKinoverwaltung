@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
@@ -383,7 +383,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveTitelAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("titel")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("titel")));
         }
         
         /// <summary>
@@ -414,7 +414,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveBeschreibungAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("beschreibung")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("beschreibung")));
         }
         
         /// <summary>
@@ -445,7 +445,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveDauerAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("dauer")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("dauer")));
         }
         
         /// <summary>
@@ -476,7 +476,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveFskAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("fsk")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("fsk")));
         }
         
         /// <summary>
@@ -507,7 +507,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveGenreAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("genre")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("genre")));
         }
         
         /// <summary>
@@ -569,7 +569,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveVorstellungReference()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("vorstellung")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("vorstellung")));
         }
         
         /// <summary>

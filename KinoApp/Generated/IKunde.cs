@@ -28,31 +28,18 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities    
+namespace SeeSharper.Models.Kino
 {
     
     
     /// <summary>
-    /// The public interface for Gast
+    /// The public interface for Kunde
     /// </summary>
-    [DefaultImplementationTypeAttribute(typeof(Gast))]
-    [XmlDefaultImplementationTypeAttribute(typeof(Gast))]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Gast")]
-    public partial interface IGast : IModelElement
+    [DefaultImplementationTypeAttribute(typeof(Kunde))]
+    [XmlDefaultImplementationTypeAttribute(typeof(Kunde))]
+    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Kunde")]
+    public partial interface IKunde : IModelElement, IBenutzer
     {
-        
-        /// <summary>
-        /// The id property
-        /// </summary>
-        [DisplayNameAttribute("id")]
-        [CategoryAttribute("Gast")]
-        [XmlElementNameAttribute("id")]
-        [XmlAttributeAttribute(true)]
-        Nullable<int> Id
-        {
-            get;
-            set;
-        }
         
         /// <summary>
         /// The warenkorb property
@@ -68,14 +55,18 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// Gets fired when the Id property changed its value
+        /// The tickets property
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> IdChanged;
-        
-        /// <summary>
-        /// Gets fired before the Id property changes its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> IdChanging;
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
+        [DisplayNameAttribute("tickets")]
+        [CategoryAttribute("Kunde")]
+        [XmlElementNameAttribute("tickets")]
+        [XmlAttributeAttribute(true)]
+        [ConstantAttribute()]
+        IOrderedSetExpression<ITicket> Tickets
+        {
+            get;
+        }
         
         /// <summary>
         /// Gets fired before the Warenkorb property changes its value

@@ -38,9 +38,16 @@ namespace KinoAppCore.Entities
     [XmlNamespaceAttribute("http://www.example.org/kino")]
     [XmlNamespacePrefixAttribute("kino")]
     [ModelRepresentationClassAttribute("http://www.example.org/kino#//Gast")]
-    [DebuggerDisplayAttribute("Gast {Name}")]
-    public partial class Gast : Benutzer, IGast, IModelElement
+    public partial class Gast : ModelElement, IGast, IModelElement
     {
+        
+        /// <summary>
+        /// The backing field for the Id property
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
+        private Nullable<int> _id;
+        
+        private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
         
         private static Lazy<ITypedElement> _warenkorbReference = new Lazy<ITypedElement>(RetrieveWarenkorbReference);
         
@@ -51,6 +58,34 @@ namespace KinoAppCore.Entities
         private IWarenkorb _warenkorb;
         
         private static IClass _classInstance;
+        
+        /// <summary>
+        /// The id property
+        /// </summary>
+        [DisplayNameAttribute("id")]
+        [CategoryAttribute("Gast")]
+        [XmlElementNameAttribute("id")]
+        [XmlAttributeAttribute(true)]
+        public Nullable<int> Id
+        {
+            get
+            {
+                return this._id;
+            }
+            set
+            {
+                if ((this._id != value))
+                {
+                    Nullable<int> old = this._id;
+                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
+                    this.OnIdChanging(e);
+                    this.OnPropertyChanging("Id", e, _idAttribute);
+                    this._id = value;
+                    this.OnIdChanged(e);
+                    this.OnPropertyChanged("Id", e, _idAttribute);
+                }
+            }
+        }
         
         /// <summary>
         /// The warenkorb property
@@ -131,6 +166,16 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// Gets fired when the Id property changed its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanged;
+        
+        /// <summary>
+        /// Gets fired before the Id property changes its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanging;
+        
+        /// <summary>
         /// Gets fired before the Warenkorb property changes its value
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> WarenkorbChanging;
@@ -139,6 +184,37 @@ namespace KinoAppCore.Entities
         /// Gets fired when the Warenkorb property changed its value
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> WarenkorbChanged;
+        
+        private static ITypedElement RetrieveIdAttribute()
+        {
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Gast.ClassInstance)).Resolve("id")));
+        }
+        
+        /// <summary>
+        /// Raises the IdChanged event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanged(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanged;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
+        
+        /// <summary>
+        /// Raises the IdChanging event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanging(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanging;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
         
         private static ITypedElement RetrieveWarenkorbReference()
         {
@@ -214,6 +290,21 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// Resolves the given attribute name
+        /// </summary>
+        /// <returns>The attribute value or null if it could not be found</returns>
+        /// <param name="attribute">The requested attribute name</param>
+        /// <param name="index">The index of this attribute</param>
+        protected override object GetAttributeValue(string attribute, int index)
+        {
+            if ((attribute == "ID"))
+            {
+                return this.Id;
+            }
+            return base.GetAttributeValue(attribute, index);
+        }
+        
+        /// <summary>
         /// Sets a value to the given feature
         /// </summary>
         /// <param name="feature">The requested feature</param>
@@ -225,7 +316,26 @@ namespace KinoAppCore.Entities
                 this.Warenkorb = ((IWarenkorb)(value));
                 return;
             }
+            if ((feature == "ID"))
+            {
+                this.Id = ((int)(value));
+                return;
+            }
             base.SetFeature(feature, value);
+        }
+        
+        /// <summary>
+        /// Gets the property expression for the given attribute
+        /// </summary>
+        /// <returns>An incremental property expression</returns>
+        /// <param name="attribute">The requested attribute in upper case</param>
+        protected override NMF.Expressions.INotifyExpression<object> GetExpressionForAttribute(string attribute)
+        {
+            if ((attribute == "ID"))
+            {
+                return Observable.Box(new IdProxy(this));
+            }
+            return base.GetExpressionForAttribute(attribute);
         }
         
         /// <summary>
@@ -503,6 +613,37 @@ namespace KinoAppCore.Entities
             public override IEnumerator<IModelElement> GetEnumerator()
             {
                 return Enumerable.Empty<IModelElement>().Concat(this._parent.Warenkorb).GetEnumerator();
+            }
+        }
+        
+        /// <summary>
+        /// Represents a proxy to represent an incremental access to the id property
+        /// </summary>
+        private sealed class IdProxy : ModelPropertyChange<IGast, Nullable<int>>
+        {
+            
+            /// <summary>
+            /// Creates a new observable property access proxy
+            /// </summary>
+            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
+            public IdProxy(IGast modelElement) : 
+                    base(modelElement, "id")
+            {
+            }
+            
+            /// <summary>
+            /// Gets or sets the value of this expression
+            /// </summary>
+            public override Nullable<int> Value
+            {
+                get
+                {
+                    return this.ModelElement.Id;
+                }
+                set
+                {
+                    this.ModelElement.Id = value;
+                }
             }
         }
         

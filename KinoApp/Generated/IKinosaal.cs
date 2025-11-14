@@ -28,38 +28,28 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
     /// <summary>
-    /// The public interface for Warenkorb
+    /// The public interface for Kinosaal
     /// </summary>
-    [DefaultImplementationTypeAttribute(typeof(Warenkorb))]
-    [XmlDefaultImplementationTypeAttribute(typeof(Warenkorb))]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Warenkorb")]
-    public partial interface IWarenkorb : IModelElement
+    [DefaultImplementationTypeAttribute(typeof(Kinosaal))]
+    [XmlDefaultImplementationTypeAttribute(typeof(Kinosaal))]
+    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Kinosaal")]
+    public partial interface IKinosaal : IModelElement
     {
         
         /// <summary>
-        /// The gesamtpreis property
+        /// The name property
         /// </summary>
-        [DisplayNameAttribute("gesamtpreis")]
-        [CategoryAttribute("Warenkorb")]
-        [XmlElementNameAttribute("gesamtpreis")]
+        [DisplayNameAttribute("name")]
+        [CategoryAttribute("Kinosaal")]
+        [XmlElementNameAttribute("name")]
+        [IdAttribute()]
         [XmlAttributeAttribute(true)]
-        Nullable<int> Gesamtpreis
-        {
-            get;
-            set;
-        }
-        
-        /// <summary>
-        /// The Zahlungsmittel property
-        /// </summary>
-        [CategoryAttribute("Warenkorb")]
-        [XmlAttributeAttribute(true)]
-        Nullable<Zahlungsmittel> Zahlungsmittel
+        string Name
         {
             get;
             set;
@@ -69,7 +59,7 @@ namespace KinoAppCore.Entities
         /// The id property
         /// </summary>
         [DisplayNameAttribute("id")]
-        [CategoryAttribute("Warenkorb")]
+        [CategoryAttribute("Kinosaal")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
         Nullable<int> Id
@@ -79,39 +69,44 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// The ticket property
+        /// The vorstellung property
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
-        [DisplayNameAttribute("ticket")]
-        [CategoryAttribute("Warenkorb")]
-        [XmlElementNameAttribute("ticket")]
+        [DisplayNameAttribute("vorstellung")]
+        [CategoryAttribute("Kinosaal")]
+        [XmlElementNameAttribute("vorstellung")]
         [XmlAttributeAttribute(true)]
-        [XmlOppositeAttribute("warenkorb")]
+        [XmlOppositeAttribute("kinosaal")]
         [ConstantAttribute()]
-        IOrderedSetExpression<ITicket> Ticket
+        IOrderedSetExpression<IVorstellung> Vorstellung
         {
             get;
         }
         
         /// <summary>
-        /// Gets fired when the Gesamtpreis property changed its value
+        /// The sitzreihe property
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> GesamtpreisChanged;
+        [LowerBoundAttribute(1)]
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
+        [BrowsableAttribute(false)]
+        [XmlElementNameAttribute("sitzreihe")]
+        [XmlAttributeAttribute(false)]
+        [ContainmentAttribute()]
+        [ConstantAttribute()]
+        IOrderedSetExpression<ISitzreihe> Sitzreihe
+        {
+            get;
+        }
         
         /// <summary>
-        /// Gets fired before the Gesamtpreis property changes its value
+        /// Gets fired when the Name property changed its value
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> GesamtpreisChanging;
+        event EventHandler<ValueChangedEventArgs> NameChanged;
         
         /// <summary>
-        /// Gets fired when the Zahlungsmittel property changed its value
+        /// Gets fired before the Name property changes its value
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> ZahlungsmittelChanged;
-        
-        /// <summary>
-        /// Gets fired before the Zahlungsmittel property changes its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> ZahlungsmittelChanging;
+        event EventHandler<ValueChangedEventArgs> NameChanging;
         
         /// <summary>
         /// Gets fired when the Id property changed its value

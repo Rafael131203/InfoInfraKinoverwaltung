@@ -28,27 +28,27 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace KinoAppCore.Entities
+namespace SeeSharper.Models.Kino
 {
     
     
     /// <summary>
-    /// The public interface for Sitzplatz
+    /// The public interface for Sitzreihe
     /// </summary>
-    [DefaultImplementationTypeAttribute(typeof(Sitzplatz))]
-    [XmlDefaultImplementationTypeAttribute(typeof(Sitzplatz))]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Sitzplatz")]
-    public partial interface ISitzplatz : IModelElement
+    [DefaultImplementationTypeAttribute(typeof(Sitzreihe))]
+    [XmlDefaultImplementationTypeAttribute(typeof(Sitzreihe))]
+    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Sitzreihe")]
+    public partial interface ISitzreihe : IModelElement
     {
         
         /// <summary>
-        /// The gebucht property
+        /// The kategorie property
         /// </summary>
-        [DisplayNameAttribute("gebucht")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("gebucht")]
+        [DisplayNameAttribute("kategorie")]
+        [CategoryAttribute("Sitzreihe")]
+        [XmlElementNameAttribute("kategorie")]
         [XmlAttributeAttribute(true)]
-        Nullable<bool> Gebucht
+        Nullable<Platzkategorie> Kategorie
         {
             get;
             set;
@@ -58,7 +58,7 @@ namespace KinoAppCore.Entities
         /// The nummer property
         /// </summary>
         [DisplayNameAttribute("nummer")]
-        [CategoryAttribute("Sitzplatz")]
+        [CategoryAttribute("Sitzreihe")]
         [XmlElementNameAttribute("nummer")]
         [XmlAttributeAttribute(true)]
         Nullable<int> Nummer
@@ -68,23 +68,10 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// The preis property
-        /// </summary>
-        [DisplayNameAttribute("preis")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("preis")]
-        [XmlAttributeAttribute(true)]
-        Nullable<int> Preis
-        {
-            get;
-            set;
-        }
-        
-        /// <summary>
         /// The id property
         /// </summary>
         [DisplayNameAttribute("id")]
-        [CategoryAttribute("Sitzplatz")]
+        [CategoryAttribute("Sitzreihe")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
         Nullable<int> Id
@@ -94,27 +81,29 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
-        /// The Sitzplatz property
+        /// The sitzplatz property
         /// </summary>
-        [DisplayNameAttribute("Sitzplatz")]
-        [CategoryAttribute("Sitzplatz")]
-        [XmlElementNameAttribute("Sitzplatz")]
-        [XmlAttributeAttribute(true)]
-        ITicket Sitzplatz_
+        [LowerBoundAttribute(1)]
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
+        [BrowsableAttribute(false)]
+        [XmlElementNameAttribute("sitzplatz")]
+        [XmlAttributeAttribute(false)]
+        [ContainmentAttribute()]
+        [ConstantAttribute()]
+        IOrderedSetExpression<ISitzplatz> Sitzplatz
         {
             get;
-            set;
         }
         
         /// <summary>
-        /// Gets fired when the Gebucht property changed its value
+        /// Gets fired when the Kategorie property changed its value
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> GebuchtChanged;
+        event EventHandler<ValueChangedEventArgs> KategorieChanged;
         
         /// <summary>
-        /// Gets fired before the Gebucht property changes its value
+        /// Gets fired before the Kategorie property changes its value
         /// </summary>
-        event EventHandler<ValueChangedEventArgs> GebuchtChanging;
+        event EventHandler<ValueChangedEventArgs> KategorieChanging;
         
         /// <summary>
         /// Gets fired when the Nummer property changed its value
@@ -127,16 +116,6 @@ namespace KinoAppCore.Entities
         event EventHandler<ValueChangedEventArgs> NummerChanging;
         
         /// <summary>
-        /// Gets fired when the Preis property changed its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> PreisChanged;
-        
-        /// <summary>
-        /// Gets fired before the Preis property changes its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> PreisChanging;
-        
-        /// <summary>
         /// Gets fired when the Id property changed its value
         /// </summary>
         event EventHandler<ValueChangedEventArgs> IdChanged;
@@ -145,15 +124,5 @@ namespace KinoAppCore.Entities
         /// Gets fired before the Id property changes its value
         /// </summary>
         event EventHandler<ValueChangedEventArgs> IdChanging;
-        
-        /// <summary>
-        /// Gets fired before the Sitzplatz_ property changes its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> Sitzplatz_Changing;
-        
-        /// <summary>
-        /// Gets fired when the Sitzplatz_ property changed its value
-        /// </summary>
-        event EventHandler<ValueChangedEventArgs> Sitzplatz_Changed;
     }
 }

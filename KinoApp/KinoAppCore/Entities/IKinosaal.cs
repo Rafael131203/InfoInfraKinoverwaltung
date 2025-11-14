@@ -56,6 +56,19 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// The id property
+        /// </summary>
+        [DisplayNameAttribute("id")]
+        [CategoryAttribute("Kinosaal")]
+        [XmlElementNameAttribute("id")]
+        [XmlAttributeAttribute(true)]
+        Nullable<int> Id
+        {
+            get;
+            set;
+        }
+        
+        /// <summary>
         /// The vorstellung property
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
@@ -94,5 +107,15 @@ namespace KinoAppCore.Entities
         /// Gets fired before the Name property changes its value
         /// </summary>
         event EventHandler<ValueChangedEventArgs> NameChanging;
+        
+        /// <summary>
+        /// Gets fired when the Id property changed its value
+        /// </summary>
+        event EventHandler<ValueChangedEventArgs> IdChanged;
+        
+        /// <summary>
+        /// Gets fired before the Id property changes its value
+        /// </summary>
+        event EventHandler<ValueChangedEventArgs> IdChanging;
     }
 }

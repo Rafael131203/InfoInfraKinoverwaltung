@@ -57,6 +57,14 @@ namespace KinoAppCore.Entities
         
         private static Lazy<ITypedElement> _zahlungsmittelAttribute = new Lazy<ITypedElement>(RetrieveZahlungsmittelAttribute);
         
+        /// <summary>
+        /// The backing field for the Id property
+        /// </summary>
+        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
+        private Nullable<int> _id;
+        
+        private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
+        
         private static Lazy<ITypedElement> _ticketReference = new Lazy<ITypedElement>(RetrieveTicketReference);
         
         /// <summary>
@@ -132,6 +140,34 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// The id property
+        /// </summary>
+        [DisplayNameAttribute("id")]
+        [CategoryAttribute("Warenkorb")]
+        [XmlElementNameAttribute("id")]
+        [XmlAttributeAttribute(true)]
+        public Nullable<int> Id
+        {
+            get
+            {
+                return this._id;
+            }
+            set
+            {
+                if ((this._id != value))
+                {
+                    Nullable<int> old = this._id;
+                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
+                    this.OnIdChanging(e);
+                    this.OnPropertyChanging("Id", e, _idAttribute);
+                    this._id = value;
+                    this.OnIdChanged(e);
+                    this.OnPropertyChanged("Id", e, _idAttribute);
+                }
+            }
+        }
+        
+        /// <summary>
         /// The ticket property
         /// </summary>
         [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
@@ -195,6 +231,16 @@ namespace KinoAppCore.Entities
         /// </summary>
         public event EventHandler<ValueChangedEventArgs> ZahlungsmittelChanging;
         
+        /// <summary>
+        /// Gets fired when the Id property changed its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanged;
+        
+        /// <summary>
+        /// Gets fired before the Id property changes its value
+        /// </summary>
+        public event EventHandler<ValueChangedEventArgs> IdChanging;
+        
         private static ITypedElement RetrieveGesamtpreisAttribute()
         {
             return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Warenkorb.ClassInstance)).Resolve("gesamtpreis")));
@@ -251,6 +297,37 @@ namespace KinoAppCore.Entities
         protected virtual void OnZahlungsmittelChanging(ValueChangedEventArgs eventArgs)
         {
             EventHandler<ValueChangedEventArgs> handler = this.ZahlungsmittelChanging;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
+        
+        private static ITypedElement RetrieveIdAttribute()
+        {
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Warenkorb.ClassInstance)).Resolve("id")));
+        }
+        
+        /// <summary>
+        /// Raises the IdChanged event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanged(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanged;
+            if ((handler != null))
+            {
+                handler.Invoke(this, eventArgs);
+            }
+        }
+        
+        /// <summary>
+        /// Raises the IdChanging event
+        /// </summary>
+        /// <param name="eventArgs">The event data</param>
+        protected virtual void OnIdChanging(ValueChangedEventArgs eventArgs)
+        {
+            EventHandler<ValueChangedEventArgs> handler = this.IdChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -320,6 +397,10 @@ namespace KinoAppCore.Entities
             {
                 return this.Zahlungsmittel;
             }
+            if ((attribute == "ID"))
+            {
+                return this.Id;
+            }
             return base.GetAttributeValue(attribute, index);
         }
         
@@ -354,6 +435,11 @@ namespace KinoAppCore.Entities
                 this.Zahlungsmittel = ((Zahlungsmittel)(value));
                 return;
             }
+            if ((feature == "ID"))
+            {
+                this.Id = ((int)(value));
+                return;
+            }
             base.SetFeature(feature, value);
         }
         
@@ -371,6 +457,10 @@ namespace KinoAppCore.Entities
             if ((attribute == "ZAHLUNGSMITTEL"))
             {
                 return Observable.Box(new ZahlungsmittelProxy(this));
+            }
+            if ((attribute == "ID"))
+            {
+                return Observable.Box(new IdProxy(this));
             }
             return base.GetExpressionForAttribute(attribute);
         }
@@ -575,6 +665,37 @@ namespace KinoAppCore.Entities
                 set
                 {
                     this.ModelElement.Zahlungsmittel = value;
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Represents a proxy to represent an incremental access to the id property
+        /// </summary>
+        private sealed class IdProxy : ModelPropertyChange<IWarenkorb, Nullable<int>>
+        {
+            
+            /// <summary>
+            /// Creates a new observable property access proxy
+            /// </summary>
+            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
+            public IdProxy(IWarenkorb modelElement) : 
+                    base(modelElement, "id")
+            {
+            }
+            
+            /// <summary>
+            /// Gets or sets the value of this expression
+            /// </summary>
+            public override Nullable<int> Value
+            {
+                get
+                {
+                    return this.ModelElement.Id;
+                }
+                set
+                {
+                    this.ModelElement.Id = value;
                 }
             }
         }

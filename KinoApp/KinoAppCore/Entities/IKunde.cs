@@ -55,6 +55,20 @@ namespace KinoAppCore.Entities
         }
         
         /// <summary>
+        /// The tickets property
+        /// </summary>
+        [DesignerSerializationVisibilityAttribute(DesignerSerializationVisibility.Content)]
+        [DisplayNameAttribute("tickets")]
+        [CategoryAttribute("Kunde")]
+        [XmlElementNameAttribute("tickets")]
+        [XmlAttributeAttribute(true)]
+        [ConstantAttribute()]
+        IOrderedSetExpression<ITicket> Tickets
+        {
+            get;
+        }
+        
+        /// <summary>
         /// Gets fired before the Warenkorb property changes its value
         /// </summary>
         event EventHandler<ValueChangedEventArgs> WarenkorbChanging;
