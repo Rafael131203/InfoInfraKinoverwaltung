@@ -33,80 +33,72 @@ namespace SeeSharper.Models.Kino
     
     
     /// <summary>
-    /// The default implementation of the Ticket class
+    /// The default implementation of the Vorstellung class
     /// </summary>
     [XmlNamespaceAttribute("http://www.example.org/kino")]
     [XmlNamespacePrefixAttribute("kino")]
-    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Ticket")]
-    public partial class Ticket : ModelElement, ITicket, IModelElement
+    [ModelRepresentationClassAttribute("http://www.example.org/kino#//Vorstellung")]
+    public partial class Vorstellung : ModelElement, IVorstellung, IModelElement
     {
         
         /// <summary>
-        /// The backing field for the Id property
+        /// The backing field for the Datum property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private Nullable<int> _id;
+        private Nullable<DateTime> _datum;
         
-        private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
+        private static Lazy<ITypedElement> _datumAttribute = new Lazy<ITypedElement>(RetrieveDatumAttribute);
         
         /// <summary>
         /// The backing field for the Status property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private Nullable<Ticketstatus> _status;
+        private Nullable<Vorstellungsstatus> _status;
         
         private static Lazy<ITypedElement> _statusAttribute = new Lazy<ITypedElement>(RetrieveStatusAttribute);
         
-        private static Lazy<ITypedElement> _warenkorbReference = new Lazy<ITypedElement>(RetrieveWarenkorbReference);
+        private static Lazy<ITypedElement> _filmReference = new Lazy<ITypedElement>(RetrieveFilmReference);
         
         /// <summary>
-        /// The backing field for the Warenkorb property
+        /// The backing field for the Film property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private IWarenkorb _warenkorb;
+        private IFilm _film;
         
-        private static Lazy<ITypedElement> _vorstellungReference = new Lazy<ITypedElement>(RetrieveVorstellungReference);
+        private static Lazy<ITypedElement> _kinosaalReference = new Lazy<ITypedElement>(RetrieveKinosaalReference);
         
         /// <summary>
-        /// The backing field for the Vorstellung property
+        /// The backing field for the Kinosaal property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private IVorstellung _vorstellung;
-        
-        private static Lazy<ITypedElement> _sitzplatzReference = new Lazy<ITypedElement>(RetrieveSitzplatzReference);
-        
-        /// <summary>
-        /// The backing field for the Sitzplatz property
-        /// </summary>
-        [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private ISitzplatz _sitzplatz;
+        private IKinosaal _kinosaal;
         
         private static IClass _classInstance;
         
         /// <summary>
-        /// The id property
+        /// The datum property
         /// </summary>
-        [DisplayNameAttribute("id")]
-        [CategoryAttribute("Ticket")]
-        [XmlElementNameAttribute("id")]
+        [DisplayNameAttribute("datum")]
+        [CategoryAttribute("Vorstellung")]
+        [XmlElementNameAttribute("datum")]
         [XmlAttributeAttribute(true)]
-        public Nullable<int> Id
+        public Nullable<DateTime> Datum
         {
             get
             {
-                return this._id;
+                return this._datum;
             }
             set
             {
-                if ((this._id != value))
+                if ((this._datum != value))
                 {
-                    Nullable<int> old = this._id;
+                    Nullable<DateTime> old = this._datum;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnIdChanging(e);
-                    this.OnPropertyChanging("Id", e, _idAttribute);
-                    this._id = value;
-                    this.OnIdChanged(e);
-                    this.OnPropertyChanged("Id", e, _idAttribute);
+                    this.OnDatumChanging(e);
+                    this.OnPropertyChanging("Datum", e, _datumAttribute);
+                    this._datum = value;
+                    this.OnDatumChanged(e);
+                    this.OnPropertyChanged("Datum", e, _datumAttribute);
                 }
             }
         }
@@ -115,10 +107,10 @@ namespace SeeSharper.Models.Kino
         /// The status property
         /// </summary>
         [DisplayNameAttribute("status")]
-        [CategoryAttribute("Ticket")]
+        [CategoryAttribute("Vorstellung")]
         [XmlElementNameAttribute("status")]
         [XmlAttributeAttribute(true)]
-        public Nullable<Ticketstatus> Status
+        public Nullable<Vorstellungsstatus> Status
         {
             get
             {
@@ -128,7 +120,7 @@ namespace SeeSharper.Models.Kino
             {
                 if ((this._status != value))
                 {
-                    Nullable<Ticketstatus> old = this._status;
+                    Nullable<Vorstellungsstatus> old = this._status;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
                     this.OnStatusChanging(e);
                     this.OnPropertyChanging("Status", e, _statusAttribute);
@@ -140,112 +132,79 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// The warenkorb property
+        /// The film property
         /// </summary>
-        [DisplayNameAttribute("warenkorb")]
-        [CategoryAttribute("Ticket")]
-        [XmlElementNameAttribute("warenkorb")]
+        [DisplayNameAttribute("film")]
+        [CategoryAttribute("Vorstellung")]
+        [XmlElementNameAttribute("film")]
         [XmlAttributeAttribute(true)]
-        [XmlOppositeAttribute("ticket")]
-        public IWarenkorb Warenkorb
+        [XmlOppositeAttribute("vorstellung")]
+        public IFilm Film
         {
             get
             {
-                return this._warenkorb;
+                return this._film;
             }
             set
             {
-                if ((this._warenkorb != value))
+                if ((this._film != value))
                 {
-                    IWarenkorb old = this._warenkorb;
+                    IFilm old = this._film;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnWarenkorbChanging(e);
-                    this.OnPropertyChanging("Warenkorb", e, _warenkorbReference);
-                    this._warenkorb = value;
+                    this.OnFilmChanging(e);
+                    this.OnPropertyChanging("Film", e, _filmReference);
+                    this._film = value;
                     if ((old != null))
                     {
-                        old.Ticket.Remove(this);
-                        old.Deleted -= this.OnResetWarenkorb;
+                        old.Vorstellung.Remove(this);
+                        old.Deleted -= this.OnResetFilm;
                     }
                     if ((value != null))
                     {
-                        value.Ticket.Add(this);
-                        value.Deleted += this.OnResetWarenkorb;
+                        value.Vorstellung.Add(this);
+                        value.Deleted += this.OnResetFilm;
                     }
-                    this.OnWarenkorbChanged(e);
-                    this.OnPropertyChanged("Warenkorb", e, _warenkorbReference);
+                    this.OnFilmChanged(e);
+                    this.OnPropertyChanged("Film", e, _filmReference);
                 }
             }
         }
         
         /// <summary>
-        /// The vorstellung property
+        /// The kinosaal property
         /// </summary>
-        [DisplayNameAttribute("vorstellung")]
-        [CategoryAttribute("Ticket")]
-        [XmlElementNameAttribute("vorstellung")]
+        [DisplayNameAttribute("kinosaal")]
+        [CategoryAttribute("Vorstellung")]
+        [XmlElementNameAttribute("kinosaal")]
         [XmlAttributeAttribute(true)]
-        public IVorstellung Vorstellung
+        [XmlOppositeAttribute("vorstellung")]
+        public IKinosaal Kinosaal
         {
             get
             {
-                return this._vorstellung;
+                return this._kinosaal;
             }
             set
             {
-                if ((this._vorstellung != value))
+                if ((this._kinosaal != value))
                 {
-                    IVorstellung old = this._vorstellung;
+                    IKinosaal old = this._kinosaal;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnVorstellungChanging(e);
-                    this.OnPropertyChanging("Vorstellung", e, _vorstellungReference);
-                    this._vorstellung = value;
+                    this.OnKinosaalChanging(e);
+                    this.OnPropertyChanging("Kinosaal", e, _kinosaalReference);
+                    this._kinosaal = value;
                     if ((old != null))
                     {
-                        old.Deleted -= this.OnResetVorstellung;
+                        old.Vorstellung.Remove(this);
+                        old.Deleted -= this.OnResetKinosaal;
                     }
                     if ((value != null))
                     {
-                        value.Deleted += this.OnResetVorstellung;
+                        value.Vorstellung.Add(this);
+                        value.Deleted += this.OnResetKinosaal;
                     }
-                    this.OnVorstellungChanged(e);
-                    this.OnPropertyChanged("Vorstellung", e, _vorstellungReference);
-                }
-            }
-        }
-        
-        /// <summary>
-        /// The sitzplatz property
-        /// </summary>
-        [DisplayNameAttribute("sitzplatz")]
-        [CategoryAttribute("Ticket")]
-        [XmlElementNameAttribute("sitzplatz")]
-        [XmlAttributeAttribute(true)]
-        public ISitzplatz Sitzplatz
-        {
-            get
-            {
-                return this._sitzplatz;
-            }
-            set
-            {
-                if ((this._sitzplatz != value))
-                {
-                    ISitzplatz old = this._sitzplatz;
-                    ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
-                    this.OnSitzplatzChanging(e);
-                    this.OnPropertyChanging("Sitzplatz", e, _sitzplatzReference);
-                    this._sitzplatz = value;
-                    if ((old != null))
-                    {
-                        old.Deleted -= this.OnResetSitzplatz;
-                    }
-                    if ((value != null))
-                    {
-                        value.Deleted += this.OnResetSitzplatz;
-                    }
-                    this.OnSitzplatzChanged(e);
-                    this.OnPropertyChanged("Sitzplatz", e, _sitzplatzReference);
+                    this.OnKinosaalChanged(e);
+                    this.OnPropertyChanged("Kinosaal", e, _kinosaalReference);
                 }
             }
         }
@@ -257,7 +216,7 @@ namespace SeeSharper.Models.Kino
         {
             get
             {
-                return base.ReferencedElements.Concat(new TicketReferencedElementsCollection(this));
+                return base.ReferencedElements.Concat(new VorstellungReferencedElementsCollection(this));
             }
         }
         
@@ -270,21 +229,21 @@ namespace SeeSharper.Models.Kino
             {
                 if ((_classInstance == null))
                 {
-                    _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Ticket")));
+                    _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Vorstellung")));
                 }
                 return _classInstance;
             }
         }
         
         /// <summary>
-        /// Gets fired when the Id property changed its value
+        /// Gets fired when the Datum property changed its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> IdChanged;
+        public event EventHandler<ValueChangedEventArgs> DatumChanged;
         
         /// <summary>
-        /// Gets fired before the Id property changes its value
+        /// Gets fired before the Datum property changes its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> IdChanging;
+        public event EventHandler<ValueChangedEventArgs> DatumChanging;
         
         /// <summary>
         /// Gets fired when the Status property changed its value
@@ -297,47 +256,37 @@ namespace SeeSharper.Models.Kino
         public event EventHandler<ValueChangedEventArgs> StatusChanging;
         
         /// <summary>
-        /// Gets fired before the Warenkorb property changes its value
+        /// Gets fired before the Film property changes its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> WarenkorbChanging;
+        public event EventHandler<ValueChangedEventArgs> FilmChanging;
         
         /// <summary>
-        /// Gets fired when the Warenkorb property changed its value
+        /// Gets fired when the Film property changed its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> WarenkorbChanged;
+        public event EventHandler<ValueChangedEventArgs> FilmChanged;
         
         /// <summary>
-        /// Gets fired before the Vorstellung property changes its value
+        /// Gets fired before the Kinosaal property changes its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> VorstellungChanging;
+        public event EventHandler<ValueChangedEventArgs> KinosaalChanging;
         
         /// <summary>
-        /// Gets fired when the Vorstellung property changed its value
+        /// Gets fired when the Kinosaal property changed its value
         /// </summary>
-        public event EventHandler<ValueChangedEventArgs> VorstellungChanged;
+        public event EventHandler<ValueChangedEventArgs> KinosaalChanged;
         
-        /// <summary>
-        /// Gets fired before the Sitzplatz property changes its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> SitzplatzChanging;
-        
-        /// <summary>
-        /// Gets fired when the Sitzplatz property changed its value
-        /// </summary>
-        public event EventHandler<ValueChangedEventArgs> SitzplatzChanged;
-        
-        private static ITypedElement RetrieveIdAttribute()
+        private static ITypedElement RetrieveDatumAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("datum")));
         }
         
         /// <summary>
-        /// Raises the IdChanged event
+        /// Raises the DatumChanged event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnIdChanged(ValueChangedEventArgs eventArgs)
+        protected virtual void OnDatumChanged(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.IdChanged;
+            EventHandler<ValueChangedEventArgs> handler = this.DatumChanged;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -345,12 +294,12 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Raises the IdChanging event
+        /// Raises the DatumChanging event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnIdChanging(ValueChangedEventArgs eventArgs)
+        protected virtual void OnDatumChanging(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.IdChanging;
+            EventHandler<ValueChangedEventArgs> handler = this.DatumChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -359,7 +308,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveStatusAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("status")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("status")));
         }
         
         /// <summary>
@@ -388,18 +337,18 @@ namespace SeeSharper.Models.Kino
             }
         }
         
-        private static ITypedElement RetrieveWarenkorbReference()
+        private static ITypedElement RetrieveFilmReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("warenkorb")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("film")));
         }
         
         /// <summary>
-        /// Raises the WarenkorbChanging event
+        /// Raises the FilmChanging event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnWarenkorbChanging(ValueChangedEventArgs eventArgs)
+        protected virtual void OnFilmChanging(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.WarenkorbChanging;
+            EventHandler<ValueChangedEventArgs> handler = this.FilmChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -407,12 +356,12 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Raises the WarenkorbChanged event
+        /// Raises the FilmChanged event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnWarenkorbChanged(ValueChangedEventArgs eventArgs)
+        protected virtual void OnFilmChanged(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.WarenkorbChanged;
+            EventHandler<ValueChangedEventArgs> handler = this.FilmChanged;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -420,30 +369,30 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Handles the event that the Warenkorb property must reset
+        /// Handles the event that the Film property must reset
         /// </summary>
         /// <param name="sender">The object that sent this reset request</param>
         /// <param name="eventArgs">The event data for the reset event</param>
-        private void OnResetWarenkorb(object sender, EventArgs eventArgs)
+        private void OnResetFilm(object sender, EventArgs eventArgs)
         {
-            if ((sender == this.Warenkorb))
+            if ((sender == this.Film))
             {
-                this.Warenkorb = null;
+                this.Film = null;
             }
         }
         
-        private static ITypedElement RetrieveVorstellungReference()
+        private static ITypedElement RetrieveKinosaalReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("vorstellung")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Vorstellung.ClassInstance)).Resolve("kinosaal")));
         }
         
         /// <summary>
-        /// Raises the VorstellungChanging event
+        /// Raises the KinosaalChanging event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnVorstellungChanging(ValueChangedEventArgs eventArgs)
+        protected virtual void OnKinosaalChanging(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.VorstellungChanging;
+            EventHandler<ValueChangedEventArgs> handler = this.KinosaalChanging;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -451,12 +400,12 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Raises the VorstellungChanged event
+        /// Raises the KinosaalChanged event
         /// </summary>
         /// <param name="eventArgs">The event data</param>
-        protected virtual void OnVorstellungChanged(ValueChangedEventArgs eventArgs)
+        protected virtual void OnKinosaalChanged(ValueChangedEventArgs eventArgs)
         {
-            EventHandler<ValueChangedEventArgs> handler = this.VorstellungChanged;
+            EventHandler<ValueChangedEventArgs> handler = this.KinosaalChanged;
             if ((handler != null))
             {
                 handler.Invoke(this, eventArgs);
@@ -464,59 +413,15 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Handles the event that the Vorstellung property must reset
+        /// Handles the event that the Kinosaal property must reset
         /// </summary>
         /// <param name="sender">The object that sent this reset request</param>
         /// <param name="eventArgs">The event data for the reset event</param>
-        private void OnResetVorstellung(object sender, EventArgs eventArgs)
+        private void OnResetKinosaal(object sender, EventArgs eventArgs)
         {
-            if ((sender == this.Vorstellung))
+            if ((sender == this.Kinosaal))
             {
-                this.Vorstellung = null;
-            }
-        }
-        
-        private static ITypedElement RetrieveSitzplatzReference()
-        {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("sitzplatz")));
-        }
-        
-        /// <summary>
-        /// Raises the SitzplatzChanging event
-        /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnSitzplatzChanging(ValueChangedEventArgs eventArgs)
-        {
-            EventHandler<ValueChangedEventArgs> handler = this.SitzplatzChanging;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
-        }
-        
-        /// <summary>
-        /// Raises the SitzplatzChanged event
-        /// </summary>
-        /// <param name="eventArgs">The event data</param>
-        protected virtual void OnSitzplatzChanged(ValueChangedEventArgs eventArgs)
-        {
-            EventHandler<ValueChangedEventArgs> handler = this.SitzplatzChanged;
-            if ((handler != null))
-            {
-                handler.Invoke(this, eventArgs);
-            }
-        }
-        
-        /// <summary>
-        /// Handles the event that the Sitzplatz property must reset
-        /// </summary>
-        /// <param name="sender">The object that sent this reset request</param>
-        /// <param name="eventArgs">The event data for the reset event</param>
-        private void OnResetSitzplatz(object sender, EventArgs eventArgs)
-        {
-            if ((sender == this.Sitzplatz))
-            {
-                this.Sitzplatz = null;
+                this.Kinosaal = null;
             }
         }
         
@@ -528,17 +433,13 @@ namespace SeeSharper.Models.Kino
         /// <param name="index">The index of this reference</param>
         protected override IModelElement GetModelElementForReference(string reference, int index)
         {
-            if ((reference == "WARENKORB"))
+            if ((reference == "FILM"))
             {
-                return this.Warenkorb;
+                return this.Film;
             }
-            if ((reference == "VORSTELLUNG"))
+            if ((reference == "KINOSAAL"))
             {
-                return this.Vorstellung;
-            }
-            if ((reference == "SITZPLATZ"))
-            {
-                return this.Sitzplatz;
+                return this.Kinosaal;
             }
             return base.GetModelElementForReference(reference, index);
         }
@@ -551,9 +452,9 @@ namespace SeeSharper.Models.Kino
         /// <param name="index">The index of this attribute</param>
         protected override object GetAttributeValue(string attribute, int index)
         {
-            if ((attribute == "ID"))
+            if ((attribute == "DATUM"))
             {
-                return this.Id;
+                return this.Datum;
             }
             if ((attribute == "STATUS"))
             {
@@ -569,29 +470,24 @@ namespace SeeSharper.Models.Kino
         /// <param name="value">The value that should be set to that feature</param>
         protected override void SetFeature(string feature, object value)
         {
-            if ((feature == "WARENKORB"))
+            if ((feature == "FILM"))
             {
-                this.Warenkorb = ((IWarenkorb)(value));
+                this.Film = ((IFilm)(value));
                 return;
             }
-            if ((feature == "VORSTELLUNG"))
+            if ((feature == "KINOSAAL"))
             {
-                this.Vorstellung = ((IVorstellung)(value));
+                this.Kinosaal = ((IKinosaal)(value));
                 return;
             }
-            if ((feature == "SITZPLATZ"))
+            if ((feature == "DATUM"))
             {
-                this.Sitzplatz = ((ISitzplatz)(value));
-                return;
-            }
-            if ((feature == "ID"))
-            {
-                this.Id = ((int)(value));
+                this.Datum = ((System.DateTime)(value));
                 return;
             }
             if ((feature == "STATUS"))
             {
-                this.Status = ((Ticketstatus)(value));
+                this.Status = ((Vorstellungsstatus)(value));
                 return;
             }
             base.SetFeature(feature, value);
@@ -604,9 +500,9 @@ namespace SeeSharper.Models.Kino
         /// <param name="attribute">The requested attribute in upper case</param>
         protected override NMF.Expressions.INotifyExpression<object> GetExpressionForAttribute(string attribute)
         {
-            if ((attribute == "ID"))
+            if ((attribute == "DATUM"))
             {
-                return Observable.Box(new IdProxy(this));
+                return Observable.Box(new DatumProxy(this));
             }
             if ((attribute == "STATUS"))
             {
@@ -622,17 +518,13 @@ namespace SeeSharper.Models.Kino
         /// <param name="reference">The requested reference in upper case</param>
         protected override NMF.Expressions.INotifyExpression<NMF.Models.IModelElement> GetExpressionForReference(string reference)
         {
-            if ((reference == "WARENKORB"))
+            if ((reference == "FILM"))
             {
-                return new WarenkorbProxy(this);
+                return new FilmProxy(this);
             }
-            if ((reference == "VORSTELLUNG"))
+            if ((reference == "KINOSAAL"))
             {
-                return new VorstellungProxy(this);
-            }
-            if ((reference == "SITZPLATZ"))
-            {
-                return new SitzplatzProxy(this);
+                return new KinosaalProxy(this);
             }
             return base.GetExpressionForReference(reference);
         }
@@ -644,23 +536,23 @@ namespace SeeSharper.Models.Kino
         {
             if ((_classInstance == null))
             {
-                _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Ticket")));
+                _classInstance = ((IClass)(MetaRepository.Instance.Resolve("http://www.example.org/kino#//Vorstellung")));
             }
             return _classInstance;
         }
         
         /// <summary>
-        /// The collection class to to represent the children of the Ticket class
+        /// The collection class to to represent the children of the Vorstellung class
         /// </summary>
-        public class TicketReferencedElementsCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
+        public class VorstellungReferencedElementsCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
         {
             
-            private Ticket _parent;
+            private Vorstellung _parent;
             
             /// <summary>
             /// Creates a new instance
             /// </summary>
-            public TicketReferencedElementsCollection(Ticket parent)
+            public VorstellungReferencedElementsCollection(Vorstellung parent)
             {
                 this._parent = parent;
             }
@@ -673,15 +565,11 @@ namespace SeeSharper.Models.Kino
                 get
                 {
                     int count = 0;
-                    if ((this._parent.Warenkorb != null))
+                    if ((this._parent.Film != null))
                     {
                         count = (count + 1);
                     }
-                    if ((this._parent.Vorstellung != null))
-                    {
-                        count = (count + 1);
-                    }
-                    if ((this._parent.Sitzplatz != null))
+                    if ((this._parent.Kinosaal != null))
                     {
                         count = (count + 1);
                     }
@@ -694,9 +582,8 @@ namespace SeeSharper.Models.Kino
             /// </summary>
             protected override void AttachCore()
             {
-                this._parent.WarenkorbChanged += this.PropagateValueChanges;
-                this._parent.VorstellungChanged += this.PropagateValueChanges;
-                this._parent.SitzplatzChanged += this.PropagateValueChanges;
+                this._parent.FilmChanged += this.PropagateValueChanges;
+                this._parent.KinosaalChanged += this.PropagateValueChanges;
             }
             
             /// <summary>
@@ -704,9 +591,8 @@ namespace SeeSharper.Models.Kino
             /// </summary>
             protected override void DetachCore()
             {
-                this._parent.WarenkorbChanged -= this.PropagateValueChanges;
-                this._parent.VorstellungChanged -= this.PropagateValueChanges;
-                this._parent.SitzplatzChanged -= this.PropagateValueChanges;
+                this._parent.FilmChanged -= this.PropagateValueChanges;
+                this._parent.KinosaalChanged -= this.PropagateValueChanges;
             }
             
             /// <summary>
@@ -715,30 +601,21 @@ namespace SeeSharper.Models.Kino
             /// <param name="item">The item to add</param>
             public override void Add(IModelElement item)
             {
-                if ((this._parent.Warenkorb == null))
+                if ((this._parent.Film == null))
                 {
-                    IWarenkorb warenkorbCasted = item.As<IWarenkorb>();
-                    if ((warenkorbCasted != null))
+                    IFilm filmCasted = item.As<IFilm>();
+                    if ((filmCasted != null))
                     {
-                        this._parent.Warenkorb = warenkorbCasted;
+                        this._parent.Film = filmCasted;
                         return;
                     }
                 }
-                if ((this._parent.Vorstellung == null))
+                if ((this._parent.Kinosaal == null))
                 {
-                    IVorstellung vorstellungCasted = item.As<IVorstellung>();
-                    if ((vorstellungCasted != null))
+                    IKinosaal kinosaalCasted = item.As<IKinosaal>();
+                    if ((kinosaalCasted != null))
                     {
-                        this._parent.Vorstellung = vorstellungCasted;
-                        return;
-                    }
-                }
-                if ((this._parent.Sitzplatz == null))
-                {
-                    ISitzplatz sitzplatzCasted = item.As<ISitzplatz>();
-                    if ((sitzplatzCasted != null))
-                    {
-                        this._parent.Sitzplatz = sitzplatzCasted;
+                        this._parent.Kinosaal = kinosaalCasted;
                         return;
                     }
                 }
@@ -749,9 +626,8 @@ namespace SeeSharper.Models.Kino
             /// </summary>
             public override void Clear()
             {
-                this._parent.Warenkorb = null;
-                this._parent.Vorstellung = null;
-                this._parent.Sitzplatz = null;
+                this._parent.Film = null;
+                this._parent.Kinosaal = null;
             }
             
             /// <summary>
@@ -761,15 +637,11 @@ namespace SeeSharper.Models.Kino
             /// <param name="item">The item that should be looked out for</param>
             public override bool Contains(IModelElement item)
             {
-                if ((item == this._parent.Warenkorb))
+                if ((item == this._parent.Film))
                 {
                     return true;
                 }
-                if ((item == this._parent.Vorstellung))
-                {
-                    return true;
-                }
-                if ((item == this._parent.Sitzplatz))
+                if ((item == this._parent.Kinosaal))
                 {
                     return true;
                 }
@@ -783,19 +655,14 @@ namespace SeeSharper.Models.Kino
             /// <param name="arrayIndex">The starting index</param>
             public override void CopyTo(IModelElement[] array, int arrayIndex)
             {
-                if ((this._parent.Warenkorb != null))
+                if ((this._parent.Film != null))
                 {
-                    array[arrayIndex] = this._parent.Warenkorb;
+                    array[arrayIndex] = this._parent.Film;
                     arrayIndex = (arrayIndex + 1);
                 }
-                if ((this._parent.Vorstellung != null))
+                if ((this._parent.Kinosaal != null))
                 {
-                    array[arrayIndex] = this._parent.Vorstellung;
-                    arrayIndex = (arrayIndex + 1);
-                }
-                if ((this._parent.Sitzplatz != null))
-                {
-                    array[arrayIndex] = this._parent.Sitzplatz;
+                    array[arrayIndex] = this._parent.Kinosaal;
                     arrayIndex = (arrayIndex + 1);
                 }
             }
@@ -807,19 +674,14 @@ namespace SeeSharper.Models.Kino
             /// <param name="item">The item that should be removed</param>
             public override bool Remove(IModelElement item)
             {
-                if ((this._parent.Warenkorb == item))
+                if ((this._parent.Film == item))
                 {
-                    this._parent.Warenkorb = null;
+                    this._parent.Film = null;
                     return true;
                 }
-                if ((this._parent.Vorstellung == item))
+                if ((this._parent.Kinosaal == item))
                 {
-                    this._parent.Vorstellung = null;
-                    return true;
-                }
-                if ((this._parent.Sitzplatz == item))
-                {
-                    this._parent.Sitzplatz = null;
+                    this._parent.Kinosaal = null;
                     return true;
                 }
                 return false;
@@ -831,37 +693,37 @@ namespace SeeSharper.Models.Kino
             /// <returns>A generic enumerator</returns>
             public override IEnumerator<IModelElement> GetEnumerator()
             {
-                return Enumerable.Empty<IModelElement>().Concat(this._parent.Warenkorb).Concat(this._parent.Vorstellung).Concat(this._parent.Sitzplatz).GetEnumerator();
+                return Enumerable.Empty<IModelElement>().Concat(this._parent.Film).Concat(this._parent.Kinosaal).GetEnumerator();
             }
         }
         
         /// <summary>
-        /// Represents a proxy to represent an incremental access to the id property
+        /// Represents a proxy to represent an incremental access to the datum property
         /// </summary>
-        private sealed class IdProxy : ModelPropertyChange<ITicket, Nullable<int>>
+        private sealed class DatumProxy : ModelPropertyChange<IVorstellung, Nullable<System.DateTime>>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public IdProxy(ITicket modelElement) : 
-                    base(modelElement, "id")
+            public DatumProxy(IVorstellung modelElement) : 
+                    base(modelElement, "datum")
             {
             }
             
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override Nullable<int> Value
+            public override Nullable<System.DateTime> Value
             {
                 get
                 {
-                    return this.ModelElement.Id;
+                    return this.ModelElement.Datum;
                 }
                 set
                 {
-                    this.ModelElement.Id = value;
+                    this.ModelElement.Datum = value;
                 }
             }
         }
@@ -869,14 +731,14 @@ namespace SeeSharper.Models.Kino
         /// <summary>
         /// Represents a proxy to represent an incremental access to the status property
         /// </summary>
-        private sealed class StatusProxy : ModelPropertyChange<ITicket, Nullable<Ticketstatus>>
+        private sealed class StatusProxy : ModelPropertyChange<IVorstellung, Nullable<Vorstellungsstatus>>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public StatusProxy(ITicket modelElement) : 
+            public StatusProxy(IVorstellung modelElement) : 
                     base(modelElement, "status")
             {
             }
@@ -884,7 +746,7 @@ namespace SeeSharper.Models.Kino
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override Nullable<Ticketstatus> Value
+            public override Nullable<Vorstellungsstatus> Value
             {
                 get
                 {
@@ -898,94 +760,63 @@ namespace SeeSharper.Models.Kino
         }
         
         /// <summary>
-        /// Represents a proxy to represent an incremental access to the warenkorb property
+        /// Represents a proxy to represent an incremental access to the film property
         /// </summary>
-        private sealed class WarenkorbProxy : ModelPropertyChange<ITicket, IWarenkorb>
+        private sealed class FilmProxy : ModelPropertyChange<IVorstellung, IFilm>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public WarenkorbProxy(ITicket modelElement) : 
-                    base(modelElement, "warenkorb")
+            public FilmProxy(IVorstellung modelElement) : 
+                    base(modelElement, "film")
             {
             }
             
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override IWarenkorb Value
+            public override IFilm Value
             {
                 get
                 {
-                    return this.ModelElement.Warenkorb;
+                    return this.ModelElement.Film;
                 }
                 set
                 {
-                    this.ModelElement.Warenkorb = value;
+                    this.ModelElement.Film = value;
                 }
             }
         }
         
         /// <summary>
-        /// Represents a proxy to represent an incremental access to the vorstellung property
+        /// Represents a proxy to represent an incremental access to the kinosaal property
         /// </summary>
-        private sealed class VorstellungProxy : ModelPropertyChange<ITicket, IVorstellung>
+        private sealed class KinosaalProxy : ModelPropertyChange<IVorstellung, IKinosaal>
         {
             
             /// <summary>
             /// Creates a new observable property access proxy
             /// </summary>
             /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public VorstellungProxy(ITicket modelElement) : 
-                    base(modelElement, "vorstellung")
+            public KinosaalProxy(IVorstellung modelElement) : 
+                    base(modelElement, "kinosaal")
             {
             }
             
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override IVorstellung Value
+            public override IKinosaal Value
             {
                 get
                 {
-                    return this.ModelElement.Vorstellung;
+                    return this.ModelElement.Kinosaal;
                 }
                 set
                 {
-                    this.ModelElement.Vorstellung = value;
-                }
-            }
-        }
-        
-        /// <summary>
-        /// Represents a proxy to represent an incremental access to the sitzplatz property
-        /// </summary>
-        private sealed class SitzplatzProxy : ModelPropertyChange<ITicket, ISitzplatz>
-        {
-            
-            /// <summary>
-            /// Creates a new observable property access proxy
-            /// </summary>
-            /// <param name="modelElement">The model instance element for which to create the property access proxy</param>
-            public SitzplatzProxy(ITicket modelElement) : 
-                    base(modelElement, "sitzplatz")
-            {
-            }
-            
-            /// <summary>
-            /// Gets or sets the value of this expression
-            /// </summary>
-            public override ISitzplatz Value
-            {
-                get
-                {
-                    return this.ModelElement.Sitzplatz;
-                }
-                set
-                {
-                    this.ModelElement.Sitzplatz = value;
+                    this.ModelElement.Kinosaal = value;
                 }
             }
         }
