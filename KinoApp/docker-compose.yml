@@ -22,27 +22,13 @@ services:
       retries: 20
     networks: [kino-net]
 
-  # Optional: pgAdmin
-  pgadmin:
-    image: dpage/pgadmin4:8
-    container_name: kinoapp-pgadmin
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.test}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
-    ports:
-      - "${PGADMIN_PORT:-8080}:80"
-    networks: [kino-net]
-
-  # ---------- MongoDB (aggregates / stats) ----------
+  # ---------- MongoDB ----------
   mongodb:
     image: mongo:7
     container_name: kinoapp-mongodb
     restart: unless-stopped
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    # simple single-node Mongo (no replica set needed for the school project)
+    command: ["--bind_ip_all"]
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
@@ -54,40 +40,7 @@ services:
       retries: 30
     networks: [kino-net]
 
-  # one-time RS initialization
-  mongo-rs-init:
-    image: mongo:7
-    container_name: kinoapp-mongo-rs-init
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    entrypoint: ["/bin/bash","-lc"]
-    command: >
-      "
-      mongosh --host mongodb:27017 --eval
-      'rs.initiate({_id:\"rs0\", members:[{_id:0, host:\"mongodb:27017\"}]});
-       rs.status();'
-      "
-    restart: "no"
-    networks: [kino-net]
-
-  # Optional: Mongo Express
-  mongo-express:
-    image: mongo-express:1.0.2-20
-    container_name: kinoapp-mongo-express
-    restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017
-      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-admin}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-admin}
-    ports:
-      - "${MONGO_EXPRESS_PORT:-8082}:8081"
-    networks: [kino-net]
-
-  # ---------- Redpanda (Kafka-compatible) ----------
+  # ---------- Redpanda (Kafka-compatible broker) ----------
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.2.11
     container_name: kinoapp-redpanda
@@ -110,7 +63,7 @@ services:
       - "${REDPANDA_KAFKA_PORT:-9092}:9092"
       - "${REDPANDA_ADMIN_PORT:-9644}:9644"
       - "${REDPANDA_PROXY_PORT:-8083}:8082"
-      - "${REDPANDA_SCHEMA_PORT:-18081}:8081"   # host 18081 -> container 8081
+      - "${REDPANDA_SCHEMA_PORT:-18081}:8081"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -120,58 +73,26 @@ services:
       retries: 30
     networks: [kino-net]
 
-  redpanda-console:
-    image: docker.redpanda.com/redpandadata/console:v2.5.1
-    container_name: kinoapp-redpanda-console
-    restart: unless-stopped
-    depends_on:
-      redpanda:
-        condition: service_healthy
-    environment:
-      KAFKA_BROKERS: redpanda:9092
-      SCHEMAREGISTRY_ENABLED: "true"
-      SCHEMAREGISTRY_URL: http://redpanda:8081
-      SERVER_LISTENPORT: 8080
-    ports:
-      - "${REDPANDA_CONSOLE_PORT:-8081}:8080"
-    networks: [kino-net]
-
-  # Optional: topic bootstrap
-  topics-init:
-    image: docker.redpanda.com/redpandadata/redpanda:v24.2.11
-    container_name: kinoapp-topics-init
-    depends_on:
-      redpanda:
-        condition: service_healthy
-    entrypoint: ["/bin/bash","-lc"]
-    command: >
-      "
-      set -e
-      rpk topic create ticket-sold --brokers redpanda:9092 || true
-      echo 'Topics ready.'
-      "
-    networks: [kino-net]
-
-  # ---------- KinoApp API (applies EF migrations at startup) ----------
+  # ---------- KinoApp API (.NET backend) ----------
   kinoapp-api:
     build:
       context: .
       dockerfile: ./KinoAppService/Dockerfile
     container_name: kinoapp-api
     restart: unless-stopped
-    env_file: [.env]
+    env_file:
+      - .env
     depends_on:
       postgres:
         condition: service_healthy
       mongodb:
         condition: service_healthy
-      mongo-rs-init:
-        condition: service_completed_successfully
       redpanda:
         condition: service_healthy
     environment:
-      ASPNETCORE_URLS: http://+:5000
-      ASPNETCORE_ENVIRONMENT: Docker
+      # you can keep these here or move them into .env, up to you
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:5000}
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Docker}
     ports:
       - "${APP_PORT:-5000}:5000"
     healthcheck:
