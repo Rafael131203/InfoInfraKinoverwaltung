@@ -1,0 +1,22 @@
+﻿using AutoMapper;
+using KinoAppCore.Entities;
+using KinoAppShared.DTOs;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KinoAppCore.Mappings
+{
+
+    public class WarenkorbProfile : Profile
+    {
+        public WarenkorbProfile()
+        {
+            CreateMap<Warenkorb, WarenkorbDTO>().ReverseMap();
+
+        }
+    }
+
+}
