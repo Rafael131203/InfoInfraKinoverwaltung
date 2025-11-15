@@ -90,7 +90,6 @@ services:
       redpanda:
         condition: service_healthy
     environment:
-      # you can keep these here or move them into .env, up to you
       ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:5000}
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Docker}
     ports:
