@@ -16,8 +16,7 @@ public class KinoAppDbContext : DbContext
     {
         base.OnModelCreating(b);
 
-        b.Entity<Kunde>()
-            .Ignore(k => k.Parent);
+        b.Entity<Kunde>().Ignore(k => k.Parent);
         b.Ignore<IModelElement>();
         b.Ignore<ModelElement>();
         b.Ignore<ModelElementExtension>();

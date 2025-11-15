@@ -22,10 +22,7 @@ namespace KinoAppService
         public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             // optional: load docker overrides
-            var config = new ConfigurationBuilder()
-                .AddConfiguration(configuration)
-                .AddJsonFile("appsettings.Docker.json", optional: true)
-                .Build();
+            var config = configuration;
 
             // CORS for Blazor WASM
             services.AddCors(o => o.AddPolicy("ui",
@@ -34,7 +31,7 @@ namespace KinoAppService
 
             // EF Core (Postgres)
             services.AddDbContext<KinoAppDbContext>(o =>
-                o.UseNpgsql(config.GetConnectionString("Sql")));
+                o.UseNpgsql(config.GetConnectionString("Postgres")));
 
             // Mongo (optional)
             services.AddSingleton<IMongoClient>(_ =>
