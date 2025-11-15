@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Hand off to Startup (keeps Program.cs tidy)
 Startup.ConfigureServices(builder.Services, builder.Configuration);
 
-builder.Services.AddAutoMapper(typeof(KundeProfile));
+builder.Services.AddAutoMapper(typeof(KundeMappingProfile));
 builder.Services.AddAutoMapper(typeof(WarenkorbProfile));
 
 var app = builder.Build();

@@ -14,7 +14,12 @@ namespace KinoAppCore.Mappings
     {
         public WarenkorbProfile()
         {
-            CreateMap<Warenkorb, WarenkorbDTO>().ReverseMap();
+            // DTO → konkrete Klasse
+            CreateMap<WarenkorbDTO, Warenkorb>();
+
+            // DTO → Interface (AutoMapper weiß sonst nicht, welche Klasse gemeint ist)
+            CreateMap<WarenkorbDTO, IWarenkorb>()
+                .ConstructUsing((dto, ctx) => ctx.Mapper.Map<Warenkorb>(dto));
 
         }
     }

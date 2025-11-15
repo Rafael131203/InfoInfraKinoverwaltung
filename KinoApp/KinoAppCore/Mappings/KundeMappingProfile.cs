@@ -10,11 +10,12 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace KinoAppCore.Mappings
 {
-    public class KundeProfile : Profile
+    public class KundeMappingProfile : Profile
     {
-        public KundeProfile()
+        public KundeMappingProfile()
         {
-            CreateMap<Kunde, FullKundeDTO>().ReverseMap();
+            CreateMap<Kunde, FullKundeDTO>().ReverseMap()
+                .ForMember(dest => dest.Warenkorb, opt => opt.MapFrom(src => src.Warenkorb));
             CreateMap<Kunde, GetKundeDTO>().ReverseMap();
             
         }

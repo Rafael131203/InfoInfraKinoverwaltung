@@ -9,7 +9,7 @@ public sealed class KinoAppDbContextFactory : IDesignTimeDbContextFactory<KinoAp
     {
         var opts = new DbContextOptionsBuilder<KinoAppDbContext>()
             // Use your provider here (Postgres example):
-            .UseNpgsql("Host=localhost;Database=kinoapp_dev;Username=postgres;Password=postgres")
+            .UseNpgsql("Host=postgres;Database=kinoapp;Username=postgres;Password=postgres")
             .Options;
 
         return new KinoAppDbContext(opts);

@@ -3,6 +3,7 @@ using KinoAppCore.Abstractions;
 using KinoAppCore.Entities;
 using KinoAppShared.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -44,10 +45,11 @@ namespace KinoAppService
 
         // POST api/<KundenController>
         [HttpPost]
-        public void Post([FromBody] FullKundeDTO kunde)
+        public async Task Post([FromBody] FullKundeDTO kunde)
         {
             var entity = _mapper.Map<Kunde>(kunde);
-            _repo.AddAsync(entity);
+            await _repo.AddAsync(entity);
+            await _repo.SaveAsync();
         }
 
 

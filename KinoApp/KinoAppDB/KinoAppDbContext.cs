@@ -18,6 +18,9 @@ public class KinoAppDbContext : DbContext
 
         b.Entity<Kunde>()
             .Ignore(k => k.Parent);
+        b.Ignore<IModelElement>();
+        b.Ignore<ModelElement>();
+        b.Ignore<ModelElementExtension>();
         //// Unique seat per show
         //b.Entity<Ticket>()
         //    .HasIndex(x => new { x.ShowId, x.SeatId })
