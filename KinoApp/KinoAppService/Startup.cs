@@ -41,29 +41,29 @@ namespace KinoAppService
                 new MongoClient(config["Mongo"]));
 
             // MassTransit (Kafka Rider) — if you’re using Redpanda
-            services.AddMassTransit(x =>
-            {
-                // Main bus not used → in-memory
-                x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
+            //services.AddMassTransit(x =>
+            //{
+            //    // Main bus not used → in-memory
+            //    x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
 
-                x.AddRider(r =>
-                {
-                    r.AddConsumer<TicketSoldProjectionConsumer>();               // your consumer
-                    r.AddProducer<KinoAppShared.Messaging.TicketSold>("ticket-sold"); // your producer topic
+            //    x.AddRider(r =>
+            //    {
+            //        r.AddConsumer<TicketSoldProjectionConsumer>();               // your consumer
+            //        r.AddProducer<KinoAppShared.Messaging.TicketSold>("ticket-sold"); // your producer topic
 
-                    r.UsingKafka((ctx, k) =>
-                    {
-                        var brokers = config["Kafka:Brokers"] ?? "redpanda:9092";
-                        var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
-                        k.Host(brokers);
+            //        r.UsingKafka((ctx, k) =>
+            //        {
+            //            var brokers = config["Kafka:Brokers"] ?? "redpanda:9092";
+            //            var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
+            //            k.Host(brokers);
 
-                        k.TopicEndpoint<KinoAppShared.Messaging.TicketSold>("ticket-sold", groupId, e =>
-                        {
-                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
-                        });
-                    });
-                });
-            });
+            //            k.TopicEndpoint<KinoAppShared.Messaging.TicketSold>("ticket-sold", groupId, e =>
+            //            {
+            //                e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
+            //            });
+            //        });
+            //    });
+            //});
 
             // JWT auth (remove if not needed yet)
             var keyString = config["Jwt:SigningKey"] ?? "dev-change-me";
@@ -117,9 +117,8 @@ namespace KinoAppService
             // CORE services (pure logic)
             services.AddKinoAppCore();
 
-            // Bind Core ports to infra implementations
-            services.AddScoped<IUserRepository, UserRepository>();        // from KinoAppDB
-            services.AddScoped<IBookingRepository, BookingRepository>();  // from KinoAppDB
+            // Bind Core ports to infra implementations  // from KinoAppDB
+            services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
             services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
             services.AddScoped<ITokenService>(_ => new JwtTokenService(
                 config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
@@ -131,15 +130,15 @@ namespace KinoAppService
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
+            //app.UseAuthentication();
+            //app.UseAuthorization();
 
             app.MapControllers();
 
             // dev/docker: apply EF migrations automatically
-            using var scope = app.Services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<KinoAppDbContext>();
-            db.Database.Migrate();
+            //using var scope = app.Services.CreateScope();
+            //var db = scope.ServiceProvider.GetRequiredService<KinoAppDbContext>();
+            //db.Database.Migrate();
         }
     }
 }

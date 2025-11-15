@@ -576,7 +576,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveKundeReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Ticket.ClassInstance)).Resolve("kunde")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Ticket.ClassInstance)).Resolve("kunde")));
         }
         
         /// <summary>

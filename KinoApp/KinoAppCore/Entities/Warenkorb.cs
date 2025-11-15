@@ -305,7 +305,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Warenkorb.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Warenkorb.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>

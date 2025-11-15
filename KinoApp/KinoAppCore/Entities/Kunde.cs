@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics;
 using System.Linq;
 
@@ -47,6 +48,7 @@ namespace KinoAppCore.Entities
         /// The backing field for the Warenkorb property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
+        [NotMapped]
         private IWarenkorb _warenkorb;
         
         private static Lazy<ITypedElement> _ticketsReference = new Lazy<ITypedElement>(RetrieveTicketsReference);
@@ -76,6 +78,7 @@ namespace KinoAppCore.Entities
         [XmlElementNameAttribute("warenkorb")]
         [XmlAttributeAttribute(false)]
         [ContainmentAttribute()]
+        [NotMapped]
         public IWarenkorb Warenkorb
         {
             get
@@ -220,7 +223,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveTicketsReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Kunde.ClassInstance)).Resolve("tickets")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Kunde.ClassInstance)).Resolve("tickets")));
         }
         
         /// <summary>
@@ -343,7 +346,6 @@ namespace KinoAppCore.Entities
         /// </summary>
         public class KundeChildrenCollection : ReferenceCollection, ICollectionExpression<IModelElement>, ICollection<IModelElement>
         {
-            
             private Kunde _parent;
             
             /// <summary>
