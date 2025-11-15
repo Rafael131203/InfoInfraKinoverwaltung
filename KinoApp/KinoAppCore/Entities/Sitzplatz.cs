@@ -402,7 +402,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzplatz.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzplatz.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>

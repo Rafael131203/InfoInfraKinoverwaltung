@@ -352,7 +352,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrievePasswortAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Benutzer.ClassInstance)).Resolve("passwort")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Benutzer.ClassInstance)).Resolve("passwort")));
         }
         
         /// <summary>
@@ -383,7 +383,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveNachnameAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Benutzer.ClassInstance)).Resolve("nachname")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Benutzer.ClassInstance)).Resolve("nachname")));
         }
         
         /// <summary>
@@ -414,7 +414,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Benutzer.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Benutzer.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>

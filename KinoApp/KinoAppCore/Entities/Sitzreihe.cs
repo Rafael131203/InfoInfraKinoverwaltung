@@ -318,7 +318,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Sitzreihe.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Sitzreihe.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>

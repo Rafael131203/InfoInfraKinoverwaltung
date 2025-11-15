@@ -220,7 +220,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveTicketsReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Kunde.ClassInstance)).Resolve("tickets")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Kunde.ClassInstance)).Resolve("tickets")));
         }
         
         /// <summary>
