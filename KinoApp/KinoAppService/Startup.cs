@@ -29,8 +29,11 @@ namespace KinoAppService
                 p => p.WithOrigins("http://localhost", "https://localhost", "http://kinoappweb")
                       .AllowAnyHeader().AllowAnyMethod()));
 
+            //AutoMapper for DTO <-> Entity mapping
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             // EF Core (Postgres)
-            services.AddDbContext<KinoAppDbContext>(o =>
+            services.AddDbContextFactory<KinoAppDbContext>(o =>
                 o.UseNpgsql(config.GetConnectionString("Postgres")));
 
             // Mongo (optional)
@@ -115,10 +118,12 @@ namespace KinoAppService
             services.AddKinoAppCore();
 
             // Bind Core ports to infra implementations  // from KinoAppDB
+            services.AddScoped<KinoAppDbContextScope>(); // concrete
+            services.AddScoped<IDbContextScope>(sp => sp.GetRequiredService<KinoAppDbContextScope>());
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
-            services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
-            services.AddScoped<ITokenService>(_ => new JwtTokenService(
-                config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
+            //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
+            //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }
 
         public static void Configure(WebApplication app)

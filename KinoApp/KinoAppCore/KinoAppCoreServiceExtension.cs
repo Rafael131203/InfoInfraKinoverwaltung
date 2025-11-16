@@ -1,4 +1,6 @@
 ﻿using KinoAppCore.Abstractions;
+using KinoAppCore.Services;
+
 //using KinoAppCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +16,7 @@ public static class KinoAppCoreServiceExtension
         // Use-cases / business services
         //services.AddScoped<IAuthService, AuthService>();
         //services.AddScoped<IBookingService, BookingService>();
+        services.AddScoped<IKundeService, KundeService>();
 
         // Nothing infra-related here. Repositories, token service, message bus
         // are bound in the Service project where their implementations live.

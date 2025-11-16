@@ -1,44 +1,21 @@
-﻿using KinoAppCore.Entities;
+﻿// KinoAppDB/KinoAppDbContext.cs
 using Microsoft.EntityFrameworkCore;
-using NMF.Models;
-
-//using NMF.Models;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // <-- needed for UseXminAsConcurrencyToken()
 
 namespace KinoAppDB;
 
 public class KinoAppDbContext : DbContext
 {
     public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
-    public DbSet<Kunde> Kunden => Set<Kunde>();
 
-    protected override void OnModelCreating(ModelBuilder b)
+    // DbSets only for EF entities
+    public DbSet<Entities.KundeEntity> Kunden => Set<Entities.KundeEntity>();
+    public DbSet<Entities.WarenkorbEntity> Warenkoerbe => Set<Entities.WarenkorbEntity>();
+    public DbSet<Entities.TicketEntity> Tickets => Set<Entities.TicketEntity>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        base.OnModelCreating(b);
-
-        b.Entity<Kunde>().Ignore(k => k.Parent);
-        b.Ignore<IModelElement>();
-        b.Ignore<ModelElement>();
-        b.Ignore<ModelElementExtension>();
-        //// Unique seat per show
-        //b.Entity<Ticket>()
-        //    .HasIndex(x => new { x.ShowId, x.SeatId })
-        //    .IsUnique();
-
-        //// PostgreSQL optimistic concurrency on xmin
-        //b.Entity<Ticket>()
-        //    .Property(nameof(Ticket.xmin))
-        //    .IsRowVersion()
-        //    .HasColumnName("xmin")
-        //    .ValueGeneratedOnAddOrUpdate();
-
-        //// Relationships
-        //b.Entity<Ticket>()
-        //    .HasOne(t => t.Show)
-        //    .WithMany(s => s.Tickets)
-        //    .HasForeignKey(t => t.ShowId)
-        //    .OnDelete(DeleteBehavior.Cascade);
-
-
+        base.OnModelCreating(modelBuilder);
+        // Discover all IEntityTypeConfiguration<T> in this assembly
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinoAppDbContext).Assembly);
     }
 }

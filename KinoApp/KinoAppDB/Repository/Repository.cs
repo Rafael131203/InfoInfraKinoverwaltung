@@ -1,40 +1,43 @@
 ﻿using KinoAppCore.Abstractions;
-using KinoAppCore.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace KinoAppDB.Repository;
 
-public  class Repository<T> : IRepository<T> where T : class
+public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
 {
-    private readonly KinoAppDbContext _db;
-    public Repository(KinoAppDbContext db) => _db = db;
+    private readonly KinoAppDbContextScope _scope;
+    protected KinoAppDbContext Ctx => _scope.Current;
+    protected DbSet<TEntity> Set => Ctx.Set<TEntity>();
 
-    public Task<T?> GetByIdAsync(int id)
-        => _db.Set<T>().FindAsync(new object[] { id }).AsTask();
-    public async Task<bool> ExistsAsync(int id)
-    {
-        var entity = await _db.Set<T>().FindAsync(new object[] { id });
-        return entity != null;
-    }
+    public Repository(KinoAppDbContextScope scope) => _scope = scope;
 
-    public async Task<IEnumerable<T>> GetAllAsync()
-      => await _db.Set<T>().ToListAsync();
+    public Task<TEntity?> GetByIdAsync(object id, CancellationToken ct = default)
+        => Set.FindAsync([id], ct).AsTask();
 
-    public async Task AddAsync(T entity)
+    public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default)
+        => await Set.AsNoTracking().ToListAsync(ct);
+
+    public IQueryable<TEntity> Query(bool asNoTracking = true)
+        => asNoTracking ? Set.AsNoTracking() : Set.AsQueryable();
+
+    public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default)
+        => Set.AsNoTracking().AnyAsync(predicate, ct);
+
+    public Task AddAsync(TEntity entity, CancellationToken ct = default)
+        => Set.AddAsync(entity, ct).AsTask();
+
+    public Task UpdateAsync(TEntity entity, CancellationToken ct = default)
     {
-        await _db.Set<T>().AddAsync(entity);
-    }
-    public Task UpdateAsync(T entity)
-    {
-        _db.Set<T>().Update(entity);
+        Set.Update(entity);
         return Task.CompletedTask;
     }
 
-    public Task DeleteAsync(T entity)
+    public Task DeleteAsync(TEntity entity, CancellationToken ct = default)
     {
-        _db.Set<T>().Remove(entity);
+        Set.Remove(entity);
         return Task.CompletedTask;
     }
 
-    public Task SaveAsync() => _db.SaveChangesAsync();
+    public Task SaveAsync(CancellationToken ct = default) => Ctx.SaveChangesAsync(ct);
 }

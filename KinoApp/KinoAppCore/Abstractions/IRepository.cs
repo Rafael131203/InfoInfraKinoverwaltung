@@ -1,12 +1,17 @@
-﻿using KinoAppCore.Entities;
+﻿using System.Linq.Expressions;
+
 namespace KinoAppCore.Abstractions;
-public interface IRepository<T>
+
+public interface IRepository<TEntity> where TEntity : class
 {
-    Task<bool> ExistsAsync(int id);
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<T?> GetByIdAsync(int id);
-    Task AddAsync(T entity);
-    Task UpdateAsync (T entity);
-    Task DeleteAsync(T entity);
-    Task SaveAsync();
+    Task<TEntity?> GetByIdAsync(object id, CancellationToken ct = default);
+    Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default);
+    IQueryable<TEntity> Query(bool asNoTracking = true);
+    Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken ct = default);
+
+    Task AddAsync(TEntity entity, CancellationToken ct = default);
+    Task UpdateAsync(TEntity entity, CancellationToken ct = default);
+    Task DeleteAsync(TEntity entity, CancellationToken ct = default);
+
+    Task SaveAsync(CancellationToken ct = default);
 }
