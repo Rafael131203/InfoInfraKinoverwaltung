@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-namespace KinoAppCore.Abstractions;
+namespace KinoAppDB.Repository;
 
 public interface IRepository<TEntity> where TEntity : class
 {

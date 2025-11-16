@@ -7,14 +7,14 @@ public class KundeEntityConfig : IEntityTypeConfiguration<KundeEntity>
 {
     public void Configure(EntityTypeBuilder<KundeEntity> b)
     {
-        b.ToTable("kunde");
+        b.ToTable("Kunde");
         b.HasKey(x => x.Id);
 
-        b.Property(x => x.Id).HasColumnName("id").ValueGeneratedOnAdd();
-        b.Property(x => x.Vorname).HasColumnName("vorname").HasMaxLength(100).IsRequired();
-        b.Property(x => x.Nachname).HasColumnName("nachname").HasMaxLength(100).IsRequired();
-        b.Property(x => x.Email).HasColumnName("email").HasMaxLength(255).IsRequired();
-        b.Property(x => x.PasswortHash).HasColumnName("passwort_hash").HasMaxLength(255).IsRequired();
+        b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
+        b.Property(x => x.Vorname).HasColumnName("Vorname").HasMaxLength(100).IsRequired();
+        b.Property(x => x.Nachname).HasColumnName("Nachname").HasMaxLength(100).IsRequired();
+        b.Property(x => x.Email).HasColumnName("Email").HasMaxLength(255).IsRequired();
+        b.Property(x => x.Passwort).HasColumnName("Passwort").HasMaxLength(255).IsRequired();
 
         b.HasIndex(x => x.Email).IsUnique();
 

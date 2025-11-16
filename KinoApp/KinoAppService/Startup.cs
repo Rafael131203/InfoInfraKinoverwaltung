@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Asp.Versioning;                          // remove if not using
 using KinoAppCore;                             // Core DI extension
-using KinoAppCore.Abstractions;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
@@ -119,7 +118,7 @@ namespace KinoAppService
 
             // Bind Core ports to infra implementations  // from KinoAppDB
             services.AddScoped<KinoAppDbContextScope>(); // concrete
-            services.AddScoped<IDbContextScope>(sp => sp.GetRequiredService<KinoAppDbContextScope>());
+            services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
             //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService

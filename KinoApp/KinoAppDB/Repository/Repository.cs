@@ -1,5 +1,4 @@
-﻿using KinoAppCore.Abstractions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
 namespace KinoAppDB.Repository;
@@ -13,7 +12,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     public Repository(KinoAppDbContextScope scope) => _scope = scope;
 
     public Task<TEntity?> GetByIdAsync(object id, CancellationToken ct = default)
-        => Set.FindAsync([id], ct).AsTask();
+        => Set.FindAsync(new[] { id }, ct).AsTask();
 
     public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default)
         => await Set.AsNoTracking().ToListAsync(ct);

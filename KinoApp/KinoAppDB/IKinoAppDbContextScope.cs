@@ -1,10 +1,10 @@
-﻿namespace KinoAppCore.Abstractions;
+﻿namespace KinoAppDB;
 
 /// <summary>
 /// Abstraction for opening a persistence scope and handling transactions.
 /// Implemented in KinoAppDB; consumed in services from Core.
 /// </summary>
-public interface IDbContextScope
+public interface IKinoAppDbContextScope
 {
     void Create(); // ensure a fresh DbContext/scope
 

@@ -15,7 +15,6 @@
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <ProjectReference Include="..\KinoAppShared\KinoAppShared.csproj" />
-	  <ProjectReference Include="..\KinoAppCore\KinoAppCore.csproj" />
   </ItemGroup>
 
 </Project>

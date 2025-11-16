@@ -6,7 +6,7 @@ public class KundeEntity
     public string Vorname { get; set; } = null!;
     public string Nachname { get; set; } = null!;
     public string Email { get; set; } = null!;
-    public string PasswortHash { get; set; } = null!;
+    public string Passwort { get; set; } = null!;
 
     // 1:1 optional – either a Kunde has a cart or not
     public long? WarenkorbId { get; set; }

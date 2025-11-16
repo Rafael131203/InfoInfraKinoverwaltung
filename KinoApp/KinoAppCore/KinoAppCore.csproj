@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\KinoAppShared\KinoAppShared.csproj" />
+		<ProjectReference Include="..\KinoAppDB\KinoAppDB.csproj" />
 	</ItemGroup>
 
 </Project>

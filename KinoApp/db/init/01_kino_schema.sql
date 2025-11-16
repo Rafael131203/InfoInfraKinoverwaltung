@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS "Kunde" (
     "Nachname"    TEXT NOT NULL,
     "Passwort"    TEXT NOT NULL,
     "Vorname"     TEXT NOT NULL,
-    "WarenkorbId" INTEGER NOT NULL REFERENCES "Warenkorb"("Id") ON DELETE CASCADE,
+    "WarenkorbId" INTEGER REFERENCES "Warenkorb"("Id") ON DELETE CASCADE,
     CONSTRAINT "UQ_Kunde_Email" UNIQUE ("Email")
 );
 

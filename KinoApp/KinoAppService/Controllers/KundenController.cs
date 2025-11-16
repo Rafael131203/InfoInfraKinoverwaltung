@@ -1,84 +1,78 @@
-﻿using AutoMapper;
-using KinoAppCore.Abstractions;
-using KinoAppCore.Entities;
+﻿using KinoAppDB;
+using KinoAppCore.Services;
 using KinoAppShared.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace KinoAppService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class KundenController : ControllerBase
+    public class KundenController : BaseController
     {
-        private readonly IKundeRepository _repo;
-        private readonly IMapper _mapper;
+        private readonly IKundeService _kundenService;
 
-        public KundenController(IKundeRepository repo, IMapper mapper)
+        public KundenController(IKundeService kundenService, IKinoAppDbContextScope scope) : base(scope)
         {
-            _repo = repo;
-            _mapper = mapper;
+            _kundenService = kundenService;
         }
 
-        // GET api/<KundenController>/5
-        [HttpGet("{id}")]
-        public ActionResult<FullKundeDTO>  Get(int id)
-        {
-            var kunde = _repo.GetByIdAsync(id); // Kunde
-            if (kunde == null) return NotFound();
+        // GET api/kunden/5
+        [HttpGet("{id:long}")]
+        public Task<IActionResult> Get(long id, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var dto = await _kundenService.GetAsync(id, token);
+                return dto is null ? new NotFoundResult() : new OkObjectResult(dto);
+            }, ct);
 
-            var kundeDTO = _mapper.Map<FullKundeDTO>(kunde);
-            return Ok(kundeDTO);
-        }
-
-
+        // GET api/kunden
         [HttpGet]
-        public ActionResult<IEnumerable<FullKundeDTO>> GetAll()
-        {
-            var kunden = _repo.GetAllAsync(); // IEnumerable<Kunde>
-            var kundenDTOListe = _mapper.Map<IEnumerable<FullKundeDTO>>(kunden);
-            return Ok(kundenDTOListe);
-        }
+        public Task<IActionResult> GetAll(CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var list = await _kundenService.GetAllAsync(token);
+                return new OkObjectResult(list);
+            }, ct);
 
-
-        // POST api/<KundenController>
+        // POST api/kunden
         [HttpPost]
-        public async Task Post([FromBody] FullKundeDTO kunde)
-        {
-            var entity = _mapper.Map<Kunde>(kunde);
-            await _repo.AddAsync(entity);
-            await _repo.SaveAsync();
-        }
+        public Task<IActionResult> Post([FromBody] FullKundeDTO kundeDTO, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                if (kundeDTO is null)
+                    return new BadRequestResult();
 
+                var created = await _kundenService.CreateAsync(kundeDTO, token);
+                return new CreatedAtActionResult(
+                    nameof(Get),
+                    "Kunden",
+                    new { id = created.Id },
+                    created
+                );
+            }, ct);
 
-        // PUT api/<KundenController>/5
-        [HttpPut("{id}")]
-        public ActionResult<FullKundeDTO> Put([FromBody] FullKundeDTO kundeDTO)
-        {
-            if (kundeDTO == null)
-                return BadRequest();
+        // PUT api/kunden/5
+        [HttpPut("{id:long}")]
+        public Task<IActionResult> Put(long id, [FromBody] FullKundeDTO kundeDTO, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                if (kundeDTO is null)
+                    return new BadRequestResult();
 
-            var entity = _mapper.Map<Kunde>(kundeDTO);
-            var updated = _repo.UpdateAsync(entity);
+                var updated = await _kundenService.UpdateAsync(id, kundeDTO, token);
+                if (updated is null)
+                    return new NotFoundResult();
 
-            if (updated == null)
-                return NotFound();
+                return new OkObjectResult(updated);
+            }, ct);
 
-            return Ok(_mapper.Map<FullKundeDTO>(updated));
-        }
-
-
-        // DELETE api/<KundenController>/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete(FullKundeDTO kundeDTO)
-        {
-            var entity = _mapper.Map<Kunde>(kundeDTO);
-
-            _repo.DeleteAsync(entity);
-
-            return NoContent();
-        }
+        // DELETE api/kunden/5
+        [HttpDelete("{id:long}")]
+        public Task<IActionResult> Delete(long id, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var success = await _kundenService.DeleteAsync(id, token);
+                return success ? new NoContentResult() : new NotFoundResult();
+            }, ct);
     }
 }

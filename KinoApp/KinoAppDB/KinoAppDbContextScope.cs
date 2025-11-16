@@ -1,10 +1,9 @@
-﻿using KinoAppCore.Abstractions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace KinoAppDB;
 
-public sealed class KinoAppDbContextScope : IDbContextScope
+public sealed class KinoAppDbContextScope : IKinoAppDbContextScope
 {
     private readonly IDbContextFactory<KinoAppDbContext> _factory;
     private KinoAppDbContext? _ctx;
