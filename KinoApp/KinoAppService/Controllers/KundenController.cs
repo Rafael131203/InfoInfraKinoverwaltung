@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using KinoAppCore.Abstractions;
 using KinoAppCore.Entities;
+using KinoAppCore.Services;
 using KinoAppShared.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -14,32 +15,41 @@ namespace KinoAppService.Controllers
     public class KundenController : ControllerBase
     {
         private readonly IKundeRepository _repo;
+        private readonly KundeService _service;
         private readonly IMapper _mapper;
 
-        public KundenController(IKundeRepository repo, IMapper mapper)
+        public KundenController(IKundeRepository repo, IMapper mapper, KundeService service)
         {
             _repo = repo;
             _mapper = mapper;
+            _service = service;
         }
 
         // GET api/<KundenController>/5
         [HttpGet("{id}")]
-        public ActionResult<FullKundeDTO>  Get(int id)
+        public ActionResult<FullKundeDTO>  GetKundeById(int id)
         {
-            var kunde = _repo.GetByIdAsync(id); // Kunde
-            if (kunde == null) return NotFound();
+            //var kunde = _repo.GetByIdAsync(id); // Kunde
+            //if (kunde == null) return NotFound();
 
-            var kundeDTO = _mapper.Map<FullKundeDTO>(kunde);
-            return Ok(kundeDTO);
+            //var kundeDTO = _mapper.Map<FullKundeDTO>(kunde);
+            return Ok(_service.GetByIdAsync(id));
+        }
+
+        // GET api/<KundenController>/5
+        [HttpGet("{Email}")]
+        public ActionResult<FullKundeDTO> GetKundeByEmail(string email)
+        {
+            return Ok(_service.FindKundeByEmail(email));
         }
 
 
         [HttpGet]
         public ActionResult<IEnumerable<FullKundeDTO>> GetAll()
         {
-            var kunden = _repo.GetAllAsync(); // IEnumerable<Kunde>
-            var kundenDTOListe = _mapper.Map<IEnumerable<FullKundeDTO>>(kunden);
-            return Ok(kundenDTOListe);
+            //var kunden = _repo.GetAllAsync(); // IEnumerable<Kunde>
+            //var kundenDTOListe = _mapper.Map<IEnumerable<FullKundeDTO>>(kunden);
+            return Ok(_service.GetAllAsync());
         }
 
 
@@ -48,8 +58,7 @@ namespace KinoAppService.Controllers
         public async Task Post([FromBody] FullKundeDTO kunde)
         {
             var entity = _mapper.Map<Kunde>(kunde);
-            await _repo.AddAsync(entity);
-            await _repo.SaveAsync();
+            await _service.AddAsync(entity);
         }
 
 
@@ -61,12 +70,8 @@ namespace KinoAppService.Controllers
                 return BadRequest();
 
             var entity = _mapper.Map<Kunde>(kundeDTO);
-            var updated = _repo.UpdateAsync(entity);
 
-            if (updated == null)
-                return NotFound();
-
-            return Ok(_mapper.Map<FullKundeDTO>(updated));
+            return Ok(_service.UpdateAsync(entity));
         }
 
 
@@ -76,7 +81,7 @@ namespace KinoAppService.Controllers
         {
             var entity = _mapper.Map<Kunde>(kundeDTO);
 
-            _repo.DeleteAsync(entity);
+            _service.DeleteAsync(entity).Wait();
 
             return NoContent();
         }
