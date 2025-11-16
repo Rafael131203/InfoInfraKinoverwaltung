@@ -36,5 +36,5 @@ public  class Repository<T> : IRepository<T> where T : class
         return Task.CompletedTask;
     }
 
-    public Task SaveAsync(CancellationToken ct) => _db.SaveChangesAsync(ct);
+    public Task SaveAsync() => _db.SaveChangesAsync();
 }

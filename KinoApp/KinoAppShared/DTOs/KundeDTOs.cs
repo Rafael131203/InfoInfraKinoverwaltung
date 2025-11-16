@@ -12,7 +12,6 @@ namespace KinoAppShared.DTOs
         public string Vorname { get; set; }
         public string Nachname { get; set; }
         public string Email { get; set; }
-        [JsonIgnore]
         public string Passwort { get; set; }   // Hinweis: In DTOs normalerweise NICHT senden
         public int Id { get; set; }
 
