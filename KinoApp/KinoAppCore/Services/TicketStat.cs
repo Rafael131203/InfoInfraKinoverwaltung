@@ -3,7 +3,9 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,6 +15,8 @@ namespace KinoAppCore.Services
 
     public class TicketStat
     {
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; } = string.Empty;
         public string filmTitel { get; set; } = string.Empty;
 
         [BsonRepresentation(BsonType.Decimal128)]
