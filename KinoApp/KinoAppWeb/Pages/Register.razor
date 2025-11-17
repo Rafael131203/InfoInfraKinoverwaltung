@@ -1,0 +1,57 @@
+﻿@page "/register"
+
+<PageTitle>Registrieren</PageTitle>
+
+<div class="auth-container">
+    <h2 class="auth-title">Registrieren</h2>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div class="alert alert-danger">@_errorMessage</div>
+    }
+
+    @if (!string.IsNullOrEmpty(_successMessage))
+    {
+        <div class="alert alert-success">@_successMessage</div>
+    }
+
+    <div class="auth-field">
+        <label for="vorname">Vorname</label>
+        <input id="vorname"
+               class="auth-input"
+               @bind="_model.Vorname" />
+    </div>
+
+    <div class="auth-field">
+        <label for="nachname">Nachname</label>
+        <input id="nachname"
+               class="auth-input"
+               @bind="_model.Nachname" />
+    </div>
+
+    <div class="auth-field">
+        <label for="email">Email</label>
+        <input id="email"
+               class="auth-input"
+               @bind="_model.Email"
+               type="email" />
+    </div>
+
+    <div class="auth-field">
+        <label for="password">Passwort</label>
+        <input id="password"
+               class="auth-input"
+               type="password"
+               @bind="_model.Passwort" />
+    </div>
+
+    <button class="auth-btn"
+            @onclick="HandleRegister"
+            disabled="@_isBusy">
+        @(_isBusy ? "Registering" : "Register")
+    </button>
+
+    <div class="auth-alt">
+        <a href="/login">Schon ein Konto? Login</a>
+    </div>
+</div>

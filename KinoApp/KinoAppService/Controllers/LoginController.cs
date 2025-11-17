@@ -44,5 +44,38 @@ namespace KinoAppService.Controllers
 
                 return new OkObjectResult(result);
             }, ct);
+
+        [HttpPost("register")]
+        public Task<IActionResult> Register([FromBody] RegisterRequestDTO dto, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                if (dto == null ||
+                    string.IsNullOrWhiteSpace(dto.Email) ||
+                    string.IsNullOrWhiteSpace(dto.Passwort))
+                {
+                    return new BadRequestObjectResult("Email and password are required.");
+                }
+
+                try
+                {
+                    var result = await _loginService.RegisterAsync(dto, token);
+                    // 201 Created with minimal data
+                    return new CreatedResult("/api/auth/register", result);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // e.g. email already exists
+                    return new ConflictObjectResult(ex.Message);
+                }
+            }, ct);
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            // With stateless JWT there is nothing to revoke server-side in this project.
+            // "Logout" is handled by the client deleting its tokens.
+            // If you later add a refresh-token store, you can mark tokens as revoked here.
+            return NoContent();
+        }
     }
 }

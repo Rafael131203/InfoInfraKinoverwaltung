@@ -1,3 +1,5 @@
+﻿using KinoAppWeb;
+using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
@@ -11,7 +13,15 @@ namespace KinoAppWeb
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            // HttpClient for API
+            builder.Services.AddScoped(sp => new HttpClient
+            {
+                BaseAddress = new Uri("http://localhost:5170/") // adjust if docker differs
+            });
+
+            // Client auth + session
+            builder.Services.AddScoped<IClientLoginService, ClientLoginService>();
+            builder.Services.AddScoped<UserSession>();
 
             await builder.Build().RunAsync();
         }

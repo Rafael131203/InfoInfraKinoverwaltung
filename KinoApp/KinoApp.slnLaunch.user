@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "KinoAppWeb\\KinoAppWeb.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "KinoAppService\\KinoAppService.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

@@ -2,6 +2,7 @@
 using KinoAppCore.Entities;
 using KinoAppDB.Entities;         // <-- add this
 using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Authentication;
 
 namespace KinoAppCore.Mappings
 {
@@ -13,6 +14,11 @@ namespace KinoAppCore.Mappings
             CreateMap<Kunde, FullKundeDTO>().ReverseMap()
                 .ForMember(dest => dest.Warenkorb, opt => opt.MapFrom(src => src.Warenkorb));
             CreateMap<Kunde, GetKundeDTO>().ReverseMap();
+
+            CreateMap<RegisterRequestDTO, KundeEntity>()
+            .ForMember(dest => dest.Passwort, opt => opt.Ignore()); // we hash manually
+
+            CreateMap<KundeEntity, RegisterResponseDTO>();
 
             // EF-Entity <-> FullKundeDTO
             CreateMap<KundeEntity, FullKundeDTO>()

@@ -25,9 +25,12 @@ namespace KinoAppService
             var config = configuration;
 
             // CORS for Blazor WASM
-            services.AddCors(o => o.AddPolicy("ui",
-                p => p.WithOrigins("http://localhost", "https://localhost", "http://kinoappweb")
-                      .AllowAnyHeader().AllowAnyMethod()));
+            services.AddCors(o => o.AddPolicy("ui", p =>p.WithOrigins(
+                        "https://localhost:7268",  // Blazor dev server (https profile)
+                        "http://localhost:5143"    // Blazor dev server (http profile)
+                    ).AllowAnyHeader().AllowAnyMethod()
+            ));
+
 
             //AutoMapper for DTO <-> Entity mapping
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());

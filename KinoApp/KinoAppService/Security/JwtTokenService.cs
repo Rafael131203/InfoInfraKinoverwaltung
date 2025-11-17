@@ -18,8 +18,7 @@ namespace KinoAppService.Security
         {
             _config = config;
 
-            var keyString = _config["Jwt:SigningKey"]
-                            ?? throw new InvalidOperationException("Jwt:SigningKey missing");
+            var keyString = _config["Jwt:SigningKey"] ?? throw new InvalidOperationException("Jwt:SigningKey missing");
 
             if (keyString.Length < 32)
                 throw new InvalidOperationException("Signing key must be at least 32 characters.");
