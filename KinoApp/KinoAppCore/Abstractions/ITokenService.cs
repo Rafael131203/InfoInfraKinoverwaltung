@@ -1,5 +1,11 @@
-﻿namespace KinoAppCore.Abstractions;
-public interface ITokenService
+﻿using KinoAppShared.DTOs.Authentication;
+
+namespace KinoAppCore.Abstractions
 {
-    (string token, DateTime expiresUtc) CreateToken(string username, IEnumerable<string>? roles = null);
+    public interface ITokenService
+    {
+        TokenInfoDTO GenerateAccessToken(long userId, string email, string vorname, string nachname);
+        TokenInfoDTO GenerateRefreshToken(long userId, string email);
+        (long userId, string email)? ValidateRefreshToken(string refreshToken);
+    }
 }

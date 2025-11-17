@@ -1,5 +1,4 @@
-﻿using KinoAppCore.Abstractions;
-using KinoAppDB;
+﻿using KinoAppDB;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
@@ -38,9 +37,6 @@ namespace KinoAppService.Controllers
         }
 
         // Convenience overload if you don't need the token in your lambda
-        protected Task<IActionResult> ExecuteAsync(
-            Func<Task<IActionResult>> action,
-            CancellationToken ct = default)
-            => ExecuteAsync(_ => action(), ct);
+        protected Task<IActionResult> ExecuteAsync(Func<Task<IActionResult>> action, CancellationToken ct = default) => ExecuteAsync(_ => action(), ct);
     }
 }

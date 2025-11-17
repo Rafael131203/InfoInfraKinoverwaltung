@@ -17,7 +17,7 @@ public static class KinoAppCoreServiceExtension
         //services.AddScoped<IAuthService, AuthService>();
         //services.AddScoped<IBookingService, BookingService>();
         services.AddScoped<IKundeService, KundeService>();
-
+        services.AddScoped<ILoginService, LoginService>();
         // Nothing infra-related here. Repositories, token service, message bus
         // are bound in the Service project where their implementations live.
         return services;

@@ -1,6 +1,6 @@
-﻿using System.Text;
-using Asp.Versioning;                          // remove if not using
+﻿using Asp.Versioning;                          // remove if not using
 using KinoAppCore;                             // Core DI extension
+using KinoAppCore.Abstractions;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using System.Text;
 
 namespace KinoAppService
 {
@@ -121,6 +122,8 @@ namespace KinoAppService
             services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
+            services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
             //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
             //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }

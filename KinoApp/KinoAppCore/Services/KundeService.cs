@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
+using KinoAppCore.Abstractions;
+using KinoAppDB.Entities;         
 using KinoAppDB.Repository;
-using KinoAppDB.Entities;          // <-- EF entity
 using KinoAppShared.DTOs;
 
 namespace KinoAppCore.Services;
@@ -9,11 +10,13 @@ public sealed class KundeService : IKundeService
 {
     private readonly IKundeRepository _repo;
     private readonly IMapper _mapper;
+    private readonly IPasswordHasher _hasher;
 
-    public KundeService(IKundeRepository repo, IMapper mapper)
+    public KundeService(IKundeRepository repo, IMapper mapper, IPasswordHasher hasher)
     {
         _repo = repo;
         _mapper = mapper;
+        _hasher = hasher;
     }
 
     public async Task<FullKundeDTO?> GetAsync(long id, CancellationToken ct = default)
@@ -31,6 +34,7 @@ public sealed class KundeService : IKundeService
     public async Task<FullKundeDTO> CreateAsync(FullKundeDTO dto, CancellationToken ct = default)
     {
         var entity = _mapper.Map<KundeEntity>(dto);
+        entity.Passwort = _hasher.Hash(dto.Passwort);
         await _repo.AddAsync(entity, ct);
         await _repo.SaveAsync(ct);
         return _mapper.Map<FullKundeDTO>(entity);
@@ -43,6 +47,7 @@ public sealed class KundeService : IKundeService
             return null;
 
         _mapper.Map(dto, existing);
+        existing.Passwort = _hasher.Hash(dto.Passwort);
         await _repo.UpdateAsync(existing, ct);
         await _repo.SaveAsync(ct);
 
