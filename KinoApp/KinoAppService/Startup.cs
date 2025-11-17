@@ -1,6 +1,7 @@
-﻿using System.Text;
-using Asp.Versioning;                          // remove if not using
+﻿using Asp.Versioning;                          // remove if not using
 using KinoAppCore;                             // Core DI extension
+using KinoAppCore.Abstractions;
+using KinoAppCore.Services;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
@@ -13,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using System.Text;
 
 namespace KinoAppService
 {
@@ -35,11 +37,7 @@ namespace KinoAppService
             services.AddDbContextFactory<KinoAppDbContext>(o =>
                 o.UseNpgsql(config.GetConnectionString("Postgres")));
 
-            // Mongo (optional)
-            services.AddSingleton<IMongoClient>(_ =>
-                new MongoClient(config["Mongo"]));
-
-            // MassTransit (Kafka Rider) — if you’re using Redpanda
+            //MassTransit(Kafka Rider) — if you’re using Redpanda
             //services.AddMassTransit(x =>
             //{
             //    // Main bus not used → in-memory
@@ -121,6 +119,7 @@ namespace KinoAppService
             services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
+            services.AddScoped<TicketService>();
             //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
             //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }
