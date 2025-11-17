@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson;
+﻿using KinoAppCore.Entities;
+using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
@@ -12,16 +13,17 @@ namespace KinoAppCore.Services
 
     public class TicketStat
     {
-        public string MovieTitle { get; set; } = string.Empty;
-        public int SoldTickets { get; set; }
+        public string filmTitel { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Der Gesamtpreis für die verkauften Tickets.
-        /// Wird als BsonType.Decimal128 in MongoDB gespeichert, um finanzielle Genauigkeit zu gewährleisten.
-        /// </summary>
         [BsonRepresentation(BsonType.Decimal128)]
-        public decimal TotalPrice { get; set; }
+        public decimal preis { get; set; }
 
-        public DateTime DateCreated { get; set; } = DateTime.UtcNow;
+        public string genre { get; set; }
+
+        public Platzkategorie platzkategorie { get; set; }
+
+        public DateTime vorstellungsbeginn { get; set; }
+
+        public Zahlungsmittel zahlungsmittel    { get; set; }
     }
 }
