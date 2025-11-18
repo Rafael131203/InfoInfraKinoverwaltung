@@ -41,7 +41,7 @@
         public string? SortBy { get; set; }
 
         // string sortOrder (ASC or DESC)
-        public string? SortOrder { get; set; }
+        public string? SortOrder { get; set; } = "ASC";
 
         // string pageToken (pagination cursor)
         public string? PageToken { get; set; }

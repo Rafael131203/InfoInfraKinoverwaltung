@@ -1,10 +1,23 @@
 ﻿// Home.razor.js – KinoApp landing page logic
-// Hero slider + shutter + movie filters
+// Hero slider + (optional) movie filters
 
+// 1) Global function Blazor calls
+//    Home.razor.cs: await JS.InvokeVoidAsync("kinoInitHero");
+window.kinoInitHero = function () {
+    console.log("kinoInitHero called");
+    if (window.KinoHome && typeof window.KinoHome.init === "function") {
+        window.KinoHome.init();
+    }
+};
+
+// 2) Page module with actual logic
 window.KinoHome = (function () {
+
+    // Public init – called from kinoInitHero
     function init() {
         initHeroSlider();
-        initMovieFilters();
+        // If filters are now Blazor-only, comment this out:
+        // initMovieFilters();
     }
 
     /* =========================================
@@ -13,6 +26,12 @@ window.KinoHome = (function () {
     function initHeroSlider() {
         const slider = document.querySelector('[data-slider="hero"]');
         if (!slider) return;
+
+        // Avoid double-initializing the same slider element
+        if (slider.dataset.kinoInitialized === "true") {
+            return;
+        }
+        slider.dataset.kinoInitialized = "true";
 
         const slides = Array.from(slider.querySelectorAll(".hero-slide"));
         const dots = Array.from(slider.querySelectorAll(".hero-slider__dot"));
@@ -28,13 +47,13 @@ window.KinoHome = (function () {
 
         const intervalAttr = slider.getAttribute("data-slider-interval");
         const SLIDE_INTERVAL = Number(intervalAttr) || 7000;
-        const SHUTTER_DURATION_MS = 900; // matches CSS shutter animations
+        const SHUTTER_DURATION_MS = 900; // keep for CSS sync if needed
 
         function setActiveSlide(index) {
-            slides.forEach((slide) =>
+            slides.forEach(slide =>
                 slide.classList.remove("hero-slide--active")
             );
-            dots.forEach((dot) =>
+            dots.forEach(dot =>
                 dot.classList.remove("hero-slider__dot--active")
             );
 
@@ -47,28 +66,21 @@ window.KinoHome = (function () {
             currentIndex = index;
         }
 
-        function playShutterAnimation(onHalfway) {
+        // Shutter is now purely a visual effect over the *new* slide
+        function playShutterAnimation() {
             if (!shutterTop || !shutterBottom) {
-                if (typeof onHalfway === "function") onHalfway();
                 return;
             }
 
-            // Remove classes so animation can restart
             shutterTop.classList.remove("hero-slider__shutter--play-top");
             shutterBottom.classList.remove("hero-slider__shutter--play-bottom");
 
-            // Force reflow to allow re-adding animation classes
+            // force reflow so animation can restart
             // eslint-disable-next-line no-unused-expressions
             shutterTop.offsetWidth;
 
             shutterTop.classList.add("hero-slider__shutter--play-top");
             shutterBottom.classList.add("hero-slider__shutter--play-bottom");
-
-            // Trigger slide change roughly mid-animation
-            const halfway = SHUTTER_DURATION_MS * 0.4;
-            window.setTimeout(() => {
-                if (typeof onHalfway === "function") onHalfway();
-            }, halfway);
         }
 
         function goToSlide(targetIndex, useShutter = true) {
@@ -80,12 +92,12 @@ window.KinoHome = (function () {
             if (index >= total) index = 0;
             if (index === currentIndex) return;
 
-            const changeSlide = () => setActiveSlide(index);
+            // 1) Immediately switch slide
+            setActiveSlide(index);
 
+            // 2) Then play shutter over the new slide
             if (useShutter) {
-                playShutterAnimation(changeSlide);
-            } else {
-                changeSlide();
+                playShutterAnimation();
             }
         }
 
@@ -157,6 +169,7 @@ window.KinoHome = (function () {
 
     /* =========================================
        MOVIE FILTERS (experience + language)
+       Only used if you still filter purely in JS.
     ========================================= */
     function initMovieFilters() {
         const experienceSelect = document.querySelector(
@@ -200,7 +213,7 @@ window.KinoHome = (function () {
         applyFilters();
     }
 
-    // Expose public entry point for app.js
+    // expose public API
     return {
         init
     };

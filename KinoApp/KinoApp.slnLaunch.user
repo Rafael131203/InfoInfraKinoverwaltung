@@ -3,11 +3,20 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "KinoAppWeb\\KinoAppWeb.csproj",
+        "Path": "KinoAppService\\KinoAppService.csproj",
         "Action": "Start"
       },
       {
-        "Path": "KinoAppService\\KinoAppService.csproj",
+        "Path": "KinoAppWeb\\KinoAppWeb.csproj",
+        "Action": "Start"
+      }
+    ]
+  },
+  {
+    "Name": "New Profile (1)",
+    "Projects": [
+      {
+        "Path": "KinoAppWeb\\KinoAppWeb.csproj",
         "Action": "Start"
       }
     ]
