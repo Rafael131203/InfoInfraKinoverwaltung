@@ -1,9 +1,527 @@
 ﻿@page "/"
+<PageTitle>KinoApp – Retro Cinema Experience</PageTitle>
 
-<PageTitle>Home</PageTitle>
+<!-- HERO SECTION: CAMERA + SLIDER -->
+<section class="hero" aria-labelledby="hero-title">
+    <div class="hero__layout">
+        <!-- LEFT: TEXT + CAMERA -->
+        <div class="hero__column hero__column--left">
+            <header class="hero-copy">
+                <p class="hero-copy__eyebrow">Retro Cinema • Modern Comfort</p>
+                <h1 id="hero-title" class="hero-copy__title">
+                    Experience cinema like
+                    <span class="hero-copy__highlight">the golden age of film.</span>
+                </h1>
+                <p class="hero-copy__subtitle">
+                    Select your movie, reserve your seat and let the old-school projector
+                    light up your night – all from your browser.
+                </p>
+            </header>
 
-<h1>KinoApp</h1>
+            <ul class="hero-features" aria-label="Cinema highlights">
+                <li class="hero-features__item">4K Remasters</li>
+                <li class="hero-features__item">Dolby Atmos Sound</li>
+                <li class="hero-features__item">Original Version &amp; DE Subs</li>
+            </ul>
 
-<p>Bitte loggen Sie sich ein, um fortzufahren.</p>
+            <div class="hero-actions">
+                <button class="btn btn--primary" type="button">
+                    Book Tickets
+                </button>
+                <button class="btn btn--ghost" type="button">
+                    View Schedule
+                </button>
+            </div>
 
-<a class="btn btn-primary" href="login">Zum Login</a>
+            <!-- ENHANCED OLD CINEMA CAMERA BLOCK -->
+            <aside class="camera-block" aria-label="Retro cinema projector illustration">
+                <div class="camera-block__inner">
+                    <!-- Top bar for extra depth -->
+                    <div class="camera-top">
+                        <div class="camera-top__plate">
+                            <span class="camera-top__bolt camera-top__bolt--left"></span>
+                            <span class="camera-top__bolt camera-top__bolt--right"></span>
+                            <span class="camera-top__handle"></span>
+                        </div>
+                    </div>
+
+                    <!-- Reels assembly -->
+                    <div class="camera-reels">
+                        <div class="camera-reel camera-reel--left">
+                            <span class="camera-reel__ring"></span>
+                            <span class="camera-reel__spoke camera-reel__spoke--v"></span>
+                            <span class="camera-reel__spoke camera-reel__spoke--h"></span>
+                            <span class="camera-reel__hub"></span>
+                        </div>
+                        <div class="camera-reel camera-reel--right">
+                            <span class="camera-reel__ring"></span>
+                            <span class="camera-reel__spoke camera-reel__spoke--v"></span>
+                            <span class="camera-reel__spoke camera-reel__spoke--h"></span>
+                            <span class="camera-reel__hub"></span>
+                        </div>
+                    </div>
+
+                    <!-- Main body -->
+                    <div class="camera-body">
+                        <div class="camera-body__front">
+                            <!-- Lens stack -->
+                            <div class="camera-lens">
+                                <div class="camera-lens__ring camera-lens__ring--outer"></div>
+                                <div class="camera-lens__ring camera-lens__ring--mid"></div>
+                                <div class="camera-lens__ring camera-lens__ring--inner"></div>
+                                <div class="camera-lens__glass">
+                                    <div class="camera-lens__reflection camera-lens__reflection--primary"></div>
+                                    <div class="camera-lens__reflection camera-lens__reflection--secondary"></div>
+                                </div>
+                                <div class="camera-lens__glow"></div>
+                            </div>
+
+                            <!-- Viewfinder & controls -->
+                            <div class="camera-body__panel">
+                                <div class="camera-panel__row camera-panel__row--status">
+                                    <span class="camera-status-dot camera-status-dot--red"></span>
+                                    <span class="camera-status-dot camera-status-dot--amber"></span>
+                                    <span class="camera-status-dot camera-status-dot--green"></span>
+                                    <span class="camera-panel__label">REC</span>
+                                </div>
+
+                                <div class="camera-panel__row camera-panel__row--slider">
+                                    <span class="camera-slider__track">
+                                        <span class="camera-slider__fill"></span>
+                                        <span class="camera-slider__thumb"></span>
+                                    </span>
+                                </div>
+
+                                <div class="camera-panel__row camera-panel__row--meters">
+                                    <span class="camera-meter camera-meter--left"></span>
+                                    <span class="camera-meter camera-meter--right"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Side panel with film door -->
+                        <div class="camera-body__side">
+                            <div class="camera-side__door">
+                                <span class="camera-side__hinge"></span>
+                                <span class="camera-side__screw camera-side__screw--top"></span>
+                                <span class="camera-side__screw camera-side__screw--bottom"></span>
+                                <span class="camera-side__label">35mm</span>
+                            </div>
+
+                            <div class="camera-side__vents">
+                                <span class="camera-vent"></span>
+                                <span class="camera-vent"></span>
+                                <span class="camera-vent"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tripod / base -->
+                    <div class="camera-base">
+                        <div class="camera-base__plate"></div>
+                        <div class="camera-tripod">
+                            <span class="camera-tripod__leg camera-tripod__leg--left"></span>
+                            <span class="camera-tripod__leg camera-tripod__leg--center"></span>
+                            <span class="camera-tripod__leg camera-tripod__leg--right"></span>
+                        </div>
+                    </div>
+
+                    <!-- Light cone pointing towards the slider -->
+                    <div class="camera-light-cone">
+                        <div class="camera-light-cone__inner"></div>
+                    </div>
+                </div>
+
+                <p class="camera-block__caption">
+                    Authentic projector-inspired animation: spinning reels, layered lens glow,
+                    film-door details and a warm beam casting across the feature slider.
+                </p>
+            </aside>
+        </div>
+
+        <!-- RIGHT: IMAGE SLIDER -->
+        <div class="hero__column hero__column--right">
+            <section
+                class="hero-slider"
+                aria-label="Featured screenings"
+                data-slider="hero"
+                data-slider-interval="5000">
+
+                <!-- Shutter effect layers -->
+                <div class="hero-slider__shutter hero-slider__shutter--top" aria-hidden="true"></div>
+                <div class="hero-slider__shutter hero-slider__shutter--bottom" aria-hidden="true"></div>
+
+                <!-- Frame / border -->
+                <div class="hero-slider__frame">
+                    <div class="hero-slider__inner">
+                        <!-- Individual slides: controlled via JS -->
+                        <article
+                            class="hero-slide hero-slide--active"
+                            data-slide-index="0"
+                            aria-label="Retro Sci-Fi Night">
+                            <div class="hero-slide__image-wrapper">
+                                <img
+                                    src="images/download (1).jpg"
+                                    alt="Stylized futuristic city skyline with neon lights, retro sci-fi style poster"
+                                    class="hero-slide__image" />
+                            </div>
+                            <div class="hero-slide__gradient" aria-hidden="true"></div>
+
+                            <div class="hero-slide__content">
+                                <div class="hero-slide__text">
+                                    <h2 class="hero-slide__title">Retro Sci-Fi Night</h2>
+                                    <p class="hero-slide__meta">
+                                        Double feature of cult classics · 20:00 &amp; 23:00 · OV with DE subtitles
+                                    </p>
+                                </div>
+                                <span class="hero-slide__badge hero-slide__badge--primary">
+                                    Tonight
+                                </span>
+                            </div>
+                        </article>
+
+                        <article
+                            class="hero-slide"
+                            data-slide-index="1"
+                            aria-label="Midnight Premiere">
+                            <div class="hero-slide__image-wrapper">
+                                <img
+                                    src="images/download (2).jpg"
+                                    alt="Dark cinema room with a bright screen, promoting a midnight movie premiere"
+                                    class="hero-slide__image" />
+                            </div>
+                            <div class="hero-slide__gradient" aria-hidden="true"></div>
+
+                            <div class="hero-slide__content">
+                                <div class="hero-slide__text">
+                                    <h2 class="hero-slide__title">Midnight Premiere</h2>
+                                    <p class="hero-slide__meta">
+                                        First screening · Red carpet vibes · Limited seats · FSK 16
+                                    </p>
+                                </div>
+                                <span class="hero-slide__badge hero-slide__badge--accent">
+                                    New
+                                </span>
+                            </div>
+                        </article>
+
+                        <article
+                            class="hero-slide"
+                            data-slide-index="2"
+                            aria-label="Classic Cinema Week">
+                            <div class="hero-slide__image-wrapper">
+                                <img
+                                    src="images/download (3).jpg"
+                                    alt="Vintage film reel and red velvet curtain advertising a classic cinema week"
+                                    class="hero-slide__image" />
+                            </div>
+                            <div class="hero-slide__gradient" aria-hidden="true"></div>
+
+                            <div class="hero-slide__content">
+                                <div class="hero-slide__text">
+                                    <h2 class="hero-slide__title">Classic Cinema Week</h2>
+                                    <p class="hero-slide__meta">
+                                        Restored 35mm favorites · Every evening · Live introduction before the film
+                                    </p>
+                                </div>
+                                <span class="hero-slide__badge hero-slide__badge--secondary">
+                                    Event
+                                </span>
+                            </div>
+                        </article>
+                    </div>
+
+                    <!-- Slider controls (for JS) -->
+                    <div class="hero-slider__controls" aria-hidden="false">
+                        <button
+                            class="hero-slider__arrow hero-slider__arrow--prev"
+                            type="button"
+                            aria-label="Previous slide"
+                            data-slider-prev>
+                            ‹
+                        </button>
+                        <button
+                            class="hero-slider__arrow hero-slider__arrow--next"
+                            type="button"
+                            aria-label="Next slide"
+                            data-slider-next>
+                            ›
+                        </button>
+
+                        <div class="hero-slider__dots" role="tablist" aria-label="Select featured slide">
+                            <button
+                                class="hero-slider__dot hero-slider__dot--active"
+                                type="button"
+                                role="tab"
+                                aria-label="Slide 1"
+                                aria-selected="true"
+                                data-slider-dot="0"></button>
+                            <button
+                                class="hero-slider__dot"
+                                type="button"
+                                role="tab"
+                                aria-label="Slide 2"
+                                aria-selected="false"
+                                data-slider-dot="1"></button>
+                            <button
+                                class="hero-slider__dot"
+                                type="button"
+                                role="tab"
+                                aria-label="Slide 3"
+                                aria-selected="false"
+                                data-slider-dot="2"></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</section>
+
+<!-- NOW SHOWING SECTION -->
+<section id="now-showing" class="section section--now-showing" aria-labelledby="now-showing-title">
+    <header class="section__header">
+        <div class="section__header-left">
+            <p class="section__eyebrow">Now Showing</p>
+            <h2 id="now-showing-title" class="section__title">Pick your feature</h2>
+        </div>
+        <div class="section__header-right">
+            <form class="movie-filters" aria-label="Filter movies">
+                <label class="movie-filters__group">
+                    <span class="movie-filters__label">Experience</span>
+                    <select class="movie-filters__select" name="experience">
+                        <option value="all">All</option>
+                        <option value="4k">4K</option>
+                        <option value="3d">3D</option>
+                        <option value="atmos">Dolby Atmos</option>
+                        <option value="classic">Classic</option>
+                    </select>
+                </label>
+
+                <label class="movie-filters__group">
+                    <span class="movie-filters__label">Language</span>
+                    <select class="movie-filters__select" name="language">
+                        <option value="all">All</option>
+                        <option value="ov">OV</option>
+                        <option value="de">DE Dub</option>
+                        <option value="subs">OV + Subs</option>
+                    </select>
+                </label>
+            </form>
+        </div>
+    </header>
+
+    <div class="movie-grid" aria-label="Movies currently playing">
+        <!-- MOVIE CARD 1 -->
+        <article class="movie-card" data-age-rating="12" data-format="4k" data-language="subs">
+            <a href="#"
+               class="movie-card__link"
+               aria-label="Open details for Neon City Rewind">
+                <div class="movie-card__poster">
+                    <img
+                        src="images/28733.jpg"
+                        alt="Poster of Neon City Rewind with neon-lit futuristic skyline"
+                        class="movie-card__poster-image" />
+                    <span class="movie-card__tag movie-card__tag--primary">4K</span>
+                </div>
+                <div class="movie-card__body">
+                    <h3 class="movie-card__title">Neon City Rewind</h3>
+                    <p class="movie-card__meta">2h 4m · Sci-Fi · OV + DE Subs</p>
+                    <p class="movie-card__description">
+                        A retired hacker is pulled back into the glowing underbelly of a neon-soaked megacity.
+                    </p>
+                    <div class="movie-card__footer">
+                        <div class="movie-card__badges">
+                            <span class="movie-card__badge-age">FSK 12</span>
+                            <span class="movie-card__badge-format">Dolby Atmos</span>
+                        </div>
+                        <div class="movie-card__times">
+                            <span class="movie-card__time">18:00</span>
+                            <span class="movie-card__time">20:45</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- MOVIE CARD 2 -->
+        <article class="movie-card" data-age-rating="16" data-format="atmos" data-language="ov">
+            <a href="#"
+               class="movie-card__link"
+               aria-label="Open details for Silent Shadows">
+                <div class="movie-card__poster">
+                    <img
+                        src="images/71gN7I-9cwL._AC_UF894,1000_QL80_.jpg"
+                        alt="Poster of Silent Shadows with silhouettes in a foggy alley"
+                        class="movie-card__poster-image" />
+                    <span class="movie-card__tag movie-card__tag--event">Late Night</span>
+                </div>
+                <div class="movie-card__body">
+                    <h3 class="movie-card__title">Silent Shadows</h3>
+                    <p class="movie-card__meta">1h 48m · Thriller · OV</p>
+                    <p class="movie-card__description">
+                        A sound designer notices a voice in his recordings that shouldn’t exist – and it knows his name.
+                    </p>
+                    <div class="movie-card__footer">
+                        <div class="movie-card__badges">
+                            <span class="movie-card__badge-age">FSK 16</span>
+                            <span class="movie-card__badge-format">Dolby Atmos</span>
+                        </div>
+                        <div class="movie-card__times">
+                            <span class="movie-card__time">21:30</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- MOVIE CARD 3 -->
+        <article class="movie-card" data-age-rating="6" data-format="3d" data-language="de">
+            <a href="#"
+               class="movie-card__link"
+               aria-label="Open details for Galactic Voyage">
+                <div class="movie-card__poster">
+                    <img
+                        src="images/81dae9nZFBS._AC_UF894,1000_QL80_.jpg"
+                        alt="Poster of Galactic Voyage showing a spaceship leaving a green-blue planet"
+                        class="movie-card__poster-image" />
+                    <span class="movie-card__tag movie-card__tag--family">Family</span>
+                </div>
+                <div class="movie-card__body">
+                    <h3 class="movie-card__title">Galactic Voyage</h3>
+                    <p class="movie-card__meta">2h 21m · Adventure · DE Dub</p>
+                    <p class="movie-card__description">
+                        A young crew of explorers charts an untested route through a wormhole to save their home world.
+                    </p>
+                    <div class="movie-card__footer">
+                        <div class="movie-card__badges">
+                            <span class="movie-card__badge-age">FSK 6</span>
+                            <span class="movie-card__badge-format">3D</span>
+                        </div>
+                        <div class="movie-card__times">
+                            <span class="movie-card__time">15:30</span>
+                            <span class="movie-card__time">18:15</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- MOVIE CARD 4 -->
+        <article class="movie-card" data-age-rating="12" data-format="classic" data-language="ov">
+            <a href="#"
+               class="movie-card__link"
+               aria-label="Open details for Retro Reels Marathon">
+                <div class="movie-card__poster">
+                    <img
+                        src="https://m.media-amazon.com/images/M/MV5BYzYzNDYxMTQtMTU4OS00MTdlLThhMTQtZjI4NGJmMTZmNmRiXkEyXk.jpg"
+                        alt="Poster for Retro Reels Marathon showing vintage film reels and popcorn"
+                        class="movie-card__poster-image" />
+                    <span class="movie-card__tag movie-card__tag--special">All-Night</span>
+                </div>
+                <div class="movie-card__body">
+                    <h3 class="movie-card__title">Retro Reels Marathon</h3>
+                    <p class="movie-card__meta">All night · Classics · OV</p>
+                    <p class="movie-card__description">
+                        A curated line-up of black-and-white gems, trailers, and vintage ads running until sunrise.
+                    </p>
+                    <div class="movie-card__footer">
+                        <div class="movie-card__badges">
+                            <span class="movie-card__badge-age">FSK 12</span>
+                            <span class="movie-card__badge-format">B/W</span>
+                        </div>
+                        <div class="movie-card__times">
+                            <span class="movie-card__time">22:00</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </article>
+    </div>
+</section>
+
+<!-- COMING SOON STRIP -->
+<section id="coming-soon" class="section section--strip" aria-labelledby="coming-soon-title">
+    <header class="section__header section__header--compact">
+        <div>
+            <p class="section__eyebrow">Coming Soon</p>
+            <h2 id="coming-soon-title" class="section__title">Sneak a peek</h2>
+        </div>
+    </header>
+
+    <div class="strip-carousel" aria-label="Upcoming movies">
+        <article class="strip-item">
+            <h3 class="strip-item__title">Moonlight Over Berlin</h3>
+            <p class="strip-item__meta">Romance · FSK 6 · From 12 Dec</p>
+        </article>
+        <article class="strip-item">
+            <h3 class="strip-item__title">The Silent Orchestra</h3>
+            <p class="strip-item__meta">Drama · Live score · One-night event</p>
+        </article>
+        <article class="strip-item">
+            <h3 class="strip-item__title">Circuit Breakers</h3>
+            <p class="strip-item__meta">Action · FSK 12 · Premiere soon</p>
+        </article>
+    </div>
+</section>
+
+<!-- SPECIAL EVENTS / ABOUT -->
+<section id="special-events" class="section section--split" aria-labelledby="special-events-title">
+    <div class="section__split">
+        <div class="section__split-col">
+            <header class="section__header">
+                <p class="section__eyebrow">Special Events</p>
+                <h2 id="special-events-title" class="section__title">
+                    Theme nights, marathons &amp; live guests
+                </h2>
+            </header>
+            <p class="section__text">
+                From horror marathons on long autumn nights to Q&amp;A sessions with directors,
+                KinoApp’s curated events make each visit feel like a premiere.
+            </p>
+            <ul class="bullet-list">
+                <li class="bullet-list__item">Live score screenings with local musicians</li>
+                <li class="bullet-list__item">Classic 35mm film prints on selected weekends</li>
+                <li class="bullet-list__item">Surprise sneak previews every month</li>
+            </ul>
+        </div>
+
+        <div id="about" class="section__split-col">
+            <header class="section__header section__header--compact">
+                <p class="section__eyebrow">About the cinema</p>
+                <h2 class="section__title">Built for film lovers</h2>
+            </header>
+            <p class="section__text">
+                KinoApp is a concept for a cinema interface that blends retro aesthetics with
+                modern booking flows. Select a movie, choose your seat, and keep that classic
+                projector feeling alive in every interaction.
+            </p>
+
+            <form class="newsletter" aria-label="Sign up for newsletter">
+                <label class="newsletter__label" for="newsletter-email">
+                    Stay in the reel: get updates on new screenings and events.
+                </label>
+                <div class="newsletter__controls">
+                    <input
+                        id="newsletter-email"
+                        class="newsletter__input"
+                        type="email"
+                        name="email"
+                        placeholder="you@example.com"
+                        required />
+                    <button class="btn btn--primary newsletter__button" type="submit">
+                        Sign up
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- NOW SHOWING -->
+<section id="now-showing" class="section section--now-showing" aria-labelledby="now-showing-title">
+    <!-- keep your existing movie cards section here (from the HTML we built) -->
+</section>
+
+<!-- COMING SOON / SPECIAL EVENTS / ABOUT -->
+<!-- same as in the HTML file we wrote earlier – you can paste the rest under here -->
