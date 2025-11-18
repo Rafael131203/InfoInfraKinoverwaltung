@@ -1,10 +1,14 @@
 ﻿using Asp.Versioning;                          // remove if not using
 using KinoAppCore;                             // Core DI extension
 using KinoAppCore.Abstractions;
+using KinoAppCore.Config;
+using KinoAppCore.Services;
+using Microsoft.Extensions.Options;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
-using KinoAppService.Security;                 // JwtTokenService
+using KinoAppService.Security;  
+// JwtTokenService
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -119,6 +123,20 @@ namespace KinoAppService
 
             // CORE services (pure logic)
             services.AddKinoAppCore();
+
+            // IMDb API config
+            services.Configure<ApiOptions>(config.GetSection(ApiOptions.SectionName));
+
+            // Typed HttpClient for IImdbService
+            services.AddHttpClient<IImdbService, ImdbService>((sp, client) =>
+            {
+                var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
+
+                if (!string.IsNullOrWhiteSpace(options.BaseUrl))
+                {
+                    client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/'));
+                }
+            });
 
             // Bind Core ports to infra implementations  // from KinoAppDB
             services.AddScoped<KinoAppDbContextScope>(); // concrete

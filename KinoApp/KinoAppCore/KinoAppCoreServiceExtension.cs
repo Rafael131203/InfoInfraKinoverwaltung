@@ -15,6 +15,7 @@ public static class KinoAppCoreServiceExtension
     {
         // Use-cases / business services
         services.AddScoped<ILoginService, LoginService>();
+        services.AddScoped<ILoginService, LoginService>();
         // Nothing infra-related here. Repositories, token service, message bus
         // are bound in the Service project where their implementations live.
         return services;

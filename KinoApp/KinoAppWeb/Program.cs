@@ -13,15 +13,19 @@ namespace KinoAppWeb
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            // HttpClient for API
+            // HttpClient for API (KinoAppService)
+            // Make sure this matches the URL/port where your ASP.NET API runs
             builder.Services.AddScoped(sp => new HttpClient
             {
-                BaseAddress = new Uri("http://localhost:5170/") // adjust if docker differs
+                BaseAddress = new Uri("http://localhost:5170/") // adjust if needed
             });
 
             // Client auth + session
             builder.Services.AddScoped<IClientLoginService, ClientLoginService>();
             builder.Services.AddScoped<UserSession>();
+
+            // IMDb API client (talks to your API's /api/imdb endpoints)
+            builder.Services.AddScoped<ImdbApiClient>();
 
             await builder.Build().RunAsync();
         }
