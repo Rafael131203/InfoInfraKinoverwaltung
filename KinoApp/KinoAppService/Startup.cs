@@ -3,17 +3,18 @@ using KinoAppCore;                             // Core DI extension
 using KinoAppCore.Abstractions;
 using KinoAppCore.Config;
 using KinoAppCore.Services;
-using Microsoft.Extensions.Options;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
 using KinoAppService.Security;  
+using KinoAppShared.Messaging;
 // JwtTokenService
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
@@ -47,30 +48,65 @@ namespace KinoAppService
             services.AddSingleton<IMongoClient>(_ =>
                 new MongoClient(config["Mongo"]));
 
-            // MassTransit (Kafka Rider) — if you’re using Redpanda
-            //services.AddMassTransit(x =>
-            //{
-            //    // Main bus not used → in-memory
-            //    x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
+            // ---------- MassTransit + Redpanda (Kafka) ----------
+            services.AddMassTransit(x =>
+            {
+                // Hauptbus: InMemory (wir nutzen den Kafka-Rider)
+                x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
 
-            //    x.AddRider(r =>
-            //    {
-            //        r.AddConsumer<TicketSoldProjectionConsumer>();               // your consumer
-            //        r.AddProducer<KinoAppShared.Messaging.TicketSold>("ticket-sold"); // your producer topic
+                x.AddRider(r =>
+                {
+                    // Consumers registrieren
+                    r.AddConsumer<TicketSoldProjectionConsumer>();
+                    r.AddConsumer<KundeRegisteredConsumer>();
+                    r.AddConsumer<ShowCreatedConsumer>();
 
-            //        r.UsingKafka((ctx, k) =>
-            //        {
-            //            var brokers = config["Kafka:Brokers"] ?? "redpanda:9092";
-            //            var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
-            //            k.Host(brokers);
+                    // Producer registrieren (für IMessageBus)
+                    r.AddProducer<TicketSold>("ticket-sold");
+                    r.AddProducer<KundeRegistered>("kunde-registered");
+                    r.AddProducer<ShowCreated>("show-created");
 
-            //            k.TopicEndpoint<KinoAppShared.Messaging.TicketSold>("ticket-sold", groupId, e =>
-            //            {
-            //                e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
-            //            });
-            //        });
-            //    });
-            //});
+                    r.UsingKafka((ctx, k) =>
+                    {
+                        // aus .env: Kafka__BootstrapServers=redpanda:9092
+                        // var brokers = config["Kafka:BootstrapServers"] ?? "localhost:9092";   // localhost, weil Redpanda in dev-Docker-Compose nicht genutzt wird
+                        // var brokers = config["Kafka:BootstrapServers"] ?? "redpanda:9092"; // wieder das hier rein, wenn Redpanda in Docker genutzt wird
+                        // var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
+
+                        var brokers =
+                        config["Kafka:BootstrapServers"] ??
+                        config["Kafka__BootstrapServers"] ??
+                        "localhost:9092";
+
+                        var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
+
+
+                        k.Host(brokers);
+
+                        // TicketSold -> TicketSoldProjectionConsumer
+                        k.TopicEndpoint<TicketSold>("ticket-sold", groupId, e =>
+                        {
+                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
+                        });
+
+                        // KundeRegistered -> KundeRegisteredConsumer
+                        k.TopicEndpoint<KundeRegistered>("kunde-registered", groupId, e =>
+                        {
+                            e.ConfigureConsumer<KundeRegisteredConsumer>(ctx);
+                        });
+
+                        // ShowCreated -> ShowCreatedConsumer
+                        k.TopicEndpoint<ShowCreated>("show-created", groupId, e =>
+                        {
+                            e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
+                        });
+                    });
+                });
+            });
+
+            // IMessageBus-Wrapper
+            services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>();
+            // ----------------------------------------------------
 
             // JWT auth (remove if not needed yet)
             var keyString = config["Jwt:SigningKey"] ?? "dev-change-me";
@@ -157,6 +193,24 @@ namespace KinoAppService
 
             //app.UseAuthentication();
             //app.UseAuthorization();
+
+            // Health-Endpoint for docker;später 1* unten auskommentieren => Backend hat aktuell gar keinen /health-Endpoint
+            //app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+            // 1*
+            // Health endpoint used by Docker to verify that the API AND the PostgreSQL database are reachable.
+            // Returns 200 OK only if:
+            //   - the web API is running, and
+            //   - EF Core can successfully open a connection to the Postgres database.
+            // If the DB is unavailable, CanConnectAsync() throws → endpoint returns 500 → container becomes UNHEALTHY.
+            
+            /*app.MapGet("/health", async (KinoAppDbContextScope scope) =>
+            {
+                using var ctx = scope.Create();
+                await ctx.Context.Database.CanConnectAsync(); // DB Conectivity check
+                return Results.Ok(new { status = "ok" });
+            });
+            */
+            
 
             app.MapControllers();
 

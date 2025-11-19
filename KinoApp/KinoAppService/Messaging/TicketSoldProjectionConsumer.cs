@@ -32,9 +32,10 @@ public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>
 
     public sealed class ShowRevenue
     {
-        public Guid ShowId { get; set; }
+        public long ShowId { get; set; }   
         public int SoldTickets { get; set; }
         public decimal Revenue { get; set; }
         public DateTime UpdatedUtc { get; set; }
     }
+
 }
