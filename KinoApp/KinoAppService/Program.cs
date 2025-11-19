@@ -12,6 +12,9 @@ Startup.ConfigureServices(builder.Services, builder.Configuration);
 
 builder.Services.AddAutoMapper(typeof(KundeMappingProfile));
 builder.Services.AddAutoMapper(typeof(WarenkorbProfile));
+builder.Services.AddAutoMapper(typeof(KinosaalMappingProfile));
+builder.Services.AddAutoMapper(typeof(SitzreiheMappingProfile));
+builder.Services.AddAutoMapper(typeof(SitzplatzMappingProfile));
 
 var app = builder.Build();
 Startup.Configure(app);

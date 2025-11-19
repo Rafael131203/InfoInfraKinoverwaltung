@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KinoAppDB.Entities
+{
+    public class KinosaalEntity
+    {
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<SitzreiheEntity> Sitzreihen { get; set; } = new List<SitzreiheEntity>();
+    }
+}

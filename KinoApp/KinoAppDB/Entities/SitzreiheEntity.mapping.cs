@@ -1,0 +1,28 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KinoAppDB.Entities
+{
+    public class SitzreiheEntityConfig : IEntityTypeConfiguration<SitzreiheEntity>
+    {
+        public void Configure(EntityTypeBuilder<SitzreiheEntity> b)
+        {
+            b.ToTable("Sitzreihe");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
+            b.Property(x => x.Kategorie).HasColumnName("Kategorie").HasMaxLength(100).IsRequired();
+            b.Property(x => x.Bezeichnung).HasColumnName("Bezeichnung").HasMaxLength(500).IsRequired();
+
+            b.HasOne(x => x.Kinosaal)
+             .WithMany(x => x.Sitzreihen)
+             .HasForeignKey(x => x.KinosaalId)
+             .OnDelete(DeleteBehavior.Cascade);
+        }
+    }
+}

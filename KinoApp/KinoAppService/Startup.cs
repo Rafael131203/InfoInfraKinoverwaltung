@@ -143,6 +143,9 @@ namespace KinoAppService
             services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
+            services.AddScoped<IKinosaalRepository, KinosaalRepository>();  // from KinoAppDB
+            services.AddScoped<ISitzreiheRepository, SitzreiheRepository>();  // from KinoAppDB
+            services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();  // from KinoAppDB
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
             //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
