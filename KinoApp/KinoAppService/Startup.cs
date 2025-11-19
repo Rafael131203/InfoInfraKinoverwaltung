@@ -23,7 +23,7 @@ namespace KinoAppService
 {
     internal static class Startup
     {
-        public static void ConfigureServices(IServiceCollection services, IConfiguration config)
+        public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
             // optional: load docker overrides
             var config = configuration;
