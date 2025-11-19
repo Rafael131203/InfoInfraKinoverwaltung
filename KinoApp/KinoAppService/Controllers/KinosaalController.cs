@@ -19,11 +19,15 @@ namespace KinoAppService.Controllers
         }
 
         [HttpPost("Erstellen")]
-        public async Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct)
-        {
-            await _kinosaalService.CreateAsync(dto, AnzahlSitzreihen, GrößeSitzreihen, ct);
-            return Ok();
-        }
+        public Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct)=>
+         ExecuteAsync(async token =>
+         { 
+            var test = _kinosaalService.CreateAsync(dto, AnzahlSitzreihen, GrößeSitzreihen, ct);
+            if(test == null) return new UnauthorizedObjectResult("Du Hund!");
+            return new OkObjectResult(test);
+
+
+         },ct);
 
     }
 }

@@ -34,29 +34,28 @@ namespace KinoAppCore.Services
 
             for (int i = 0; i < AnzahlSitzreihen; i++)
             {
-                var sitzreiheDto = new CreateSitzreiheDTO(
-                    0,
-                    $"Reihe {i + 1}",
-                    entity.Id
-                );
+                var sitzreihe = new SitzreiheEntity
+                {
+                    Kategorie= 0,
+                    Bezeichnung = $"Reihe {i + 1}",
+                    KinosaalId = entity.Id
+                };
+                await _repoSitzreihe.AddAsync(sitzreihe, ct);
 
-                var sitzreiheEntity = _mapper.Map<SitzreiheEntity>(sitzreiheDto);
-                await _repoSitzreihe.AddAsync(sitzreiheEntity, ct);
-
-                // 3. Sitzplätze für jede Sitzreihe erzeugen
                 for (int s = 0; s < GrößeSitzreihen; s++)
                 {
-                    var sitzplatzDTO = new CreateSitzplatzDTO(
-                        gebucht: false,
-                        nummer: s + 1,
-                        price: 10,
-                        sitzreiheId: sitzreiheEntity.Id
-                    );
-
-                    var sitzEntity = _mapper.Map<SitzplatzEntity>(sitzplatzDTO);
-                    await _repoSitzplatz.AddAsync(sitzEntity, ct);
+                    var sitz = new SitzplatzEntity
+                    {
+                        Gebucht = false,
+                        Nummer = s + 1,
+                        Preis = 10,
+                        SitzreiheId = sitzreihe.Id
+                    };
+                    await _repoSitzplatz.AddAsync(sitz, ct);
                 }
             }
+
+            await _repoKinosaal.SaveAsync();
         }
 
         public async Task DeleteAsync(KinosaalEntity kinosaal, CancellationToken ct = default)

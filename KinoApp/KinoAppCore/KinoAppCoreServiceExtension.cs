@@ -15,11 +15,8 @@ public static class KinoAppCoreServiceExtension
     {
         // Use-cases / business services
         services.AddScoped<ILoginService, LoginService>();
-<<<<<<< Updated upstream
-        services.AddScoped<ILoginService, LoginService>();
-=======
         services.AddScoped<IKinosaalService, KinosaalService>();
->>>>>>> Stashed changes
+
         // Nothing infra-related here. Repositories, token service, message bus
         // are bound in the Service project where their implementations live.
         return services;
