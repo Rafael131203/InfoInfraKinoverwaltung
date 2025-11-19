@@ -19,10 +19,11 @@ namespace KinoAppDB.Entities
             b.Property(x => x.Kategorie).HasColumnName("Kategorie").HasMaxLength(100).IsRequired();
             b.Property(x => x.Bezeichnung).HasColumnName("Bezeichnung").HasMaxLength(500).IsRequired();
 
-            b.HasOne(x => x.Kinosaal)
-             .WithMany(x => x.Sitzreihen)
-             .HasForeignKey(x => x.KinosaalId)
+            b.HasOne(s => s.Kinosaal)          // Sitzreihe -> one Kinosaal
+             .WithMany(k => k.Sitzreihen)      // Kinosaal -> many Sitzreihen
+             .HasForeignKey(s => s.KinosaalId) // FK property on Sitzreihe
              .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

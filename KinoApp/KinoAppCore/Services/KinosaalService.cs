@@ -27,36 +27,45 @@ namespace KinoAppCore.Services
             _mapper = mapper;
         }
 
-        public async Task CreateAsync(CreateKinosaalDTO kinosaal, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct = default)
+        public async Task CreateAsync(CreateKinosaalDTO dto, int anzahlSitzreihen, int groesseSitzreihen, CancellationToken ct = default)
         {
-            var entity = _mapper.Map<KinosaalEntity>(kinosaal);
-            await _repoKinosaal.AddAsync(entity, ct);
+            // Map basic Kinosaal data (Name)
+            var kinosaal = _mapper.Map<KinosaalEntity>(dto);
+            kinosaal.Sitzreihen = new List<SitzreiheEntity>();
 
-            for (int i = 0; i < AnzahlSitzreihen; i++)
+            // Build Sitzreihen + Sitzplaetze in memory
+            for (int rowIndex = 0; rowIndex < anzahlSitzreihen; rowIndex++)
             {
                 var sitzreihe = new SitzreiheEntity
                 {
-                    Kategorie= 0,
-                    Bezeichnung = $"Reihe {i + 1}",
-                    KinosaalId = entity.Id
+                    Kategorie = 0,
+                    Bezeichnung = $"Reihe {rowIndex + 1}",
+                    Sitzplätze = new List<SitzplatzEntity>()
                 };
-                await _repoSitzreihe.AddAsync(sitzreihe, ct);
 
-                for (int s = 0; s < GrößeSitzreihen; s++)
+                for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
-                    var sitz = new SitzplatzEntity
+                    var sitzplatz = new SitzplatzEntity
                     {
                         Gebucht = false,
-                        Nummer = s + 1,
-                        Preis = 10,
-                        SitzreiheId = sitzreihe.Id
+                        Nummer = seatIndex + 1,
+                        Preis = 10m
                     };
-                    await _repoSitzplatz.AddAsync(sitz, ct);
+
+                    // Attach seat to row (navigation only, no FK set)
+                    sitzreihe.Sitzplätze.Add(sitzplatz);
                 }
+
+                // Attach row to kinosaal (navigation only)
+                kinosaal.Sitzreihen.Add(sitzreihe);
             }
 
-            await _repoKinosaal.SaveAsync();
+            // Only add the root entity; EF will discover and insert the whole graph
+            await _repoKinosaal.AddAsync(kinosaal, ct);
+            await _repoKinosaal.SaveAsync(ct);
         }
+
+
 
         public async Task DeleteAsync(KinosaalEntity kinosaal, CancellationToken ct = default)
         {
