@@ -9,16 +9,20 @@ namespace KinoAppCore.Mappings
     {
         public KinosaalMappingProfile()
         {
-            // 1) DTO -> Domain
+            // DTO -> Domain
             CreateMap<CreateKinosaalDTO, Kinosaal>()
                 .ForMember(x => x.Id, opt => opt.Ignore()); // Domain ID handled elsewhere
 
-            // 2) Domain -> Entity
+            // Domain -> Entity
             CreateMap<Kinosaal, KinosaalEntity>()
                 .ForMember(e => e.Id, opt => opt.MapFrom(src => src.Id ?? 0));
 
-            // 3) Entity -> DTO (reading data)
+            // Entity -> DTO (reading data)
             CreateMap<KinosaalEntity, CreateKinosaalDTO>();
+
+            CreateMap<CreateKinosaalDTO, KinosaalEntity>()
+                .ForMember(e => e.Id, opt => opt.Ignore());
+
         }
     }
 }

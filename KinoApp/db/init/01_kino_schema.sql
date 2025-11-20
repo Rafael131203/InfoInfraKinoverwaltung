@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS "Vorstellung" (
     "Id"         SERIAL PRIMARY KEY,
     "Datum"      TIMESTAMP NOT NULL,           -- (use TIMESTAMPTZ if you want TZ-aware)
     "Status"     INTEGER,
-    "FilmId"     INTEGER NOT NULL REFERENCES "Film"("Id") ON DELETE CASCADE,
+    "FilmId"     TEXT NOT NULL REFERENCES "Film"("Id") ON DELETE CASCADE,
     "KinosaalId" INTEGER NOT NULL REFERENCES "Kinosaal"("Id") ON DELETE CASCADE,
     CONSTRAINT "UQ_Vorstellung_Hall_Time" UNIQUE ("KinosaalId","Datum")
 );
