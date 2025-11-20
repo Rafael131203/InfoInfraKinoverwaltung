@@ -1,0 +1,36 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace KinoAppDB.Entities
+{
+    public class VorstellungEntityConfig : IEntityTypeConfiguration<VorstellungEntity>
+    {
+        public void Configure(EntityTypeBuilder<VorstellungEntity> b)
+        {
+            b.ToTable("Vorstellung");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
+            b.Property(x => x.Datum).HasColumnName("Datum").IsRequired();
+            b.Property(x => x.Status).HasColumnName("Status").IsRequired();
+
+            b.Property(x => x.FilmId).HasColumnName("FilmId");
+            b.Property(x => x.KinosaalId).HasColumnName("KinosaalId");
+
+            b.HasOne(x => x.Film)
+             .WithMany(f => f.Vorstellungen)   
+             .HasForeignKey(x => x.FilmId)    
+             .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne(x => x.Kinosaal)
+             .WithMany(w => w.Vorstellungen)
+             .HasForeignKey(x => x.KinosaalId)
+             .OnDelete(DeleteBehavior.SetNull);
+        }
+    }
+}

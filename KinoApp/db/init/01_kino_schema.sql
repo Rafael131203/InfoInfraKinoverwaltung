@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS "Film" (
     "Beschreibung"   TEXT NOT NULL,
     "Dauer"          INTEGER,
     "FSK"            INTEGER,
-    "Genre"          TEXT NOT NULL
+    "Genre"          TEXT NOT NULL,
+    "ImageURL"       TEXT 
 );
 
 CREATE TABLE IF NOT EXISTS "Kinosaal" (

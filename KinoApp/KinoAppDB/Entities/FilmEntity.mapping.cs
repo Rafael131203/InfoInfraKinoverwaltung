@@ -39,6 +39,15 @@ namespace KinoAppDB.Entities
             builder.Property(f => f.Genre)
                    .HasColumnName("Genre")
                    .HasMaxLength(255);
+
+            builder.Property(f => f.ImageURL)
+                   .HasColumnName("ImageURL");
+
+            builder.HasMany(f => f.Vorstellungen)
+                   .WithOne(v => v.Film)
+                   .HasForeignKey(v => v.FilmId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
         }
     }
 }

@@ -37,5 +37,9 @@ namespace KinoAppDB.Entities
         /// Genre(s) as a comma-separated string.
         /// </summary>
         public string? Genre { get; set; }
+
+        public string ImageURL { get; set; }
+
+        public ICollection<VorstellungEntity> Vorstellungen { get; set; } = new List<VorstellungEntity>();
     }
 }
