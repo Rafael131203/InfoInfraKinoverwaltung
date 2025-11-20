@@ -1,14 +1,7 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;
-using KinoAppDB.Entities;
-using KinoAppShared.DTOs;
-using KinoAppShared.DTOs.Authentication;
+using KinoAppCore.Entities;      // Kinosaal (NMF Domain)
+using KinoAppDB.Entities;        // KinosaalEntity (EF)
 using KinoAppShared.DTOs.Kinosaal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppCore.Mappings
 {
@@ -16,9 +9,16 @@ namespace KinoAppCore.Mappings
     {
         public KinosaalMappingProfile()
         {
-            // NMF-Kunde <-> DTO (kannst du so lassen wie du willst)
-            CreateMap<KinosaalEntity, CreateKinosaalDTO>().ReverseMap();
-        }
+            // 1) DTO -> Domain
+            CreateMap<CreateKinosaalDTO, Kinosaal>()
+                .ForMember(x => x.Id, opt => opt.Ignore()); // Domain ID handled elsewhere
 
+            // 2) Domain -> Entity
+            CreateMap<Kinosaal, KinosaalEntity>()
+                .ForMember(e => e.Id, opt => opt.MapFrom(src => src.Id ?? 0));
+
+            // 3) Entity -> DTO (reading data)
+            CreateMap<KinosaalEntity, CreateKinosaalDTO>();
+        }
     }
 }

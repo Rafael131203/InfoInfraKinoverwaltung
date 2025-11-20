@@ -1,21 +1,25 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;
-using KinoAppDB.Entities;
+using KinoAppCore.Entities;       // Sitzreihe (NMF model)
+using KinoAppDB.Entities;        // SitzreiheEntity (EF entity)
 using KinoAppShared.DTOs.Kinosaal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppCore.Mappings
 {
     public class SitzreiheMappingProfile : Profile
     {
-            public SitzreiheMappingProfile()
-            {
-                // NMF-Kunde <-> DTO (kannst du so lassen wie du willst)
-                CreateMap<SitzreiheEntity, CreateSitzreiheDTO>().ReverseMap();
-            }
+        public SitzreiheMappingProfile()
+        {
+            // 1) DTO -> Domain (Sitzreihe)
+            CreateMap<CreateSitzreiheDTO, Sitzreihe>()
+                .ForMember(r => r.Id, opt => opt.Ignore());    // DB-generated
+
+            // 2) Domain -> EF Entity
+            CreateMap<Sitzreihe, SitzreiheEntity>()
+                .ForMember(e => e.Id,
+                    opt => opt.MapFrom(src => src.Id ?? 0));  // safe conversion for nullable Id
+
+            // 3) EF Entity -> DTO (reading back to frontend)
+            CreateMap<SitzreiheEntity, CreateSitzreiheDTO>();
+        }
     }
 }

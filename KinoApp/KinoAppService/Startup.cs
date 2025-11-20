@@ -146,8 +146,10 @@ namespace KinoAppService
             services.AddScoped<IKinosaalRepository, KinosaalRepository>();  // from KinoAppDB
             services.AddScoped<ISitzreiheRepository, SitzreiheRepository>();  // from KinoAppDB
             services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();  // from KinoAppDB
+            services.AddScoped<IFilmRepository, FilmRepository>();  // from KinoAppDB
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+            services.AddHostedService<FilmRefreshBackgroundService>();
             //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
             //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }

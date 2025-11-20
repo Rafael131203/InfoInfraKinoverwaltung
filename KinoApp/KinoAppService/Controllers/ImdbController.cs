@@ -35,12 +35,22 @@ namespace KinoAppService.Controllers
 
         // GET api/imdb/search?query=Inception
         [HttpGet("search")]
-        public Task<IActionResult> Search([FromQuery] ImdbListTitlesRequest request, CancellationToken ct) =>
+        public Task<IActionResult> Search([FromQuery] ImdbListTitlesRequest request, int? count,CancellationToken ct) =>
             ExecuteAsync(async token =>
             {
-                // request comes in with all query parameters bound automatically
-                var results = await _imdbService.ListMoviesAsync(request, token);
+                IReadOnlyList<ImdbMovieSearchResult> results;
+
+                if (count == null)
+                {
+                    results = await _imdbService.ListMoviesAsync(request, token);
+                }
+                else
+                {
+                    results = await _imdbService.ListMoviesAsync(request, count.Value, token);
+                }
+
                 return new OkObjectResult(results);
             }, ct);
+
     }
 }

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS "Warenkorb" (
 );
 
 CREATE TABLE IF NOT EXISTS "Film" (
-    "Id"             SERIAL PRIMARY KEY,
+    "Id"             TEXT PRIMARY KEY,
     "Titel"          TEXT NOT NULL,
     "Beschreibung"   TEXT NOT NULL,
     "Dauer"          INTEGER,

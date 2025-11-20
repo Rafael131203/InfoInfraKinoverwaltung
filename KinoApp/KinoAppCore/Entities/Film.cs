@@ -85,7 +85,7 @@ namespace KinoAppCore.Entities
         /// The backing field for the Id property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private Nullable<int> _id;
+        private string _id;
         
         private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
         
@@ -256,7 +256,7 @@ namespace KinoAppCore.Entities
         [CategoryAttribute("Film")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
-        public Nullable<int> Id
+        public string Id
         {
             get
             {
@@ -266,7 +266,7 @@ namespace KinoAppCore.Entities
             {
                 if ((this._id != value))
                 {
-                    Nullable<int> old = this._id;
+                    string old = this._id;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
                     this.OnIdChanging(e);
                     this.OnPropertyChanging("Id", e, _idAttribute);
@@ -697,7 +697,7 @@ namespace KinoAppCore.Entities
             }
             if ((feature == "ID"))
             {
-                this.Id = ((int)(value));
+                this.Id = ((string)(value));
                 return;
             }
             base.SetFeature(feature, value);
@@ -1037,7 +1037,7 @@ namespace KinoAppCore.Entities
         /// <summary>
         /// Represents a proxy to represent an incremental access to the id property
         /// </summary>
-        private sealed class IdProxy : ModelPropertyChange<IFilm, Nullable<int>>
+        private sealed class IdProxy : ModelPropertyChange<IFilm, string>
         {
             
             /// <summary>
@@ -1052,7 +1052,7 @@ namespace KinoAppCore.Entities
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override Nullable<int> Value
+            public override string Value
             {
                 get
                 {

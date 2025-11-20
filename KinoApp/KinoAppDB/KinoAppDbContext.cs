@@ -14,7 +14,8 @@ public class KinoAppDbContext : DbContext
 
     public DbSet<Entities.KinosaalEntity> Kinosaal => Set<Entities.KinosaalEntity>();
     public DbSet<Entities.SitzreiheEntity> Sitzreihe => Set<Entities.SitzreiheEntity>();
-    public DbSet<Entities.SitzplatzEntity> Sitzplatz => Set<Entities.SitzplatzEntity>();    
+    public DbSet<Entities.SitzplatzEntity> Sitzplatz => Set<Entities.SitzplatzEntity>();
+    public DbSet<Entities.FilmEntity> Film => Set<Entities.FilmEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

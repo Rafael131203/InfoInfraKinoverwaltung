@@ -1,7 +1,12 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
+using System.Linq;                         // <== needed for LINQ
+using AutoMapper;
 using KinoAppCore.Components;
+using KinoAppCore.Entities;
+using KinoAppDB.Entities;
+using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Imdb;
 
 namespace KinoAppCore.Services
@@ -9,16 +14,21 @@ namespace KinoAppCore.Services
     public class ImdbService : IImdbService
     {
         private readonly HttpClient _httpClient;
+        private readonly IMapper _mapper;
+        private readonly IFilmRepository _filmRepository;
 
-        public ImdbService(HttpClient httpClient)
+        // how many movies to import when no count is specified
+        private const int DefaultImportCount = 5;
+
+        public ImdbService(HttpClient httpClient, IMapper mapper, IFilmRepository filmRepository)
         {
             _httpClient = httpClient;
+            _mapper = mapper;
+            _filmRepository = filmRepository;
         }
 
-        // --- existing method you already have ---
-        public async Task<IReadOnlyList<ImdbMovieSearchResult>> SearchMoviesAsync(
-            string query,
-            CancellationToken cancellationToken = default)
+        // --- search/titles?query=... (no DB import here) ---
+        public async Task<IReadOnlyList<ImdbMovieSearchResult>> SearchMoviesAsync(string query, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync(
                 $"/search/titles?query={Uri.EscapeDataString(query)}&limit=10",
@@ -33,55 +43,85 @@ namespace KinoAppCore.Services
             if (searchResponse?.Titles == null || searchResponse.Titles.Count == 0)
                 return Array.Empty<ImdbMovieSearchResult>();
 
-            return searchResponse.Titles.Select(t => new ImdbMovieSearchResult
-            {
-                ImdbId = t.Id,
-                Type = t.Type,
-                Title = t.PrimaryTitle ?? string.Empty,
-                OriginalTitle = t.OriginalTitle,
-                Year = t.StartYear,
-                RuntimeSeconds = t.RuntimeSeconds,
-                Genres = t.Genres ?? new List<string>(),
-                Rating = t.Rating?.AggregateRating,
-                VoteCount = t.Rating?.VoteCount,
-                Plot = t.Plot,
-                PosterUrl = t.PrimaryImage?.Url,
-                PosterWidth = t.PrimaryImage?.Width,
-                PosterHeight = t.PrimaryImage?.Height
-            })
-            .ToList();
+            return searchResponse.Titles
+                .Select(MapTitleToSearchResult)
+                .ToList();
         }
 
-        // --- new: list/filter movies via GET /titles ---
-        public async Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesAsync(
-            ImdbListTitlesRequest request,
-            CancellationToken cancellationToken = default)
+        // --- list/filter movies via GET /titles (imports DefaultImportCount movies) ---
+        public Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesAsync(ImdbListTitlesRequest request, CancellationToken cancellationToken = default)
         {
-            if (request == null) throw new ArgumentNullException(nameof(request));
+            // always import some movies by default
+            return ListMoviesInternalAsync(request, DefaultImportCount, cancellationToken);
+        }
 
-            // ensure movies-only default
+        // --- list/filter movies via GET /titles AND import N movies into DB ---
+        public Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesAsync(ImdbListTitlesRequest request, int importCount, CancellationToken cancellationToken = default)
+        {
+            return ListMoviesInternalAsync(request, importCount, cancellationToken);
+        }
+
+        // shared implementation
+        private async Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesInternalAsync(ImdbListTitlesRequest request, int importCount, CancellationToken cancellationToken)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            // sanitize importCount
+            if (importCount < 0) importCount = 0;
+
+            // Force movie type as default
             if (request.Types == null || request.Types.Count == 0)
-            {
                 request.Types = new List<string> { "MOVIE" };
-            }
 
+            // IGNORE incoming pageToken
+            request.PageToken = null;
+
+            // FORCE limit=20 on first page only
+            const int maxLimit = 20;
             var queryString = BuildTitlesQueryString(request);
 
+            // Add limit if not present
+            if (!queryString.Contains("limit="))
+                queryString += (queryString.Contains("?") ? "&" : "?") + "limit=" + maxLimit;
+
+            // --- Fetch FIRST PAGE ONLY ---
             var response = await _httpClient.GetAsync($"/titles{queryString}", cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return Array.Empty<ImdbMovieSearchResult>();
 
-            // The list-titles response has the same "titles" array shape as search,
-            // so we can reuse SearchTitlesApiResponseDto.
             var listResponse = await response.Content.ReadFromJsonAsync<SearchTitlesApiResponseDto>(
-                cancellationToken: cancellationToken);
+                cancellationToken);
 
             if (listResponse?.Titles == null || listResponse.Titles.Count == 0)
                 return Array.Empty<ImdbMovieSearchResult>();
 
-            return listResponse.Titles.Select(t => new ImdbMovieSearchResult
+            // Convert API → search result (max 20 movies)
+            var results = listResponse.Titles
+                .Take(maxLimit)
+                .Select(MapTitleToSearchResult)
+                .ToList();
+
+            // --- Import logic (ALWAYS possible, importCount controls HOW MANY) ---
+            if (importCount > 0)
             {
-                ImdbId = t.Id,
+                int toImport = Math.Min(importCount, maxLimit);
+
+                foreach (var movie in results.Take(toImport))
+                {
+                    await ImportFilmAsync(movie, cancellationToken);
+                }
+            }
+
+            return results;
+        }
+
+        // helper: convert ImdbTitleApiDto -> ImdbMovieSearchResult
+        private static ImdbMovieSearchResult MapTitleToSearchResult(ImdbTitleApiDto t) =>
+            new ImdbMovieSearchResult
+            {
+                // this Id is the IMDb id (e.g. "tt30144839")
+                Id = t.Id,
                 Type = t.Type,
                 Title = t.PrimaryTitle ?? string.Empty,
                 OriginalTitle = t.OriginalTitle,
@@ -94,9 +134,48 @@ namespace KinoAppCore.Services
                 PosterUrl = t.PrimaryImage?.Url,
                 PosterWidth = t.PrimaryImage?.Width,
                 PosterHeight = t.PrimaryImage?.Height
-            })
-            .ToList();
+            };
 
+        // --- import one movie into DB using AutoMapper + certificates (age rating) ---
+        private async Task ImportFilmAsync(ImdbMovieSearchResult movie, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(movie.Id))
+                return;
+
+            // avoid duplicates by IMDb id
+            bool exists = await _filmRepository.AnyAsync(
+                f => f.Id == movie.Id,
+                cancellationToken);
+
+            if (exists)
+                return;
+
+            // get certificates for FSK
+            var certsResponse = await GetTitleCertificatesAsync(movie.Id, cancellationToken);
+            var deCertificate = certsResponse?.Certificates?.FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase)) ?? certsResponse?.Certificates?.FirstOrDefault();
+
+            var fsk = MapCertificateToFsk(deCertificate);
+
+            // direct mapping IMDb -> FilmEntity
+            var entity = _mapper.Map<FilmEntity>(movie);
+            entity.Fsk = fsk;
+
+            await _filmRepository.AddAsync(entity, cancellationToken);
+            await _filmRepository.SaveAsync(cancellationToken);
+        }
+
+
+        // simple mapping from IMDb rating string -> FSK (age)
+        private static int? MapCertificateToFsk(ImdbCertificateApiDto? cert)
+        {
+            if (cert?.Rating == null)
+                return null;
+
+            var digits = new string(cert.Rating.Where(char.IsDigit).ToArray());
+            if (int.TryParse(digits, out var age))
+                return age;
+
+            return null;
         }
 
         // helper to build query string in "multi" format for arrays
@@ -156,10 +235,8 @@ namespace KinoAppCore.Services
             return "?" + string.Join("&", parts);
         }
 
-        // you also still have GetMovieByImdbIdAsync here…
-        public async Task<ImdbMovieDetails?> GetMovieByImdbIdAsync(
-            string imdbId,
-            CancellationToken cancellationToken = default)
+        // existing detail endpoint
+        public async Task<ImdbMovieDetails?> GetMovieByImdbIdAsync(string imdbId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync($"/titles/{imdbId}", cancellationToken);
             if (!response.IsSuccessStatusCode)
@@ -181,5 +258,68 @@ namespace KinoAppCore.Services
                 Rating = apiDto.Rating?.AggregateRating
             };
         }
+
+        public async Task<ListTitleCertificatesApiResponseDto?> GetTitleCertificatesAsync(string imdbId, CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.GetAsync($"/titles/{imdbId}/certificates", cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            return await response.Content.ReadFromJsonAsync<ListTitleCertificatesApiResponseDto>(
+                cancellationToken: cancellationToken);
+        }
+
+        // helper: raw /titles/{id} call that returns the API DTO
+        private async Task<ImdbTitleApiDto?> GetTitleApiAsync(string imdbId, CancellationToken ct)
+        {
+            var response = await _httpClient.GetAsync($"/titles/{imdbId}", ct);
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            return await response.Content.ReadFromJsonAsync<ImdbTitleApiDto>(
+                cancellationToken: ct);
+        }
+
+        // PUBLIC: refresh all films currently in DB
+        public async Task RefreshAllFilmsAsync(CancellationToken ct = default)
+        {
+            // get all films currently stored in DB
+            var films = await _filmRepository.GetAllAsync(ct);
+
+            foreach (var filmEntity in films)
+            {
+                if (string.IsNullOrWhiteSpace(filmEntity.Id))
+                    continue;
+
+                // 1) get latest movie info from IMDb
+                var apiDto = await GetTitleApiAsync(filmEntity.Id, ct);
+                if (apiDto == null)
+                    continue;
+
+                // 2) map API dto -> FilmEntity (using AutoMapper)
+                var refreshed = _mapper.Map<FilmEntity>(apiDto);
+
+                // copy fields you want to keep up-to-date
+                filmEntity.Titel = refreshed.Titel;
+                filmEntity.Beschreibung = refreshed.Beschreibung;
+                filmEntity.Dauer = refreshed.Dauer;
+                filmEntity.Genre = refreshed.Genre;
+
+                // 3) refresh FSK via certificates
+                var certsResponse = await GetTitleCertificatesAsync(filmEntity.Id, ct);
+                var deCertificate = certsResponse?.Certificates?
+                    .FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase))
+                    ?? certsResponse?.Certificates?.FirstOrDefault();
+
+                filmEntity.Fsk = MapCertificateToFsk(deCertificate);
+
+                await _filmRepository.UpdateAsync(filmEntity, ct);
+            }
+
+            // one SaveChanges at the end
+            await _filmRepository.SaveAsync(ct);
+        }
+
     }
 }
