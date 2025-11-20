@@ -18,7 +18,7 @@ namespace KinoAppCore.Services
         private readonly IFilmRepository _filmRepository;
 
         // how many movies to import when no count is specified
-        private const int DefaultImportCount = 5;
+        private const int DefaultImportCount = 50;
 
         public ImdbService(HttpClient httpClient, IMapper mapper, IFilmRepository filmRepository)
         {
@@ -78,7 +78,7 @@ namespace KinoAppCore.Services
             request.PageToken = null;
 
             // FORCE limit=20 on first page only
-            const int maxLimit = 20;
+            const int maxLimit = 50;
             var queryString = BuildTitlesQueryString(request);
 
             // Add limit if not present

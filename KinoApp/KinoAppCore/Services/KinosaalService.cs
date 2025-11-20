@@ -5,6 +5,7 @@ using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
+using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

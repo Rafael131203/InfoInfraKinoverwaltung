@@ -1,4 +1,4 @@
-﻿using KinoAppCore;
+﻿using KinoAppShared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

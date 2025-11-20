@@ -34,7 +34,7 @@
         public int? MaxVoteCount { get; set; }
 
         // float min/maxAggregateRating (0.0 – 10.0)
-        public float? MinAggregateRating { get; set; } = 8.0f;
+        public float? MinAggregateRating { get; set; } = 6.0f;
         public float? MaxAggregateRating { get; set; }
 
         // string sortBy (SORT_BY_POPULARITY, SORT_BY_RELEASE_DATE, SORT_BY_USER_RATING, etc.)

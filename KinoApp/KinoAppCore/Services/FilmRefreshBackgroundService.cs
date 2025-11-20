@@ -68,7 +68,7 @@ namespace KinoAppCore.Services
                 // wait 1 hour before next refresh
                 try
                 {
-                    await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                    await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
                 }
                 catch (TaskCanceledException)
                 {
