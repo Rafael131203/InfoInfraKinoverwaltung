@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace KinoAppShared.DTOs.Kinosaal
 {
-    internal class CreateSitzplatzDTO
+    public class CreateSitzplatzDTO
     {
+        public Boolean Gebucht {  get; set; }
+        public int Nummer {  get; set; }
+        public decimal Preis {  get; set; }
+        public long SitzreihenId { get; set; }
     }
 }

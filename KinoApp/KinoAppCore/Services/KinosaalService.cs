@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using KinoAppCore.Abstractions;
+using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +19,15 @@ namespace KinoAppCore.Services
         private readonly IKinosaalRepository _repoKinosaal;
         private readonly ISitzreiheRepository _repoSitzreihe;
         private readonly ISitzplatzRepository _repoSitzplatz;
+        private readonly IPreisService _preisService;
         private readonly IMapper _mapper;
 
-        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IMapper mapper)
+        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisService preisService, IMapper mapper)
         {
             _repoKinosaal = repoKinosaal;
             _repoSitzreihe = repoSitzreihe;
             _repoSitzplatz = repoSitzplatz;
+            _preisService = preisService;   
             _mapper = mapper;
         }
 
@@ -39,19 +43,19 @@ namespace KinoAppCore.Services
                 
                 var sitzreihe = new SitzreiheEntity
                 {
-                    Kategorie = SitzreihenKategorie.LOGE,
+                    Kategorie = SitzreihenKategorie.Parkett,
                     Bezeichnung = $"Reihe {rowIndex + 1}",
                     Sitzplätze = new List<SitzplatzEntity>()
                 };
 
                 for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
-                    
+                    var preis = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
                     var sitzplatz = new SitzplatzEntity
                     {
                         Gebucht = false,
                         Nummer = countSeat,
-                        Preis = 10m
+                        Preis = preis
                     };
                     countSeat++;
                     // Attach seat to row (navigation only, no FK set)
@@ -85,16 +89,33 @@ namespace KinoAppCore.Services
             if (!Enum.IsDefined(typeof(SitzreihenKategorie), dto.Kategorie))
                 throw new ArgumentException("Ungültige Kategorie");
 
-            // 2. Kategorie ändern
+            // 2. Alle Sitzplätze der Sitzreihe laden
+            var sitzplaetze = await _repoSitzplatz
+                .Query()
+                .Where(s => s.SitzreiheId == sitzreihe.Id)
+                .ToListAsync(ct);
+
+            sitzreihe.Sitzplätze = sitzplaetze;
+
+            // 3. Kategorie ändern
             sitzreihe.Kategorie = dto.Kategorie;
 
-            // 3. Speichern
-            await _repoSitzreihe.UpdateAsync(sitzreihe);
-            await _repoSitzreihe.SaveAsync();
+            // 4. Preis der Sitzplätze aktualisieren
+            var neuerPreis = await _preisService.GetPreisAsync(dto.Kategorie, ct);
+            foreach (var platz in sitzreihe.Sitzplätze)
+            {
+                platz.Preis = neuerPreis;
+            }
+            
 
-            // 4. Ergebnis zurückgeben
+            // 5. Sitzreihe speichern
+            await _repoSitzreihe.UpdateAsync(sitzreihe, ct);
+            await _repoSitzreihe.SaveAsync(ct);
+
+            // 6. Ergebnis zurückgeben
             return sitzreihe;
         }
+
 
         public async Task<KinosaalEntity?> DeleteAsync(long id, CancellationToken ct = default)
         {
