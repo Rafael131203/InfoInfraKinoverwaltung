@@ -222,6 +222,7 @@ namespace KinoAppService
             services.AddScoped<IFilmRepository, FilmRepository>();  // from KinoAppDB
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+            services.AddHostedService<FilmRefreshBackgroundService>();
         }
 
         public static void Configure(WebApplication app)
