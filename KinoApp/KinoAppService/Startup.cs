@@ -99,7 +99,7 @@ namespace KinoAppService
 
                         var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
 
-                        Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'"); // NEW
+                        Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'");
 
                         k.Host(brokers);
 
@@ -107,18 +107,21 @@ namespace KinoAppService
                         k.TopicEndpoint<TicketSold>("ticket-sold", groupId, e =>
                         {
                             e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
+                            e.CreateIfMissing();
                         });
 
                         // KundeRegistered -> KundeRegisteredConsumer
                         k.TopicEndpoint<KundeRegistered>("kunde-registered", groupId, e =>
                         {
                             e.ConfigureConsumer<KundeRegisteredConsumer>(ctx);
+                            e.CreateIfMissing();
                         });
 
                         // ShowCreated -> ShowCreatedConsumer
                         k.TopicEndpoint<ShowCreated>("show-created", groupId, e =>
                         {
                             e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
+                            e.CreateIfMissing();
                         });
                     });
                 });
@@ -209,6 +212,7 @@ namespace KinoAppService
                 {
                     client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/'));
                 }
+                client.Timeout = TimeSpan.FromSeconds(10);
             });
 
             // Bind Core ports to infra implementations  // from KinoAppDB

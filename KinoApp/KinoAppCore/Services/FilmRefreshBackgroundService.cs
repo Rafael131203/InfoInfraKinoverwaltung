@@ -1,5 +1,6 @@
 ﻿using KinoAppCore.Services;
 using KinoAppDB;
+using KinoAppShared.DTOs.Imdb;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -34,20 +35,29 @@ namespace KinoAppCore.Services
                     var imdbService = scope.ServiceProvider.GetRequiredService<IImdbService>();
                     var dbScope = scope.ServiceProvider.GetRequiredService<IKinoAppDbContextScope>();
 
+                    var refreshTimeout = TimeSpan.FromSeconds(30);
+
                     // mimic your BaseController transaction pattern
                     dbScope.Create();
                     await dbScope.BeginAsync(stoppingToken);
 
                     try
                     {
-                        await imdbService.RefreshAllFilmsAsync(stoppingToken);
+                        await imdbService.ListMoviesAsync(new ImdbListTitlesRequest(), stoppingToken);
 
                         await dbScope.CommitAsync(stoppingToken);
                     }
-                    catch
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                     {
-                        await dbScope.RollbackAsync(stoppingToken);
-                        throw;
+                        _logger.LogInformation("IMDb refresh cancelled due to shutdown.");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogWarning("IMDb refresh timed out after {Timeout}s.", refreshTimeout.TotalSeconds);
+                    }
+                    catch (Exception ex)
+                    {
+                        await dbScope.RollbackAsync(CancellationToken.None);
                     }
                 }
                 catch (Exception ex)
