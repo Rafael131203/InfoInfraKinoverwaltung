@@ -1,6 +1,5 @@
 ﻿using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
-using KinoAppShared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
