@@ -65,7 +65,7 @@ namespace KinoAppWeb.Services
         }
 
         /// <summary>Clears all session data (tokens + flags + storage).</summary>
-        public async Task ClearAsync()
+        private async Task ClearAsync()
         {
             _session = null;
             _refreshInProgress = false;

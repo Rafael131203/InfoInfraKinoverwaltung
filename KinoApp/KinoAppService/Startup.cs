@@ -3,17 +3,18 @@ using KinoAppCore;                             // Core DI extension
 using KinoAppCore.Abstractions;
 using KinoAppCore.Config;
 using KinoAppCore.Services;
-using Microsoft.Extensions.Options;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
-using KinoAppService.Security;  
+using KinoAppService.Security;
+using KinoAppShared.Messaging;
 // JwtTokenService
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
@@ -28,15 +29,22 @@ namespace KinoAppService
             // optional: load docker overrides
             var config = configuration;
 
+            // NEW: read current environment once
+            var environmentName =
+                config["ASPNETCORE_ENVIRONMENT"] ??
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
+                "Production";
+
+            Console.WriteLine($"[Startup] ASPNETCORE_ENVIRONMENT = '{environmentName}'"); // NEW (for debugging)
+
             // CORS for Blazor WASM
-            services.AddCors(o => o.AddPolicy("ui", p =>p.WithOrigins(
+            services.AddCors(o => o.AddPolicy("ui", p => p.WithOrigins(
                         "https://localhost:7268",  // Blazor dev server (https profile)
                         "http://localhost:5143"    // Blazor dev server (http profile)
                     ).AllowAnyHeader().AllowAnyMethod()
             ));
 
 
-            // ---------- AutoMapper ----------
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             // ---------- PostgreSQL / EF Core ----------
@@ -56,6 +64,71 @@ namespace KinoAppService
             services.AddSingleton<IMongoClient>(_ =>
                 new MongoClient(mongoConnectionString));
 
+            // ---------- MassTransit + Redpanda (Kafka) ----------
+            services.AddMassTransit(x =>
+            {
+                // Hauptbus: InMemory (wir nutzen den Kafka-Rider)
+                x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
+
+                x.AddRider(r =>
+                {
+                    // Consumers registrieren
+                    r.AddConsumer<TicketSoldProjectionConsumer>();
+                    r.AddConsumer<KundeRegisteredConsumer>();
+                    r.AddConsumer<ShowCreatedConsumer>();
+
+                    // Producer registrieren (für IMessageBus)
+                    r.AddProducer<TicketSold>("ticket-sold");
+                    r.AddProducer<KundeRegistered>("kunde-registered");
+                    r.AddProducer<ShowCreated>("show-created");
+
+                    r.UsingKafka((ctx, k) =>
+                    {
+                        // NEW: decide brokers based on environment
+                        string brokers;
+                        if (string.Equals(environmentName, "Docker", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // inside Docker network -> redpanda is resolvable
+                            brokers = config["Kafka:BootstrapServers"] ?? "redpanda:9092";
+                        }
+                        else
+                        {
+                            // local dev (Development / anything else) -> always localhost
+                            brokers = "localhost:9092";
+                        }
+
+                        var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
+
+                        Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'"); // NEW
+
+                        k.Host(brokers);
+
+                        // TicketSold -> TicketSoldProjectionConsumer
+                        k.TopicEndpoint<TicketSold>("ticket-sold", groupId, e =>
+                        {
+                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
+                        });
+
+                        // KundeRegistered -> KundeRegisteredConsumer
+                        k.TopicEndpoint<KundeRegistered>("kunde-registered", groupId, e =>
+                        {
+                            e.ConfigureConsumer<KundeRegisteredConsumer>(ctx);
+                        });
+
+                        // ShowCreated -> ShowCreatedConsumer
+                        k.TopicEndpoint<ShowCreated>("show-created", groupId, e =>
+                        {
+                            e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
+                        });
+                    });
+                });
+            });
+
+            // IMessageBus-Wrapper
+            services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>();
+            // ----------------------------------------------------
+
+            // JWT auth (remove if not needed yet)
             services.AddSingleton<IMongoDatabase>(sp =>
             {
                 var client = sp.GetRequiredService<IMongoClient>();
@@ -149,9 +222,6 @@ namespace KinoAppService
             services.AddScoped<IFilmRepository, FilmRepository>();  // from KinoAppDB
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
-            services.AddHostedService<FilmRefreshBackgroundService>();
-            //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
-            //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }
 
         public static void Configure(WebApplication app)
@@ -166,14 +236,6 @@ namespace KinoAppService
             //app.UseAuthorization();
 
             app.MapControllers();
-
-            // Optional: simple health check for Docker
-            app.MapGet("/health", () => Results.Ok("OK"));
-
-            // Optional: automatic migrations if you want
-            //using var scope = app.Services.CreateScope();
-            //var db = scope.ServiceProvider.GetRequiredService<KinoAppDbContext>();
-            //db.Database.Migrate();
         }
     }
 }

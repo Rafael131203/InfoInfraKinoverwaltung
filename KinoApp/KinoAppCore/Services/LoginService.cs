@@ -3,6 +3,8 @@ using KinoAppCore.Abstractions;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Authentication;
+using KinoAppShared.Messaging;   // für KundeRegistered
+
 
 namespace KinoAppCore.Services
 {
@@ -12,13 +14,15 @@ namespace KinoAppCore.Services
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         private readonly IPasswordHasher _hasher;
+        private readonly IMessageBus _bus;
 
-        public LoginService(IKundeRepository repo, ITokenService tokenService, IPasswordHasher hasher, IMapper mapper)
+        public LoginService(IKundeRepository repo, ITokenService tokenService, IPasswordHasher hasher, IMapper mapper, IMessageBus bus)
         {
             _repo = repo;
             _tokenService = tokenService;
             _hasher = hasher;
             _mapper = mapper;
+            _bus = bus;
         }
 
         public async Task<LoginResponseDTO?> AuthenticateAsync(LoginRequestDTO request, CancellationToken ct = default)
@@ -84,7 +88,18 @@ namespace KinoAppCore.Services
             await _repo.AddAsync(entity, ct);
             await _repo.SaveAsync(ct);
 
-            // 5. Map → DTO response
+            // 5. Event für den Message Broker publishen
+            var @event = new KundeRegistered(
+                entity.Id,
+                entity.Email,
+                entity.Vorname,
+                entity.Nachname,
+                DateTime.UtcNow
+            );
+
+            await _bus.PublishAsync(@event, ct);
+
+            // 6. Map → DTO response
             return _mapper.Map<RegisterResponseDTO>(entity);
         }
     }
