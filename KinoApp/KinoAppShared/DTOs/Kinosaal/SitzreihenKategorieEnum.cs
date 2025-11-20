@@ -8,9 +8,9 @@ namespace KinoAppCore
 {
     public enum SitzreihenKategorie
     {
-        LOGE = 0,
-        LOGEPLUS = 1,
-        PREMIUM = 2 
+        Parkett = 0,
+        LOGE = 1,
+        LOGEPLUS = 2 
     }
 
 }

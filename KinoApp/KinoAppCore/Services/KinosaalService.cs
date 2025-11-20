@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using KinoAppCore.Abstractions;
+using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,13 +19,15 @@ namespace KinoAppCore.Services
         private readonly IKinosaalRepository _repoKinosaal;
         private readonly ISitzreiheRepository _repoSitzreihe;
         private readonly ISitzplatzRepository _repoSitzplatz;
+        private readonly IPreisService _preisService;
         private readonly IMapper _mapper;
 
-        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IMapper mapper)
+        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisService preisService, IMapper mapper)
         {
             _repoKinosaal = repoKinosaal;
             _repoSitzreihe = repoSitzreihe;
             _repoSitzplatz = repoSitzplatz;
+            _preisService = preisService;   
             _mapper = mapper;
         }
 
@@ -32,26 +36,28 @@ namespace KinoAppCore.Services
             // Map basic Kinosaal data (Name)
             var kinosaal = _mapper.Map<KinosaalEntity>(dto);
             kinosaal.Sitzreihen = new List<SitzreiheEntity>();
-
+            var countSeat = 1;
             // Build Sitzreihen + Sitzplaetze in memory
             for (int rowIndex = 0; rowIndex < anzahlSitzreihen; rowIndex++)
             {
+                
                 var sitzreihe = new SitzreiheEntity
                 {
-                    Kategorie = 0,
+                    Kategorie = SitzreihenKategorie.Parkett,
                     Bezeichnung = $"Reihe {rowIndex + 1}",
                     Sitzplätze = new List<SitzplatzEntity>()
                 };
 
                 for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
+                    var preis = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
                     var sitzplatz = new SitzplatzEntity
                     {
                         Gebucht = false,
-                        Nummer = seatIndex + 1,
-                        Preis = 10m
+                        Nummer = countSeat,
+                        Preis = preis
                     };
-
+                    countSeat++;
                     // Attach seat to row (navigation only, no FK set)
                     sitzreihe.Sitzplätze.Add(sitzplatz);
                 }
@@ -65,11 +71,61 @@ namespace KinoAppCore.Services
             await _repoKinosaal.SaveAsync(ct);
         }
 
-
-
-        public async Task DeleteAsync(KinosaalEntity kinosaal, CancellationToken ct = default)
+        public async Task<KinosaalEntity?> GetKinosaalAsync(long id, CancellationToken ct)
         {
-            await _repoKinosaal.DeleteAsync(kinosaal, ct);
+            var kinosaal = await _repoKinosaal.GetByIdAsync(id, ct);
+            if (kinosaal == null) return null;
+            return kinosaal;
+            
+        }
+
+        public async Task<SitzreiheEntity?> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct)
+        {
+            // 1. Sitzreihe laden
+            var sitzreihe = await _repoSitzreihe.GetByIdAsync(dto.Id, ct);
+            if (sitzreihe == null)
+                return null;
+
+            if (!Enum.IsDefined(typeof(SitzreihenKategorie), dto.Kategorie))
+                throw new ArgumentException("Ungültige Kategorie");
+
+            // 2. Alle Sitzplätze der Sitzreihe laden
+            var sitzplaetze = await _repoSitzplatz
+                .Query()
+                .Where(s => s.SitzreiheId == sitzreihe.Id)
+                .ToListAsync(ct);
+
+            sitzreihe.Sitzplätze = sitzplaetze;
+
+            // 3. Kategorie ändern
+            sitzreihe.Kategorie = dto.Kategorie;
+
+            // 4. Preis der Sitzplätze aktualisieren
+            var neuerPreis = await _preisService.GetPreisAsync(dto.Kategorie, ct);
+            foreach (var platz in sitzreihe.Sitzplätze)
+            {
+                platz.Preis = neuerPreis;
+            }
+            
+
+            // 5. Sitzreihe speichern
+            await _repoSitzreihe.UpdateAsync(sitzreihe, ct);
+            await _repoSitzreihe.SaveAsync(ct);
+
+            // 6. Ergebnis zurückgeben
+            return sitzreihe;
+        }
+
+
+        public async Task<KinosaalEntity?> DeleteAsync(long id, CancellationToken ct = default)
+        {
+            var kinosaal = await _repoKinosaal.GetByIdAsync(id, ct);
+            if (kinosaal == null)
+                return null;
+
+            await _repoKinosaal.DeleteAsync(kinosaal);
+            await _repoKinosaal.SaveAsync();
+            return kinosaal;
         }
     }
 }
