@@ -12,6 +12,8 @@ namespace KinoAppCore.Services
     public interface IKinosaalService
     {
         Task CreateAsync(CreateKinosaalDTO kinosaal, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct = default);
-        Task DeleteAsync(KinosaalEntity kinosaal ,CancellationToken ct = default);
+        Task<KinosaalEntity?> GetKinosaalAsync(long Id, CancellationToken ct);
+        Task<SitzreiheEntity> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct);
+        Task<KinosaalEntity?> DeleteAsync(long id,CancellationToken ct = default);
     }
 }

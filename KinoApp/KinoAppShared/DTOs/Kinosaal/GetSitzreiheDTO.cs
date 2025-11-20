@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace KinoAppShared.DTOs.Kinosaal
 {
-    internal class CreateSitzreiheDTO
+    public class GetSitzreiheDTO
     {
     }
 }
