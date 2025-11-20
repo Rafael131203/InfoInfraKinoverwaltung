@@ -13,7 +13,7 @@ namespace KinoAppDB.Entities
         public Boolean Gebucht { get; set; }
         public int Nummer { get; set; }
         public decimal Preis { get; set; }
-        public long SitzreiheId { get; set; }
+        public long? SitzreiheId { get; set; }
         [JsonIgnore]
         public SitzreiheEntity? Sitzreihe { get; set; }
     }

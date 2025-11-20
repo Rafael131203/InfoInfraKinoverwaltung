@@ -15,9 +15,9 @@ namespace KinoAppService.Controllers
     public class KinosaalController : BaseController
     {
         private readonly IKinosaalService _kinosaalService;
-        private readonly IPreisZuKategorieService _preisService;
+        private readonly IPreisService _preisService;
 
-        public KinosaalController(IKinosaalService kinosaalService, IPreisZuKategorieService preisService, IKinoAppDbContextScope scope)
+        public KinosaalController(IKinosaalService kinosaalService, IPreisService preisService, IKinoAppDbContextScope scope)
             : base(scope)
         {
             _kinosaalService = kinosaalService;
@@ -45,7 +45,7 @@ namespace KinoAppService.Controllers
         public Task<IActionResult> KategoriePreisÄndenr(SetPreisDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
             {
-                await _preisService.SetPreisAsync(dto, ct);
+                await _preisService.SetPreisAsync(dto.Kategorie, dto.Preis, ct);
                 return Ok();
             }, ct);
 

@@ -19,10 +19,10 @@ namespace KinoAppCore.Services
         private readonly IKinosaalRepository _repoKinosaal;
         private readonly ISitzreiheRepository _repoSitzreihe;
         private readonly ISitzplatzRepository _repoSitzplatz;
-        private readonly IPreisZuKategorieService _preisService;
+        private readonly IPreisService _preisService;
         private readonly IMapper _mapper;
 
-        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisZuKategorieService preisService, IMapper mapper)
+        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisService preisService, IMapper mapper)
         {
             _repoKinosaal = repoKinosaal;
             _repoSitzreihe = repoSitzreihe;
@@ -50,12 +50,12 @@ namespace KinoAppCore.Services
 
                 for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
-                    var preisZuKategorie = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
+                    var preis = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
                     var sitzplatz = new SitzplatzEntity
                     {
                         Gebucht = false,
                         Nummer = countSeat,
-                        Preis = preisZuKategorie.Preis
+                        Preis = preis
                     };
                     countSeat++;
                     // Attach seat to row (navigation only, no FK set)
@@ -101,10 +101,10 @@ namespace KinoAppCore.Services
             sitzreihe.Kategorie = dto.Kategorie;
 
             // 4. Preis der Sitzplätze aktualisieren
-            var preisZuKategorie = await _preisService.GetPreisAsync(dto.Kategorie, ct);
+            var neuerPreis = await _preisService.GetPreisAsync(dto.Kategorie, ct);
             foreach (var platz in sitzreihe.Sitzplätze)
             {
-                platz.Preis = preisZuKategorie.Preis;
+                platz.Preis = neuerPreis;
             }
             
 
