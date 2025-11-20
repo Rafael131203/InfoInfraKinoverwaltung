@@ -6,7 +6,7 @@ using KinoAppCore.Services;
 using KinoAppDB;                               // DbContext
 using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
-using KinoAppService.Security;  
+using KinoAppService.Security;
 using KinoAppShared.Messaging;
 // JwtTokenService
 using MassTransit;
@@ -29,13 +29,20 @@ namespace KinoAppService
             // optional: load docker overrides
             var config = configuration;
 
+            // NEW: read current environment once
+            var environmentName =
+                config["ASPNETCORE_ENVIRONMENT"] ??
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
+                "Production";
+
+            Console.WriteLine($"[Startup] ASPNETCORE_ENVIRONMENT = '{environmentName}'"); // NEW (for debugging)
+
             // CORS for Blazor WASM
-            services.AddCors(o => o.AddPolicy("ui", p =>p.WithOrigins(
+            services.AddCors(o => o.AddPolicy("ui", p => p.WithOrigins(
                         "https://localhost:7268",  // Blazor dev server (https profile)
                         "http://localhost:5143"    // Blazor dev server (http profile)
                     ).AllowAnyHeader().AllowAnyMethod()
             ));
-
 
             //AutoMapper for DTO <-> Entity mapping
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -68,18 +75,22 @@ namespace KinoAppService
 
                     r.UsingKafka((ctx, k) =>
                     {
-                        // aus .env: Kafka__BootstrapServers=redpanda:9092
-                        // var brokers = config["Kafka:BootstrapServers"] ?? "localhost:9092";   // localhost, weil Redpanda in dev-Docker-Compose nicht genutzt wird
-                        // var brokers = config["Kafka:BootstrapServers"] ?? "redpanda:9092"; // wieder das hier rein, wenn Redpanda in Docker genutzt wird
-                        // var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
-
-                        var brokers =
-                        config["Kafka:BootstrapServers"] ??
-                        config["Kafka__BootstrapServers"] ??
-                        "localhost:9092";
+                        // NEW: decide brokers based on environment
+                        string brokers;
+                        if (string.Equals(environmentName, "Docker", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // inside Docker network -> redpanda is resolvable
+                            brokers = config["Kafka:BootstrapServers"] ?? "redpanda:9092";
+                        }
+                        else
+                        {
+                            // local dev (Development / anything else) -> always localhost
+                            brokers = "localhost:9092";
+                        }
 
                         var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
 
+                        Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'"); // NEW
 
                         k.Host(brokers);
 
@@ -149,7 +160,6 @@ namespace KinoAppService
 
             // Controllers & (optional) API versioning
             services.AddControllers();
-            // comment out if no versioning needed
             services.AddApiVersioning(o =>
             {
                 o.DefaultApiVersion = new ApiVersion(1, 0);
@@ -181,8 +191,6 @@ namespace KinoAppService
             services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
             services.AddScoped<ITokenService, JwtTokenService>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
-            //services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>(); // from KinoAppService
-            //services.AddScoped<ITokenService>(_ => new JwtTokenService(config["Jwt:Issuer"]!, config["Jwt:Audience"]!, key, TimeSpan.FromHours(8)));
         }
 
         public static void Configure(WebApplication app)
@@ -194,30 +202,7 @@ namespace KinoAppService
             //app.UseAuthentication();
             //app.UseAuthorization();
 
-            // Health-Endpoint for docker;später 1* unten auskommentieren => Backend hat aktuell gar keinen /health-Endpoint
-            //app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-            // 1*
-            // Health endpoint used by Docker to verify that the API AND the PostgreSQL database are reachable.
-            // Returns 200 OK only if:
-            //   - the web API is running, and
-            //   - EF Core can successfully open a connection to the Postgres database.
-            // If the DB is unavailable, CanConnectAsync() throws → endpoint returns 500 → container becomes UNHEALTHY.
-            
-            /*app.MapGet("/health", async (KinoAppDbContextScope scope) =>
-            {
-                using var ctx = scope.Create();
-                await ctx.Context.Database.CanConnectAsync(); // DB Conectivity check
-                return Results.Ok(new { status = "ok" });
-            });
-            */
-            
-
             app.MapControllers();
-
-            // dev/docker: apply EF migrations automatically
-            //using var scope = app.Services.CreateScope();
-            //var db = scope.ServiceProvider.GetRequiredService<KinoAppDbContext>();
-            //db.Database.Migrate();
         }
     }
 }

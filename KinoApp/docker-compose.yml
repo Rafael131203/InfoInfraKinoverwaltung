@@ -43,6 +43,7 @@ services:
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.2.11
     container_name: kinoapp-redpanda
+    hostname: redpanda # ADDED: evtl. konnte deshalb der Host nicht gefunden werden
     command:
       - redpanda start
       - --overprovisioned
@@ -52,7 +53,7 @@ services:
       - --node-id=0
       - --check=false
       - --kafka-addr=PLAINTEXT://0.0.0.0:9092
-      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:9092
       - --rpc-addr=0.0.0.0:33145
       - --advertise-rpc-addr=redpanda:33145
       - --pandaproxy-addr=0.0.0.0:8082
