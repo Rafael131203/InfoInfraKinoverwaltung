@@ -12,6 +12,8 @@ namespace KinoAppCore.Services
     {
         Task CreateVorstellungAsync (CreateVorstellungDTO vorstellung, CancellationToken ct);
         Task <List<VorstellungEntity>> GetVorstellungVonTagAsync (DateTime datum, CancellationToken ct);
+        Task <List<VorstellungEntity>> GetVorstellungVonKinosaalAsync (long KinosaalId, CancellationToken ct);
+        Task <List<VorstellungEntity>> GetVorstellungVonKinosaalUndTagAsync (DateTime datum, long KinosaalId, CancellationToken ct);
         Task<bool> DeleteVorstellungAsync(long id, CancellationToken ct);
     }
 }

@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace KinoAppShared.DTOs.Kinosaal
 {
-    public class CreateSitzreiheDTO
+    public class SitzreiheDTO
     {
-        public SitzreihenKategorie Kategorie { get; set; }
+        public long Id { get; set; }
         public string Bezeichnung { get; set; }
-
-        public long KinosaalId { get; set; }
+        public SitzreihenKategorie Kategorie { get; set; }
+        public List<SitzplatzDTO> Sitzplätze { get; set; }
     }
 }

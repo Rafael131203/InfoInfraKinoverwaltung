@@ -29,7 +29,7 @@ namespace KinoAppService.Controllers
                     return new OkResult();
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("überschneidet"))
-                {   
+                {
                     // Überschneidung -> 400 Bad Request
                     return new BadRequestObjectResult(new { error = ex.Message });
                 }
@@ -46,6 +46,32 @@ namespace KinoAppService.Controllers
 
                 return new OkObjectResult(vorstellungen);
             }, ct);
+
+        [HttpGet("VonKinosaal")]
+        public Task<IActionResult> GetVorstellungVonKinosaal(long kinosaalId, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var vorstellungen = await _vorstellungService.GetVorstellungVonKinosaalAsync(kinosaalId, token);
+
+                if (!vorstellungen.Any())
+                    return new NotFoundObjectResult($"Keine Vorstellungen gefunden.");
+
+                return new OkObjectResult(vorstellungen);
+            }, ct);
+
+        [HttpGet("VonKinosaalUndTag")]
+        public Task<IActionResult> GetVorstellungVonKinosaalUndTag(DateTime datum, long kinosaalId, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var vorstellungen = await _vorstellungService.GetVorstellungVonKinosaalUndTagAsync(datum, kinosaalId, token);
+
+                if (!vorstellungen.Any())
+                return new NotFoundObjectResult($"Keine Vorstellungen gefunden.");
+
+                return new OkObjectResult(vorstellungen);
+            }, ct);
+
+
 
         [HttpDelete("{id:long}")]
         public Task<IActionResult> VorstellungLoeschen(long id, CancellationToken ct) =>

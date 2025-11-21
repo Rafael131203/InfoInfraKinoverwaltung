@@ -24,6 +24,14 @@ namespace KinoAppService.Controllers
             _preisService = preisService;
         }
 
+        [HttpGet]
+        public Task<IActionResult> GetKinosaal(long id, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var kinosaal = await _kinosaalService.GetKinosaalAsync(id, ct);
+                return Ok(kinosaal);
+            }, ct);
+
         [HttpPost("Erstellen")]
         public Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct) =>
             ExecuteAsync(async token =>
