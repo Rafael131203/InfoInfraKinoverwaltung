@@ -1,7 +1,8 @@
-﻿using System.Net.Http;
+﻿using KinoAppCore.Components;
+using KinoAppShared.DTOs.Imdb;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
-using KinoAppCore.Components;
 
 namespace KinoAppWeb.Services
 {
@@ -14,7 +15,7 @@ namespace KinoAppWeb.Services
             _http = http;
         }
 
-        // existing method (keep, if still used somewhere)
+        // existing method (kept if still used somewhere)
         public async Task<List<ImdbMovieSearchResult>> SearchAsync(
             string query,
             CancellationToken cancellationToken = default)
@@ -26,7 +27,7 @@ namespace KinoAppWeb.Services
             return results ?? new List<ImdbMovieSearchResult>();
         }
 
-        // NEW: filtered search using genres / languageCodes / sortBy / sortOrder
+        // filtered search using IMDb API (remote) – keep if you still need it
         public async Task<List<ImdbMovieSearchResult>> SearchFilteredAsync(
             string? genre = null,
             string? languageCode = null,
@@ -40,7 +41,6 @@ namespace KinoAppWeb.Services
 
             if (!string.IsNullOrWhiteSpace(genre) && genre != "all")
             {
-                // API expects: genres=array<string>, but simple single-item query works
                 qp.Add($"genres={Uri.EscapeDataString(genre)}");
             }
 
@@ -72,6 +72,18 @@ namespace KinoAppWeb.Services
                 cancellationToken);
 
             return results ?? new List<ImdbMovieSearchResult>();
+        }
+
+        /// <summary>
+        /// DB-backed films endpoint – used together with UserSession caching.
+        /// </summary>
+        public async Task<List<FilmDto>> GetLocalFilmsAsync(CancellationToken cancellationToken = default)
+        {
+            var films = await _http.GetFromJsonAsync<List<FilmDto>>(
+                "api/imdb/local",
+                cancellationToken);
+
+            return films ?? new List<FilmDto>();
         }
     }
 }

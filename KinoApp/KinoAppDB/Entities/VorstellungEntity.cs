@@ -12,7 +12,7 @@ namespace KinoAppDB.Entities
         public long Id { get; set; }
         public DateTime Datum { get; set; }
         public required VorstellungStatusEnum Status { get; set; }
-        public long? FilmId { get; set; }
+        public string? FilmId { get; set; }
         public required FilmEntity Film { get; set; }
         public long? KinosaalId { get; set; }
         public required KinosaalEntity Kinosaal { get; set; }

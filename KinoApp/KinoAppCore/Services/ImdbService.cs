@@ -305,6 +305,7 @@ namespace KinoAppCore.Services
                 filmEntity.Beschreibung = refreshed.Beschreibung;
                 filmEntity.Dauer = refreshed.Dauer;
                 filmEntity.Genre = refreshed.Genre;
+                filmEntity.ImageURL = refreshed.ImageURL;
 
                 // 3) refresh FSK via certificates
                 var certsResponse = await GetTitleCertificatesAsync(filmEntity.Id, ct);
@@ -320,6 +321,14 @@ namespace KinoAppCore.Services
             // one SaveChanges at the end
             await _filmRepository.SaveAsync(ct);
         }
+
+        public async Task<IReadOnlyList<FilmDto>> GetAllLocalFilmsAsync(CancellationToken ct = default)
+        {
+            var films = await _filmRepository.GetAllAsync(ct);
+            var dto = films.Select(f => _mapper.Map<FilmDto>(f)).ToList();
+            return dto;
+        }
+
 
     }
 }

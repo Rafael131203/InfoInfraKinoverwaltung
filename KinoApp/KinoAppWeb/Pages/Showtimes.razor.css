@@ -1,0 +1,476 @@
+﻿.showtimes-page {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 2rem var(--page-gutter) 2.6rem;
+}
+
+/* ===============================
+   HEADER
+=============================== */
+
+.showtimes-header {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.showtimes-header__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.showtimes-title {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.35rem;
+    font-size: var(--font-size-hero-title);
+}
+
+.showtimes-title__glow {
+    width: 70px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--accent), var(--accent-pink));
+    box-shadow: 0 0 18px rgba(255, 204, 85, 0.9), 0 0 30px rgba(255, 138, 214, 0.6);
+    animation: glowPulse 3s ease-in-out infinite alternate;
+}
+
+.showtimes-subtitle {
+    font-size: var(--font-size-body);
+    color: var(--text-muted);
+    max-width: 34rem;
+}
+
+/* Stats */
+
+.showtimes-stats {
+    display: flex;
+    gap: 1.1rem;
+    margin-top: 1rem;
+}
+
+.showtimes-stat {
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-md);
+    background: radial-gradient(circle at top left, rgba(255, 204, 85, 0.16), #0a0a16);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+}
+
+.showtimes-stat__value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.showtimes-stat__label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Date panel & chips */
+
+.showtimes-date-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.showtimes-date {
+    text-align: right;
+}
+
+.showtimes-date__label {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+.showtimes-date__field {
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    background: rgba(5, 5, 15, 0.96);
+    border: 1px solid var(--border-soft);
+}
+
+.showtimes-date__icon {
+    font-size: 0.85rem;
+}
+
+.showtimes-date__input {
+    border: none;
+    background: transparent;
+    color: var(--text-main);
+    font-size: 0.85rem;
+    outline: none;
+}
+
+    .showtimes-date__input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+
+.showtimes-date__hint {
+    margin-top: 0.25rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.showtimes-header__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+/* Chips (reuse global chip class from earlier answer) */
+
+.chip {
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-soft);
+    background: rgba(8, 8, 18, 0.96);
+    padding: 0.25rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+    .chip:hover {
+        border-color: var(--accent);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+.chip--active {
+    border-color: var(--accent);
+    background: radial-gradient(circle at top left, rgba(255, 204, 85, 0.35), #0a0a16);
+    color: #fff;
+}
+
+/* Ribbon */
+
+.showtimes-ribbon {
+    margin-top: 1.3rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient( 90deg, rgba(255, 204, 85, 0.12), rgba(118, 199, 255, 0.06), rgba(255, 138, 214, 0.14) );
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    backdrop-filter: blur(12px);
+}
+
+.showtimes-ribbon__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 14px rgba(255, 204, 85, 0.95);
+}
+
+/* ===============================
+   LIST / LOADING / EMPTY
+=============================== */
+
+.showtimes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.showtimes-loading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.3rem 0;
+    font-size: 0.92rem;
+}
+
+.showtimes-loading__hint {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.loading-spinner {
+    position: relative;
+    width: 38px;
+    height: 38px;
+}
+
+.loading-spinner__ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-top-color: var(--accent);
+    animation: reelSpinSlow 1.2s linear infinite;
+}
+
+.loading-spinner__reel {
+    position: absolute;
+    inset: 9px;
+    border-radius: 50%;
+    border: 2px dotted rgba(255, 255, 255, 0.4);
+    animation: reelSpinFast 2.4s linear infinite;
+}
+
+.showtimes-empty {
+    padding: 1.5rem 1rem;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card-soft);
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    text-align: center;
+    color: var(--text-muted);
+}
+
+    .showtimes-empty h2 {
+        margin: 0 0 0.4rem;
+    }
+
+/* ===============================
+   MOVIE CARD
+=============================== */
+
+.movie-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1.3rem;
+    background: radial-gradient(circle at top left, #171728, #11111a);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 1rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.movie-card--visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.movie-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top left, rgba(255, 204, 85, 0.2), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.movie-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--shadow-strong);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+    .movie-card:hover::before {
+        opacity: 1;
+    }
+
+/* Poster */
+
+.movie-card__poster-wrap {
+    position: relative;
+    width: 130px;
+    flex-shrink: 0;
+}
+
+.movie-card__poster-glow {
+    position: absolute;
+    inset: -14px;
+    background: radial-gradient(circle at top, rgba(255, 204, 85, 0.35), transparent 65%);
+    filter: blur(14px);
+    opacity: 0.35;
+    z-index: 0;
+}
+
+.movie-card__poster {
+    position: relative;
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    aspect-ratio: 2 / 3;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.9);
+    animation: filmFlickerSoft 6s infinite alternate;
+}
+
+.movie-card__badge {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    padding: 0.16rem 0.6rem;
+    border-radius: var(--radius-pill);
+    background: rgba(5, 5, 15, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+/* Body */
+
+.movie-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.movie-card__header {
+    margin-bottom: 0.2rem;
+}
+
+.movie-card__title {
+    font-size: 1.2rem;
+    margin: 0 0 0.1rem;
+}
+
+.movie-card__tagline {
+    font-size: 0.82rem;
+    color: var(--accent-soft);
+}
+
+.movie-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
+}
+
+.meta-pill {
+    border-radius: var(--radius-pill);
+    padding: 0.18rem 0.6rem;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid var(--border-soft);
+    background: var(--bg-chip);
+    color: var(--text-muted);
+}
+
+.meta-pill--accent {
+    border-color: var(--accent);
+    color: var(--accent-soft);
+}
+
+.meta-pill--age {
+    border-color: var(--accent-pink);
+    color: var(--accent-pink);
+}
+
+.meta-pill--soft {
+    border-style: dashed;
+}
+
+.movie-card__description {
+    font-size: var(--font-size-body);
+    color: var(--text-muted);
+    max-width: 52rem;
+}
+
+/* Showtimes in card */
+
+.movie-card__showtimes {
+    margin-top: 0.6rem;
+}
+
+.movie-card__showtimes-label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+
+.movie-card__showtimes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+/* Showtime chip */
+
+.showtime-chip {
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-soft);
+    background: var(--bg-chip);
+    padding: 0.28rem 0.8rem;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #ffffff;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.showtime-chip__time {
+    font-weight: 600;
+}
+
+.showtime-chip__meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+.showtime-chip:hover {
+    border-color: var(--accent-blue);
+    background: radial-gradient(circle at top, rgba(118, 199, 255, 0.22), #050509);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85);
+}
+
+/* ===============================
+   RESPONSIVE
+=============================== */
+
+@media (max-width: 900px) {
+    .showtimes-header__top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .showtimes-date-panel {
+        align-items: flex-start;
+    }
+
+    .showtimes-date {
+        text-align: left;
+    }
+
+    .showtimes-header__chips {
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 780px) {
+    .movie-card {
+        grid-template-columns: 1fr;
+        padding: 0.9rem 0.9rem 1.1rem;
+    }
+
+    .movie-card__poster-wrap {
+        width: 160px;
+    }
+}

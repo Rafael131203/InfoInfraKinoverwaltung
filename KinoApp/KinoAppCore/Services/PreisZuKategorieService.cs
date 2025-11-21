@@ -3,6 +3,7 @@ using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Kinosaal;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
+using KinoAppShared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,4 +1,7 @@
 ﻿@page "/"
+@using KinoAppShared.DTOs.Imdb
+@using KinoAppWeb.Services
+
 <PageTitle>KinoApp – Retro Cinema Experience</PageTitle>
 
 <!-- HERO SECTION: CAMERA + SLIDER -->
@@ -165,14 +168,15 @@
 
                                 <article class="@slideClasses"
                                          data-slide-index="@i"
-                                         aria-label="@(movie?.Title ?? "Coming soon")">
+                                         aria-label="@(movie?.Titel ?? "Coming soon")">
 
                                     <div class="hero-slide__image-wrapper">
-                                        <img src="@(string.IsNullOrWhiteSpace(movie?.PosterUrl)
-                                                                                         ? "images/download (1).jpg"
-                                                                                         : movie.PosterUrl)"
-                                     alt="@(movie?.Title ?? "Coming soon") poster"
-                                     class="hero-slide__image" />
+                                        <img src="@(string.IsNullOrWhiteSpace(movie?.ImageURL)
+                                            ? "images/download (1).jpg"
+                                            : movie.ImageURL)"
+                                         alt="@(movie?.Titel ?? "Coming soon") poster"
+                                         class="hero-slide__image" />
+
                             </div>
 
                                     <div class="hero-slide__gradient" aria-hidden="true"></div>
@@ -180,34 +184,27 @@
                                     <div class="hero-slide__content">
                                         <div class="hero-slide__text">
                                             <h2 class="hero-slide__title">
-                                                @(movie?.Title ?? "More great movies coming soon")
+                                                @(movie?.Titel ?? "More great movies coming soon")
                                             </h2>
 
                                             <p class="hero-slide__meta">
-                                        @if (movie?.Year is int year)
+                                        @if (movie?.Fsk is int fsk)
                                                 {
-                                                    @year
+                                                    @($"FSK {fsk}")
                                                 }
-                                                @if (movie?.Genres is { Count: > 0 })
+                                                @if (movie?.Dauer is int mins)
                                                 {
-                                                    @(" · " + string.Join(", ", movie.Genres.Take(2)))
+                                                    @($" · {mins} min")
                                                 }
-                                                @if (movie?.Rating is double rating)
+                                                @if (!string.IsNullOrWhiteSpace(movie?.Genre))
                                                 {
-                                                    @($" · ★ {rating:0.0}")
+                                                    @(" · " + movie.Genre)
                                                 }
                                             </p>
                                         </div>
 
                                         <span class="hero-slide__badge hero-slide__badge--primary">
-                                            @if (movie?.Rating is double r)
-                                            {
-                                                @($"Top rated · ★ {r:0.0}")
-                                            }
-                                            else
-                                            {
-                                                @("Upcoming")
-                                            }
+                                            Now showing
                                         </span>
                                     </div>
                                 </article>
@@ -321,7 +318,7 @@
                     </select>
                 </label>
 
-                <!-- LANGUAGE FILTER (country codes) -->
+                <!-- LANGUAGE FILTER (placeholder, no effect until stored on FilmDto) -->
                 <label class="movie-filters__group">
                     <span class="movie-filters__label">Language</span>
                     <select class="movie-filters__select"
@@ -335,13 +332,13 @@
                     </select>
                 </label>
 
-                <!-- SORT BY (includes user rating) -->
+                <!-- SORT BY -->
                 <label class="movie-filters__group">
                     <span class="movie-filters__label">Sort by</span>
                     <select class="movie-filters__select"
                             value="@_selectedSort"
                             @onchange="OnSortChanged">
-                        <option value="SORT_BY_POPULARITY">Popularity</option>
+                        <option value="SORT_BY_POPULARITY">Popularity (by title)</option>
                         <option value="SORT_BY_RELEASE_DATE">Release date</option>
                         <option value="SORT_BY_USER_RATING">User rating</option>
                         <option value="SORT_BY_USER_RATING_COUNT">Rating count</option>
@@ -360,55 +357,59 @@
 
                 <a href="@($"/movie/{movie.Id}")"
                    class="movie-card__link"
-                   aria-label="@movie.Title">
+                   aria-label="@movie.Titel">
 
                     <!-- POSTER -->
                     <div class="movie-card__poster">
-                        <img src="@movie.PosterUrl"
-                             alt="@movie.Title"
-                             class="movie-card__poster-image" />
-                    </div>
+                        <img src="@(string.IsNullOrWhiteSpace(movie.ImageURL)
+                            ? "images/download (1).jpg"
+                            : movie.ImageURL)"
+                         alt="@movie.Titel"
+                         class="movie-card__poster-image"
+                         loading="lazy" />
+                </div>
 
                     <div class="movie-card__body">
                         <!-- TITLE -->
-                        <h3 class="movie-card__title">@movie.Title</h3>
+                        <h3 class="movie-card__title">@movie.Titel</h3>
 
                         <!-- META INFO -->
                         <p class="movie-card__meta">
-                            @if (movie.Year.HasValue)
+                        @if (movie.Fsk.HasValue)
                             {
-                                @($"{movie.Year} · ")
+                                @($"FSK {movie.Fsk} · ")
                             }
 
-                            @if (movie.Genres.Any())
+                            @if (!string.IsNullOrWhiteSpace(movie.Genre))
                             {
-                                @string.Join(", ", movie.Genres)
+                                @movie.Genre
+                            }
+
+                            @if (movie.Dauer.HasValue)
+                            {
+                                @($" · {movie.Dauer} min")
                             }
                         </p>
 
                         <!-- DESCRIPTION -->
                         <p class="movie-card__description">
-                            @movie.Plot
+                            @movie.Beschreibung
                         </p>
 
                         <div class="movie-card__footer">
 
                             <div class="movie-card__badges">
-
-                                @if (movie.Rating.HasValue)
+                                @if (movie.Dauer.HasValue)
                                 {
-                                    <span class="movie-card__badge-format">
-                                        ⭐ @movie.Rating
+                                    <span class="movie-card__badge-age">
+                                        @($"{movie.Dauer} min")
                                     </span>
                                 }
 
-                                @if (movie.RuntimeSeconds.HasValue)
+                                @if (movie.Fsk.HasValue)
                                 {
-                                    <span class="movie-card__badge-age">
-                                        @{
-                                            var mins = movie.RuntimeSeconds.Value / 60;
-                                        }
-                                        @($"{mins} min")
+                                    <span class="movie-card__badge-format">
+                                        @($"FSK {movie.Fsk}")
                                     </span>
                                 }
                             </div>
@@ -490,13 +491,12 @@
                     Stay in the reel: get updates on new screenings and events.
                 </label>
                 <div class="newsletter__controls">
-                    <input
-                        id="newsletter-email"
-                        class="newsletter__input"
-                        type="email"
-                        name="email"
-                        placeholder="you@example.com"
-                        required />
+                    <input id="newsletter-email"
+                           class="newsletter__input"
+                           type="email"
+                           name="email"
+                           placeholder="you@example.com"
+                           required />
                     <button class="btn btn--primary newsletter__button" type="submit">
                         Sign up
                     </button>
@@ -508,8 +508,5 @@
 
 <!-- NOW SHOWING -->
 <section id="now-showing" class="section section--now-showing" aria-labelledby="now-showing-title">
-    <!-- keep your existing movie cards section here (from the HTML we built) -->
+    <!-- extra anchor section, kept for layout / future content -->
 </section>
-
-<!-- COMING SOON / SPECIAL EVENTS / ABOUT -->
-<!-- same as in the HTML file we wrote earlier – you can paste the rest under here -->

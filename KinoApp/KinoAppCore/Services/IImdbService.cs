@@ -1,4 +1,5 @@
 ﻿using KinoAppCore.Components;
+using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Imdb;
 using System.Threading;
 
@@ -20,6 +21,9 @@ namespace KinoAppCore.Services
         Task<ListTitleCertificatesApiResponseDto?> GetTitleCertificatesAsync(string imdbId, CancellationToken cancellationToken = default);
 
         Task RefreshAllFilmsAsync(CancellationToken cancellationToken = default);
+
+        Task<IReadOnlyList<FilmDto>> GetAllLocalFilmsAsync(CancellationToken ct = default);
+
 
     }
 }
