@@ -1,5 +1,6 @@
 ﻿@page "/showtimes"
 <PageTitle>Showtime</PageTitle>
+
 <div class="page-shell showtimes-page">
     <!-- Neon header / filters -->
     <section class="showtimes-header">
@@ -36,7 +37,6 @@
                                class="showtimes-date__input"
                                value="@_currentDate.ToString("yyyy-MM-dd")"
                                @onchange="OnDateChanged" />
-
                     </div>
                     <p class="showtimes-date__hint">
                         @CurrentDateFormatted
@@ -46,13 +46,19 @@
                 <div class="showtimes-header__chips">
                     <button type="button"
                             class="chip @GetDayChipClass(0)"
-                            @onclick="() => SetDayOffset(0)">Today</button>
+                            @onclick="() => SetDayOffset(0)">
+                        Today
+                    </button>
                     <button type="button"
                             class="chip @GetDayChipClass(1)"
-                            @onclick="() => SetDayOffset(1)">Tomorrow</button>
+                            @onclick="() => SetDayOffset(1)">
+                        Tomorrow
+                    </button>
                     <button type="button"
                             class="chip @GetDayChipClass(2)"
-                            @onclick="() => SetDayOffset(2)">+2 days</button>
+                            @onclick="() => SetDayOffset(2)">
+                        +2 days
+                    </button>
                 </div>
             </div>
         </div>
@@ -76,7 +82,9 @@
                 </div>
                 <div>
                     <p>Loading showtimes…</p>
-                    <p class="showtimes-loading__hint">Fetching tonight&apos;s features from the projection room.</p>
+                    <p class="showtimes-loading__hint">
+                        Fetching tonight&apos;s features from the projection room.
+                    </p>
                 </div>
             </div>
         }
@@ -94,7 +102,8 @@
         {
             @foreach (var movie in _movies)
             {
-                <article class="movie-card js-showtime-card" @onclick="@(() => GoToMovie(movie.Id))">
+                <article class="movie-card js-showtime-card"
+                         @onclick="@(() => GoToMovie(movie.Id))">
                     <div class="movie-card__poster-wrap">
                         <div class="movie-card__poster-glow"></div>
                         <img class="movie-card__poster"
@@ -148,7 +157,7 @@
                                             @show.StartsAt.ToString("HH:mm")
                                         </span>
                                         @if (!string.IsNullOrWhiteSpace(show.ScreenName) ||
-                                             !string.IsNullOrWhiteSpace(show.Version))
+                                                                    !string.IsNullOrWhiteSpace(show.Version))
                                         {
                                             <span class="showtime-chip__meta">
                                                 @show.ScreenName @show.Version
