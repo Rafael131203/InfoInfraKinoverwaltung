@@ -1,6 +1,7 @@
 ﻿using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Kinosaal;
+using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using System;

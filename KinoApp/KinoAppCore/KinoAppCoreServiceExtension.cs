@@ -17,6 +17,7 @@ public static class KinoAppCoreServiceExtension
         services.AddScoped<ILoginService, LoginService>();
         services.AddScoped<IKinosaalService, KinosaalService>();
         services.AddScoped<IPreisZuKategorieService, PreisZuKategorieService>();
+        services.AddScoped<IVorstellungService, VorstellungService>();
         services.AddScoped<IImdbService, ImdbService>();
 
         // Nothing infra-related here. Repositories, token service, message bus

@@ -1,7 +1,8 @@
-using AutoMapper;
+﻿using AutoMapper;
 using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
+using KinoAppShared.DTOs.Vorstellung;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,11 +11,13 @@ using System.Threading.Tasks;
 
 namespace KinoAppCore.Mappings
 {
-    public class PreisMappingProfile : Profile
+    public class VorstellungMappingProfile : Profile
     {
-        public PreisMappingProfile()
+        public VorstellungMappingProfile()
         {
-            CreateMap<SetPreisDTO, PreisZuKategorieEntity>().ReverseMap();
+            // DTO -> Domain
+            CreateMap<CreateVorstellungDTO, Kinosaal>().ReverseMap();
+
         }
     }
 }
