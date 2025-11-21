@@ -80,6 +80,27 @@ namespace KinoAppCore.Services
                 .ToListAsync(ct);
         }
 
+        public async Task<List<VorstellungEntity>> GetVorstellungVonKinosaalAsync(long kinosaalId, CancellationToken ct)
+        {
+            return await _repoVorstellung
+                .Query()
+                .Where(v => v.KinosaalId == kinosaalId)
+                .OrderBy(v => v.Datum)
+                .ToListAsync(ct);
+        }
+
+        public async Task<List<VorstellungEntity>> GetVorstellungVonKinosaalUndTagAsync(DateTime datum, long kinosaalId, CancellationToken ct)
+        {
+            var start = datum.Date;
+            var end = start.AddDays(1);
+
+            return await _repoVorstellung
+                .Query()
+                .Where(v => v.KinosaalId == kinosaalId && v.Datum >= start && v.Datum < end)
+                .OrderBy(v => v.Datum)
+                .ToListAsync(ct);
+        }
+
         public async Task<bool> DeleteVorstellungAsync(long id, CancellationToken ct)
         {
             // Hole die Vorstellung aus der Datenbank

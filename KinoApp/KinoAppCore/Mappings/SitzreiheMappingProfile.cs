@@ -10,7 +10,7 @@ namespace KinoAppCore.Mappings
         public SitzreiheMappingProfile()
         {
             // 1) DTO -> Domain (Sitzreihe)
-            CreateMap<CreateSitzreiheDTO, Sitzreihe>()
+            CreateMap<SitzreiheDTO, Sitzreihe>()
                 .ForMember(r => r.Id, opt => opt.Ignore());    // DB-generated
 
             // 2) Domain -> EF Entity
@@ -19,7 +19,7 @@ namespace KinoAppCore.Mappings
                     opt => opt.MapFrom(src => src.Id ?? 0));  // safe conversion for nullable Id
 
             // 3) EF Entity -> DTO (reading back to frontend)
-            CreateMap<SitzreiheEntity, CreateSitzreiheDTO>();
+            CreateMap<SitzreiheEntity, SitzreiheDTO>();
         }
     }
 }

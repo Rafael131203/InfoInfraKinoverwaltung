@@ -23,6 +23,8 @@ namespace KinoAppCore.Mappings
             CreateMap<CreateKinosaalDTO, KinosaalEntity>()
                 .ForMember(e => e.Id, opt => opt.Ignore());
 
+            CreateMap<KinosaalDTO, KinosaalEntity>().ReverseMap();
+
         }
     }
 }

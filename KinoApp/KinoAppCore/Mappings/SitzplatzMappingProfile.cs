@@ -12,7 +12,7 @@ namespace KinoAppCore.Mappings
             // 1) DTO -> domain model (Sitzplatz)
             //    DTO likely has: Reihe, Nummer, Typ, etc.
             //    Id is DB-generated, so ignore it.
-            CreateMap<CreateSitzplatzDTO, Sitzplatz>()
+            CreateMap<SitzplatzDTO, Sitzplatz>()
                 .ForMember(s => s.Id, opt => opt.Ignore());
 
             // 2) Domain model -> EF entity
@@ -21,7 +21,7 @@ namespace KinoAppCore.Mappings
                     opt => opt.MapFrom(src => src.Id ?? 0));  // NMF Id may be nullable
 
             // 3) EF entity -> DTO (for reading back)
-            CreateMap<SitzplatzEntity, CreateSitzplatzDTO>();
+            CreateMap<SitzplatzEntity, SitzplatzDTO>();
         }
     }
 }

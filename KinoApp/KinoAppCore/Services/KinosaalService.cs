@@ -72,12 +72,20 @@ namespace KinoAppCore.Services
             await _repoKinosaal.SaveAsync(ct);
         }
 
-        public async Task<KinosaalEntity?> GetKinosaalAsync(long id, CancellationToken ct)
+        public async Task<KinosaalDTO?> GetKinosaalAsync(long id, CancellationToken ct)
         {
-            var kinosaal = await _repoKinosaal.GetByIdAsync(id, ct);
+            var kinosaal = await _repoKinosaal.Query()
+                .Where(k => k.Id == id)
+                .Include(k => k.Sitzreihen)
+                    .ThenInclude(r => r.Sitzplätze)
+                .FirstOrDefaultAsync(ct);
+
             if (kinosaal == null) return null;
-            return kinosaal;
-            
+
+            var dto = _mapper.Map<KinosaalDTO>(kinosaal);
+            return dto;
+
+
         }
 
         public async Task<SitzreiheEntity?> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct)
