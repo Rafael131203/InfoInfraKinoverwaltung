@@ -8,10 +8,8 @@ public class KundeEntity
     public string Email { get; set; } = null!;
     public string Passwort { get; set; } = null!;
 
-    // 1:1 optional – either a Kunde has a cart or not
     public long? WarenkorbId { get; set; }
     public WarenkorbEntity? Warenkorb { get; set; }
 
-    // 1:n tickets
     public ICollection<TicketEntity> Tickets { get; set; } = new List<TicketEntity>();
 }

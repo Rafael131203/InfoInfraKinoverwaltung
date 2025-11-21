@@ -18,6 +18,7 @@ builder.Services.AddAutoMapper(typeof(KinosaalMappingProfile));
 builder.Services.AddAutoMapper(typeof(SitzreiheMappingProfile));
 builder.Services.AddAutoMapper(typeof(SitzplatzMappingProfile));
 builder.Services.AddAutoMapper(typeof(PreisMappingProfile));
+builder.Services.AddAutoMapper(typeof(VorstellungMappingProfile));
 
 var app = builder.Build();
 

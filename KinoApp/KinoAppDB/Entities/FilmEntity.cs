@@ -38,7 +38,7 @@ namespace KinoAppDB.Entities
         /// </summary>
         public string? Genre { get; set; }
 
-        public string ImageURL { get; set; }
+        public string? ImageURL { get; set; }
 
         public ICollection<VorstellungEntity> Vorstellungen { get; set; } = new List<VorstellungEntity>();
     }
