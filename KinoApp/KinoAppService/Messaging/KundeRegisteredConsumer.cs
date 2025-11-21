@@ -16,7 +16,7 @@ public sealed class KundeRegisteredConsumer : IConsumer<KundeRegistered>
                      .GetCollection<KundeRegistrationProjection>("registered_customers");
     }
 
-    public Task Consume(ConsumeContext<KundeRegistered> ctx)
+    public async Task Consume(ConsumeContext<KundeRegistered> ctx)
     {
         var e = ctx.Message;
 
@@ -29,11 +29,26 @@ public sealed class KundeRegisteredConsumer : IConsumer<KundeRegistered>
             RegisteredAtUtc = e.RegisteredAtUtc
         };
 
-        // upsert, falls du mehrmals dasselbe Event bekommst
-        return _col.ReplaceOneAsync(
-            f => f.KundeId == e.KundeId,
-            doc,
-            new ReplaceOptions { IsUpsert = true });
+        // upsert, falls mehrmals dasselbe Event kommt
+        try
+        {
+            // Wir warten explizit auf das Speichern
+            await _col.ReplaceOneAsync(
+                f => f.KundeId == e.KundeId,
+                doc,
+                new ReplaceOptions { IsUpsert = true }
+            );
+
+            
+            // DEBUG Console.WriteLine($" ERFOLGREICH: Kunde {e.KundeId} in MongoDB gespeichert!");
+        }
+        catch (Exception ex)
+        {
+            
+            Console.WriteLine($" MONGO-FEHLER: {ex.Message}");
+            // Fehler weiterwerfen, damit MassTransit es merkt und ggf. wiederholt
+            throw;
+        }
     }
 
     public sealed class KundeRegistrationProjection

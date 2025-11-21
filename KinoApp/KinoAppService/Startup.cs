@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;                          // remove if not using
+using Confluent.Kafka;
 using KinoAppCore;                             // Core DI extension
 using KinoAppCore.Abstractions;
 using KinoAppCore.Config;
@@ -94,10 +95,15 @@ namespace KinoAppService
                         else
                         {
                             // local dev (Development / anything else) -> always localhost
-                            brokers = "localhost:9092";
+                            brokers = "localhost:19092";
+                            //brokers = "localhost:9092";
                         }
 
+                        // original:
                         var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
+
+                        // testing: unique group id each run, to always get all created messages
+                        // var groupId = "kinoapp-debug-" + Guid.NewGuid().ToString();
 
                         Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'");
 
@@ -106,6 +112,7 @@ namespace KinoAppService
                         // TicketSold -> TicketSoldProjectionConsumer
                         k.TopicEndpoint<TicketSold>("ticket-sold", groupId, e =>
                         {
+                            e.AutoOffsetReset = AutoOffsetReset.Earliest;
                             e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
                             e.CreateIfMissing();
                         });
@@ -113,6 +120,7 @@ namespace KinoAppService
                         // KundeRegistered -> KundeRegisteredConsumer
                         k.TopicEndpoint<KundeRegistered>("kunde-registered", groupId, e =>
                         {
+                            e.AutoOffsetReset = AutoOffsetReset.Earliest;
                             e.ConfigureConsumer<KundeRegisteredConsumer>(ctx);
                             e.CreateIfMissing();
                         });
@@ -120,6 +128,7 @@ namespace KinoAppService
                         // ShowCreated -> ShowCreatedConsumer
                         k.TopicEndpoint<ShowCreated>("show-created", groupId, e =>
                         {
+                            e.AutoOffsetReset = AutoOffsetReset.Earliest;
                             e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
                             e.CreateIfMissing();
                         });
