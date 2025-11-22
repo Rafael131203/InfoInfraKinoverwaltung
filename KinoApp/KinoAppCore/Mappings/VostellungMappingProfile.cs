@@ -16,7 +16,8 @@ namespace KinoAppCore.Mappings
         public VorstellungMappingProfile()
         {
             // DTO -> Domain
-            CreateMap<CreateVorstellungDTO, Kinosaal>().ReverseMap();
+            CreateMap<CreateVorstellungDTO, VorstellungEntity>().ReverseMap();
+            CreateMap<VorstellungDTO, VorstellungEntity>().ReverseMap();
 
         }
     }

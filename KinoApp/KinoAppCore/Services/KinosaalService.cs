@@ -32,7 +32,7 @@ namespace KinoAppCore.Services
             _mapper = mapper;
         }
 
-        public async Task CreateAsync(CreateKinosaalDTO dto, int anzahlSitzreihen, int groesseSitzreihen, CancellationToken ct = default)
+        public async Task<long> CreateAsync(CreateKinosaalDTO dto, int anzahlSitzreihen, int groesseSitzreihen, CancellationToken ct = default)
         {
             // Map basic Kinosaal data (Name)
             var kinosaal = _mapper.Map<KinosaalEntity>(dto);
@@ -79,6 +79,7 @@ namespace KinoAppCore.Services
             // Only add the root entity; EF will discover and insert the whole graph
             await _repoKinosaal.AddAsync(kinosaal, ct);
             await _repoKinosaal.SaveAsync(ct);
+            return kinosaal.Id;
         }
 
         public async Task<KinosaalDTO?> GetKinosaalAsync(long id, CancellationToken ct)

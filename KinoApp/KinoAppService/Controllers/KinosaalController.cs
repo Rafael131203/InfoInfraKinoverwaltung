@@ -36,9 +36,9 @@ namespace KinoAppService.Controllers
         public Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct) =>
             ExecuteAsync(async token =>
             {
-                await _kinosaalService.CreateAsync(dto, AnzahlSitzreihen, GrößeSitzreihen, token);
+                var id = await _kinosaalService.CreateAsync(dto, AnzahlSitzreihen, GrößeSitzreihen, token);
 
-                return new OkResult();
+                return new OkObjectResult(new { id });
             }, ct);
 
         [HttpPost("SitzreiheKategorieÄndern")]
