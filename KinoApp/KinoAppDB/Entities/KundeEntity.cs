@@ -8,7 +8,5 @@ public class KundeEntity
     public string Email { get; set; } = null!;
     public string Passwort { get; set; } = null!;
 
-    public long? WarenkorbId { get; set; }
-
     public ICollection<TicketEntity> Tickets { get; set; } = new List<TicketEntity>();
 }
