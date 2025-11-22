@@ -18,16 +18,10 @@ public class KundeEntityConfig : IEntityTypeConfiguration<KundeEntity>
 
         b.HasIndex(x => x.Email).IsUnique();
 
-        // 1:1 optional cart; cart owns FK (Warenkorb has KundeId)
-        b.HasOne(x => x.Warenkorb)
-         .WithOne(x => x.Kunde)
-         .HasForeignKey<WarenkorbEntity>(x => x.KundeId)
-         .OnDelete(DeleteBehavior.Cascade);
-
         // tickets 1:n
         b.HasMany(x => x.Tickets)
-         .WithOne(x => x.Kunde)
-         .HasForeignKey(x => x.KundeId)
-         .OnDelete(DeleteBehavior.SetNull);
+          .WithOne(x => x.Kunde)
+          .HasForeignKey(x => x.KundeId)
+          .OnDelete(DeleteBehavior.SetNull);
     }
 }

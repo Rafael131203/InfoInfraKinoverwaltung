@@ -1,41 +1,46 @@
-﻿using System;
-using System.Threading.Tasks;
-using KinoAppShared.Messaging;
+﻿using KinoAppShared.Messaging;
 using MassTransit;
 using MongoDB.Driver;
 
-namespace KinoAppService.Messaging;
-
 public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>
 {
-    private readonly IMongoCollection<ShowRevenue> _col;
+    private readonly IMongoCollection<DailyShowRevenue> _col;
 
     public TicketSoldProjectionConsumer(IMongoClient client)
     {
-        _col = client.GetDatabase("stats")
-                     .GetCollection<ShowRevenue>("revenue");
+        _col = client.GetDatabase("stats").GetCollection<DailyShowRevenue>("daily_revenue");
     }
 
-    public Task Consume(ConsumeContext<TicketSold> ctx)
+    public async Task Consume(ConsumeContext<TicketSold> ctx)
     {
         var e = ctx.Message;
 
-        var update = Builders<ShowRevenue>.Update
+        // Wir schneiden die Uhrzeit ab, um nur das Datum zu haben (00:00:00)
+        var verkaufsTag = e.SoldAtUtc.Date;
+
+        // Der Filter sucht jetzt nach: GLEICHE Show UND GLEICHER Tag
+        var filter = Builders<DailyShowRevenue>.Filter.And(
+            Builders<DailyShowRevenue>.Filter.Eq(x => x.ShowId, e.ShowId),
+            Builders<DailyShowRevenue>.Filter.Eq(x => x.Day, verkaufsTag)
+        );
+
+        var update = Builders<DailyShowRevenue>.Update
             .Inc(x => x.SoldTickets, e.Quantity)
             .Inc(x => x.Revenue, e.TotalPrice)
-            .Set(x => x.UpdatedUtc, DateTime.UtcNow);
+            .Set(x => x.LastUpdatedUtc, DateTime.UtcNow);
 
-        return _col.UpdateOneAsync(f => f.ShowId == e.ShowId,
-                                   update,
-                                   new UpdateOptions { IsUpsert = true });
+        // Upsert: Wenn es für HEUTE noch keinen Eintrag gibt -> Erstellen!
+        await _col.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
     }
 
-    public sealed class ShowRevenue
+    // Angepasste Klasse
+    public class DailyShowRevenue
     {
-        public long ShowId { get; set; }   
+        public object Id { get; set; } // Mongo ObjectId
+        public long ShowId { get; set; }
+        public DateTime Day { get; set; } 
         public int SoldTickets { get; set; }
         public decimal Revenue { get; set; }
-        public DateTime UpdatedUtc { get; set; }
+        public DateTime LastUpdatedUtc { get; set; }
     }
-
 }

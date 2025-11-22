@@ -1,9 +1,9 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;          // Kunde (NMF / domain model)
-using KinoAppDB.Entities;           // KundeEntity (EF entity)
+using KinoAppCore.Entities;          // NMF Kunde
+using KinoAppDB.Entities;            // EF KundeEntity
 using KinoAppShared.DTOs;
 using KinoAppShared.DTOs.Authentication;
-using KinoAppShared.DTOs.Kinosaal;
+// using KinoAppShared.DTOs.Kinosaal; // Evtl. nicht gebraucht
 
 namespace KinoAppCore.Mappings
 {
@@ -14,52 +14,28 @@ namespace KinoAppCore.Mappings
             // 1) Domain <-> DTOs
 
             // Domain Kunde <-> FullKundeDTO
-            // Warenkorb is explicitly mapped both ways.
-            CreateMap<Kunde, FullKundeDTO>()
-                .ForMember(dto => dto.Warenkorb,
-                    opt => opt.MapFrom(src => src.Warenkorb))
-                .ReverseMap()
-                .ForMember(k => k.Warenkorb,
-                    opt => opt.MapFrom(dto => dto.Warenkorb));
+            CreateMap<Kunde, FullKundeDTO>().ReverseMap();
 
-            // Domain Kunde <-> GetKundeDTO (no special handling needed)
+            // Domain Kunde <-> GetKundeDTO
             CreateMap<Kunde, GetKundeDTO>().ReverseMap();
-
 
             // 2) Domain <-> Entity
 
             // Kunde (domain) -> KundeEntity (EF)
-            CreateMap<Kunde, KundeEntity>()
-                .ForMember(ent => ent.Warenkorb,
-                    opt => opt.MapFrom(src => src.Warenkorb))
-                // FK is managed by EF / your own logic
-                .ForMember(ent => ent.WarenkorbId,
-                    opt => opt.Ignore());
+            // WICHTIG: Keine Warenkorb-Mappings mehr!
+            CreateMap<Kunde, KundeEntity>();
 
             // KundeEntity (EF) -> Kunde (domain)
-            CreateMap<KundeEntity, Kunde>()
-                .ForMember(k => k.Warenkorb,
-                    opt => opt.MapFrom(ent => ent.Warenkorb));
-
+            CreateMap<KundeEntity, Kunde>();
 
             // 3) Registration flow
 
-            // RegisterRequestDTO -> KundeEntity (special case)
-            // We keep this so you can continue hashing the password manually.
+            // RegisterRequestDTO -> KundeEntity
             CreateMap<RegisterRequestDTO, KundeEntity>()
                 .ForMember(dest => dest.Passwort, opt => opt.Ignore());
 
             // KundeEntity -> RegisterResponseDTO
             CreateMap<KundeEntity, RegisterResponseDTO>();
-
-            // NOTE:
-            // We no longer need direct KundeEntity <-> FullKundeDTO / GetKundeDTO maps
-            // for normal usage, because AutoMapper can now go:
-            //
-            //   FullKundeDTO -> Kunde -> KundeEntity
-            //   GetKundeDTO  -> Kunde -> KundeEntity
-            //
-            // if you ever call _mapper.Map<KundeEntity>(fullKundeDto) or similar.
         }
     }
 }

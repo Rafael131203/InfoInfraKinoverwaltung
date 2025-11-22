@@ -1,16 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace KinoAppShared.DTOs.Ticket
+namespace KinoAppShared.DTOs
 {
-    public class BuyTicketDto
+    public class BuyTicketDTO
     {
-        public long ShowId { get; set; }
-        public int Amount { get; set; } // Wie viele Tickets?
-        public decimal PricePerTicket { get; set; }
-        // Evtl. noch SeatIds?
+        public long VorstellungId { get; set; }
+        public long SitzplatzId { get; set; }
+
+        [Range(1, 10, ErrorMessage = "Man muss mindestens 1 Ticket kaufen!")]
+        public int Anzahl { get; set; } = 1;
+
+        public decimal PreisVorschlag { get; set; }
+
+        // WICHTIG: Das Feld für den Gast-Kauf.
+        // Es ist nullable (string?), weil eingeloggte User es leer lassen.
+        public string? GastEmail { get; set; }
     }
 }

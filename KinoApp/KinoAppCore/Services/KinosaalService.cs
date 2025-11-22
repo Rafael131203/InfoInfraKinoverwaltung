@@ -3,8 +3,9 @@ using KinoAppCore.Abstractions;
 using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
-using KinoAppShared.Enums;
+using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
+using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -27,7 +28,7 @@ namespace KinoAppCore.Services
             _repoKinosaal = repoKinosaal;
             _repoSitzreihe = repoSitzreihe;
             _repoSitzplatz = repoSitzplatz;
-            _preisService = preisService;   
+            _preisService = preisService;
             _mapper = mapper;
         }
 
@@ -40,29 +41,38 @@ namespace KinoAppCore.Services
             // Build Sitzreihen + Sitzplaetze in memory
             for (int rowIndex = 0; rowIndex < anzahlSitzreihen; rowIndex++)
             {
-                
                 var sitzreihe = new SitzreiheEntity
                 {
-                    Kategorie = SitzreihenKategorie.Parkett,
+                    Kategorie = SitzreihenKategorie.Parkett, // Standard: Parkett
                     Bezeichnung = $"Reihe {rowIndex + 1}",
                     Sitzplätze = new List<SitzplatzEntity>()
                 };
 
                 for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
+                    // 1. Preis laden
                     var preisZuKategorie = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
+
+                    // 2. Safety Check (Hier ist dein neuer Code!)
+                    if (preisZuKategorie == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"FEHLER: Es wurde kein Preis für die Kategorie '{sitzreihe.Kategorie}' gefunden! " +
+                            "Bitte erstelle zuerst Einträge in der Tabelle 'PreisZuKategorie'.");
+                    }
+
+                    // 3. Sitzplatz erstellen (Jetzt sicher, da nicht null)
                     var sitzplatz = new SitzplatzEntity
                     {
                         Gebucht = false,
                         Nummer = countSeat,
-                        Preis = preisZuKategorie.Preis
+                        Preis = preisZuKategorie.Preis // Sicherer Zugriff
                     };
+
                     countSeat++;
-                    // Attach seat to row (navigation only, no FK set)
                     sitzreihe.Sitzplätze.Add(sitzplatz);
                 }
 
-                // Attach row to kinosaal (navigation only)
                 kinosaal.Sitzreihen.Add(sitzreihe);
             }
 
@@ -114,7 +124,7 @@ namespace KinoAppCore.Services
             {
                 platz.Preis = preisZuKategorie.Preis;
             }
-            
+
 
             // 5. Sitzreihe speichern
             await _repoSitzreihe.UpdateAsync(sitzreihe, ct);

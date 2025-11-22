@@ -14,6 +14,4 @@ public class TicketEntity
     public long? KundeId { get; set; }
     public KundeEntity? Kunde { get; set; }
 
-    public long? WarenkorbId { get; set; }
-    public WarenkorbEntity? Warenkorb { get; set; }
 }
