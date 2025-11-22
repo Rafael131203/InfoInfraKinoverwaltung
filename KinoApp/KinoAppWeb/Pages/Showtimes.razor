@@ -1,4 +1,5 @@
 ﻿@page "/showtimes"
+@using KinoAppWeb.Services
 <PageTitle>Showtime</PageTitle>
 
 <div class="page-shell showtimes-page">
@@ -11,6 +12,19 @@
                     Showtimes
                     <span class="showtimes-title__glow"></span>
                 </h1>
+
+                @* ADMIN ONLY BUTTON *@
+                @if (UserSession.IsAdmin)
+                {
+                    <div class="showtimes-admin-bar">
+                        <button type="button"
+                                class="btn btn--neon"
+                                @onclick="GoToEditMovies">
+                            Edit movies
+                        </button>
+                    </div>
+                }
+
                 <p class="showtimes-subtitle">
                     Pick a film, choose a time and we&apos;ll take you straight to seat selection.
                 </p>
@@ -156,11 +170,11 @@
                                         <span class="showtime-chip__time">
                                             @show.StartsAt.ToString("HH:mm")
                                         </span>
-                                        @if (!string.IsNullOrWhiteSpace(show.ScreenName) ||
-                                                                    !string.IsNullOrWhiteSpace(show.Version))
+
+                                        @if (!string.IsNullOrWhiteSpace(show.KinosaalName))
                                         {
                                             <span class="showtime-chip__meta">
-                                                @show.ScreenName @show.Version
+                                                @show.KinosaalName
                                             </span>
                                         }
                                     </button>

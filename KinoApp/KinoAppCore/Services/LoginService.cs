@@ -10,13 +10,13 @@ namespace KinoAppCore.Services
 {
     public class LoginService : ILoginService
     {
-        private readonly IKundeRepository _repo;
+        private readonly IUserRepository _repo;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
         private readonly IPasswordHasher _hasher;
         private readonly IMessageBus _bus;
 
-        public LoginService(IKundeRepository repo, ITokenService tokenService, IPasswordHasher hasher, IMapper mapper, IMessageBus bus)
+        public LoginService(IUserRepository repo, ITokenService tokenService, IPasswordHasher hasher, IMapper mapper, IMessageBus bus)
         {
             _repo = repo;
             _tokenService = tokenService;
@@ -33,16 +33,17 @@ namespace KinoAppCore.Services
             if (!_hasher.Verify(request.Passwort, kunde.Passwort))
                 return null;
 
-            var access = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname);
+            var access = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname, kunde.Role);
             var refresh = _tokenService.GenerateRefreshToken(kunde.Id, kunde.Email);
 
             return new LoginResponseDTO
             {
-                Token = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname),
+                Token = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname, kunde.Role),
                 RefreshToken = _tokenService.GenerateRefreshToken(kunde.Id, kunde.Email),
                 Email = kunde.Email,
                 Vorname = kunde.Vorname,
-                Nachname = kunde.Nachname
+                Nachname = kunde.Nachname,
+                Role = kunde.Role
             };
         }
 
@@ -58,7 +59,7 @@ namespace KinoAppCore.Services
             if (kunde == null || !string.Equals(kunde.Email, email, StringComparison.OrdinalIgnoreCase))
                 return null;
 
-            var newAccess = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname);
+            var newAccess = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname, kunde.Role);
             var newRefresh = _tokenService.GenerateRefreshToken(kunde.Id, kunde.Email);
 
             return new LoginResponseDTO
@@ -67,7 +68,8 @@ namespace KinoAppCore.Services
                 RefreshToken = newRefresh,
                 Email = kunde.Email,
                 Vorname = kunde.Vorname,
-                Nachname = kunde.Nachname
+                Nachname = kunde.Nachname,
+                Role = kunde.Role
             };
         }
 
@@ -79,7 +81,7 @@ namespace KinoAppCore.Services
                 throw new InvalidOperationException("Email already registered.");
 
             // 2. Map → Kunde entity
-            var entity = _mapper.Map<KundeEntity>(dto);
+            var entity = _mapper.Map<UserEntity>(dto);
 
             // 3. Hash password AFTER mapping
             entity.Passwort = _hasher.Hash(dto.Passwort);
@@ -94,7 +96,8 @@ namespace KinoAppCore.Services
                 entity.Email,
                 entity.Vorname,
                 entity.Nachname,
-                DateTime.UtcNow
+                DateTime.UtcNow,
+                entity.Role
             );
 
             await _bus.PublishAsync(@event, ct);

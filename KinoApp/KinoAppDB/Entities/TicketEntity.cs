@@ -12,6 +12,6 @@ public class TicketEntity
     // public SitzplatzEntity Sitzplatz { get; set; } = null!;     // add later when you have it
 
     public long? KundeId { get; set; }
-    public KundeEntity? Kunde { get; set; }
+    public UserEntity? Kunde { get; set; }
 
 }

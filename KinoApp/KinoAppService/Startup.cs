@@ -19,6 +19,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using System.Security.Claims;
 using System.Text;
 
 namespace KinoAppService
@@ -176,7 +177,8 @@ namespace KinoAppService
                         ValidAudience = config["Jwt:Audience"],
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = key,
-                        ValidateLifetime = true
+                        ValidateLifetime = true,
+                        RoleClaimType = ClaimTypes.Role
                     };
                 });
 
@@ -238,7 +240,7 @@ namespace KinoAppService
             services.AddScoped<KinoAppDbContextScope>(); // concrete
             services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IKundeRepository, KundeRepository>();  // from KinoAppDB
+            services.AddScoped<IUserRepository, UserRepository>();  // from KinoAppDB
             services.AddScoped<IKinosaalRepository, KinosaalRepository>();  // from KinoAppDB
             services.AddScoped<ISitzreiheRepository, SitzreiheRepository>();  // from KinoAppDB
             services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();  // from KinoAppDB

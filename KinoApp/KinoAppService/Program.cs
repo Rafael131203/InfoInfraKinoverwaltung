@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 Startup.ConfigureServices(builder.Services, builder.Configuration);
 
 // Mapping profiles
-builder.Services.AddAutoMapper(typeof(KundeMappingProfile));
+builder.Services.AddAutoMapper(typeof(UserMappingProfile));
 builder.Services.AddAutoMapper(typeof(WarenkorbProfile));
 builder.Services.AddAutoMapper(typeof(KinosaalMappingProfile));
 builder.Services.AddAutoMapper(typeof(SitzreiheMappingProfile));

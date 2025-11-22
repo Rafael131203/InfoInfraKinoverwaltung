@@ -56,18 +56,24 @@ namespace KinoAppService.Controllers
                     return new BadRequestObjectResult("Email and password are required.");
                 }
 
+                // ONLY allow User or Admin
+                var allowedRoles = new[] { "User", "Admin" };
+                if (!allowedRoles.Contains(dto.Role, StringComparer.OrdinalIgnoreCase))
+                {
+                    return new BadRequestObjectResult("Invalid role. Allowed roles: User, Admin.");
+                }
+
                 try
                 {
                     var result = await _loginService.RegisterAsync(dto, token);
-                    // 201 Created with minimal data
                     return new CreatedResult("/api/auth/register", result);
                 }
                 catch (InvalidOperationException ex)
                 {
-                    // e.g. email already exists
                     return new ConflictObjectResult(ex.Message);
                 }
             }, ct);
+
 
         [HttpPost("logout")]
         public IActionResult Logout()

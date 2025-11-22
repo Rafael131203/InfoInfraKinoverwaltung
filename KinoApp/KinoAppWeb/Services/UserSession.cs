@@ -1,5 +1,6 @@
 ﻿using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Imdb;
+using KinoAppShared.DTOs.Showtimes;
 using Microsoft.JSInterop;
 using System.Text.Json;
 
@@ -21,6 +22,17 @@ namespace KinoAppWeb.Services
         private bool _initialized;
         private bool _refreshInProgress;
         private LoginResponseDTO? _session;
+
+        public bool IsAdmin => string.Equals(_session?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+        public bool IsUser => string.Equals(_session?.Role, "User", StringComparison.OrdinalIgnoreCase);
+        public string? DisplayName => string.IsNullOrWhiteSpace(_session?.Vorname) ? _session?.Email : _session?.Vorname;
+
+        private const string SelectedShowtimeKey = "kinoapp_selected_showtime";
+        public SelectedShowtimeDto? SelectedShowtime { get; private set; }
+
+
+
+
 
         /// <summary>
         /// Cached films for this browser session, mirrored in sessionStorage.
@@ -69,6 +81,13 @@ namespace KinoAppWeb.Services
                 {
                     CachedFilms = new List<FilmDto>();
                 }
+
+                // selected showtime
+                var selectedShowtimeJson = await _js.InvokeAsync<string?>("sessionStorage.getItem", SelectedShowtimeKey);
+                if (!string.IsNullOrWhiteSpace(selectedShowtimeJson))
+                {
+                    SelectedShowtime = JsonSerializer.Deserialize<SelectedShowtimeDto>(selectedShowtimeJson, JsonOptions);
+                }
             }
             catch
             {
@@ -78,6 +97,7 @@ namespace KinoAppWeb.Services
 
             _initialized = true;
         }
+
 
         /// <summary>Stores the login payload in memory and sessionStorage.</summary>
         public async Task SetSessionAsync(LoginResponseDTO dto)
@@ -199,5 +219,27 @@ namespace KinoAppWeb.Services
 
             return CachedFilms;
         }
+
+
+        public async Task SetSelectedShowtimeAsync(int movieId, string movieTitle, string? posterUrl, ShowtimeDto showtime)
+        {
+            SelectedShowtime = new SelectedShowtimeDto
+            {
+                MovieId = movieId,
+                MovieTitle = movieTitle,
+                PosterUrl = posterUrl,
+                Showtime = showtime
+            };
+
+            var json = JsonSerializer.Serialize(SelectedShowtime, JsonOptions);
+            await _js.InvokeVoidAsync("sessionStorage.setItem", SelectedShowtimeKey, json);
+        }
+
+        public async Task ClearSelectedShowtimeAsync()
+        {
+            SelectedShowtime = null;
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedShowtimeKey);
+        }
+
     }
 }

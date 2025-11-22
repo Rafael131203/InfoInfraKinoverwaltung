@@ -1,0 +1,32 @@
+﻿@page "/admin/films"
+@inject KinoAppWeb.Services.UserSession UserSession
+@inject NavigationManager Navigation
+
+<h1>Admin – Manage Films</h1>
+
+@if (!UserSession.IsAuthenticated)
+{
+    <p>You must be logged in.</p>
+}
+else if (!UserSession.IsAdmin)
+{
+    <p>You are not authorized to view this page.</p>
+}
+else
+{
+    <!-- actual admin UI here -->
+    <p>Here you can manage films. 🎬</p>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+
+        // Optionally: redirect instead of showing messages
+        if (!UserSession.IsAdmin)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+}

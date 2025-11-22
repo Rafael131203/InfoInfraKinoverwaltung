@@ -41,8 +41,8 @@ namespace KinoAppService.Controllers
             {
                 var vorstellungen = await _vorstellungService.GetVorstellungVonTagAsync(datum, token);
 
-                if (!vorstellungen.Any())
-                    return new NotFoundObjectResult($"Keine Vorstellungen am {datum:yyyy-MM-dd} gefunden.");
+                //if (!vorstellungen.Any())
+                //    return new NotFoundObjectResult($"Keine Vorstellungen am {datum:yyyy-MM-dd} gefunden.");
 
                 return new OkObjectResult(vorstellungen);
             }, ct);

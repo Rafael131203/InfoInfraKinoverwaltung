@@ -7,5 +7,6 @@
         public string Vorname { get; set; } = null!;
         public string Nachname { get; set; } = null!;
         public string Email { get; set; } = null!;
+        public string Role { get; set; } = "User";
     }
 }

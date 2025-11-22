@@ -26,19 +26,23 @@ namespace KinoAppService.Security
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
         }
 
-        public TokenInfoDTO GenerateAccessToken(long userId, string email, string vorname, string nachname)
+        public TokenInfoDTO GenerateAccessToken(long userId, string email, string vorname, string nachname, string role)
         {
             var now = DateTime.UtcNow;
             var expires = now.AddMinutes(15);
 
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, email),
-                new Claim("vorname", vorname),
-                new Claim("nachname", nachname),
-                new Claim("type", "access")
-            };
+        new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+        new Claim(JwtRegisteredClaimNames.Email, email),
+        new Claim("vorname", vorname),
+        new Claim("nachname", nachname),
+
+        // IMPORTANT: role claim
+        new Claim(ClaimTypes.Role, role),   // or "role" if you prefer a custom name
+
+        new Claim("type", "access")
+    };
 
             var token = CreateTokenInternal(claims, expires);
 

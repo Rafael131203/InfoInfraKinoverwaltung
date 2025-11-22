@@ -49,13 +49,14 @@ CREATE TABLE IF NOT EXISTS "Vorstellung" (
     CONSTRAINT "UQ_Vorstellung_Hall_Time" UNIQUE ("KinosaalId","Datum")
 );
 
-CREATE TABLE IF NOT EXISTS "Kunde" (
+CREATE TABLE IF NOT EXISTS "User" (
     "Id"       SERIAL PRIMARY KEY,
     "Email"    TEXT NOT NULL,
     "Nachname" TEXT NOT NULL,
     "Passwort" TEXT NOT NULL,
     "Vorname"  TEXT NOT NULL,
-    CONSTRAINT "UQ_Kunde_Email" UNIQUE ("Email")
+    "Role"     TEXT NOT NULL,
+    CONSTRAINT "UQ_User_Email" UNIQUE ("Email")
 );
 
 -- 4. Das Ticket 

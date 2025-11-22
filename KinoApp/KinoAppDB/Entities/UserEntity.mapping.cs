@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace KinoAppDB.Entities;
 
-public class KundeEntityConfig : IEntityTypeConfiguration<KundeEntity>
+public class KundeEntityConfig : IEntityTypeConfiguration<UserEntity>
 {
-    public void Configure(EntityTypeBuilder<KundeEntity> b)
+    public void Configure(EntityTypeBuilder<UserEntity> b)
     {
-        b.ToTable("Kunde");
+        b.ToTable("User");
         b.HasKey(x => x.Id);
 
         b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
@@ -15,6 +15,7 @@ public class KundeEntityConfig : IEntityTypeConfiguration<KundeEntity>
         b.Property(x => x.Nachname).HasColumnName("Nachname").HasMaxLength(100).IsRequired();
         b.Property(x => x.Email).HasColumnName("Email").HasMaxLength(255).IsRequired();
         b.Property(x => x.Passwort).HasColumnName("Passwort").HasMaxLength(255).IsRequired();
+        b.Property(x => x.Role).HasColumnName("Role").HasMaxLength(255).IsRequired();
 
         b.HasIndex(x => x.Email).IsUnique();
 

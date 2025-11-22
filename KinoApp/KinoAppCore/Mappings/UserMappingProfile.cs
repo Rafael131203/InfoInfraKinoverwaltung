@@ -7,9 +7,9 @@ using KinoAppShared.DTOs.Authentication;
 
 namespace KinoAppCore.Mappings
 {
-    public class KundeMappingProfile : Profile
+    public class UserMappingProfile : Profile
     {
-        public KundeMappingProfile()
+        public UserMappingProfile()
         {
             // 1) Domain <-> DTOs
 
@@ -23,19 +23,19 @@ namespace KinoAppCore.Mappings
 
             // Kunde (domain) -> KundeEntity (EF)
             // WICHTIG: Keine Warenkorb-Mappings mehr!
-            CreateMap<Kunde, KundeEntity>();
+            CreateMap<Kunde, UserEntity>();
 
             // KundeEntity (EF) -> Kunde (domain)
-            CreateMap<KundeEntity, Kunde>();
+            CreateMap<UserEntity, Kunde>();
 
             // 3) Registration flow
 
             // RegisterRequestDTO -> KundeEntity
-            CreateMap<RegisterRequestDTO, KundeEntity>()
+            CreateMap<RegisterRequestDTO, UserEntity>()
                 .ForMember(dest => dest.Passwort, opt => opt.Ignore());
 
             // KundeEntity -> RegisterResponseDTO
-            CreateMap<KundeEntity, RegisterResponseDTO>();
+            CreateMap<UserEntity, RegisterResponseDTO>();
         }
     }
 }

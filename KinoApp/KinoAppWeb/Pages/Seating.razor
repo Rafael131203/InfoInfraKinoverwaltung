@@ -1,3 +1,66 @@
-﻿<h3>Seating</h3>
+﻿@page "/seating"
+@using KinoAppWeb.Services
+@using KinoAppShared.DTOs.Showtimes
+@inject UserSession UserSession
+@inject NavigationManager NavManager
 
-<PageTitle>Sitzwahl</PageTitle>
+<PageTitle>Seat Selection</PageTitle>
+
+<div class="page-shell seating-page">
+    @if (UserSession.SelectedShowtime is null)
+    {
+        <div class="seating-empty">
+            <h1>No showtime selected</h1>
+            <p>
+                We couldn&apos;t find a selected session. Please choose a showtime from
+                the <a href="/showtimes">Showtimes</a> page.
+            </p>
+        </div>
+    }
+    else
+    {
+        var s = UserSession.SelectedShowtime;
+
+        <section class="seating-header">
+            <button class="btn btn--ghost"
+                    type="button"
+                    @onclick="GoBack">
+                ← Back to showtimes
+            </button>
+
+            <h1>@s!.MovieTitle</h1>
+
+            <p class="seating-header__meta">
+                @s.Showtime!.StartsAt.ToString("dddd, dd.MM.yyyy HH:mm")
+                @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
+                {
+                    @: · @s.Showtime.KinosaalName
+                }
+            </p>
+        </section>
+
+        <section class="seating-layout">
+            @* TODO: your actual seat map goes here *@
+            <p>Seat selection UI coming soon…</p>
+        </section>
+    }
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await UserSession.InitializeAsync();
+
+        // Redirect back if someone opens /seating with no selection
+        if (UserSession.SelectedShowtime is null)
+        {
+            NavManager.NavigateTo("/showtimes");
+        }
+    }
+
+    private async Task GoBack()
+    {
+        await UserSession.ClearSelectedShowtimeAsync();
+        NavManager.NavigateTo("/showtimes");
+    }
+}

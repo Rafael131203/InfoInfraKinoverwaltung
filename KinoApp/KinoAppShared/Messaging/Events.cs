@@ -12,7 +12,8 @@ namespace KinoAppShared.Messaging
     string Email,
     string Vorname,
     string Nachname,
-    DateTime RegisteredAtUtc
+    DateTime RegisteredAtUtc,
+    string Role
     );
 
     public record ShowCreated

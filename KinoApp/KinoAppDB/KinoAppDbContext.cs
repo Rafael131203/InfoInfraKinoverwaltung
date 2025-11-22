@@ -7,7 +7,7 @@ public class KinoAppDbContext : DbContext
     public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
 
     // DbSets
-    public DbSet<Entities.KundeEntity> Kunden => Set<Entities.KundeEntity>();
+    public DbSet<Entities.UserEntity> Kunden => Set<Entities.UserEntity>();
     public DbSet<Entities.TicketEntity> Tickets => Set<Entities.TicketEntity>();
     public DbSet<Entities.KinosaalEntity> Kinosaal => Set<Entities.KinosaalEntity>();
     public DbSet<Entities.SitzreiheEntity> Sitzreihe => Set<Entities.SitzreiheEntity>();

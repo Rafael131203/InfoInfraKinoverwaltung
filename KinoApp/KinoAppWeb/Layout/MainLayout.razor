@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Routing
+@inject KinoAppWeb.Services.UserSession UserSession
+@inject NavigationManager Navigation
 
 <!-- BACKGROUND -->
 <div class="bg-stars"></div>
@@ -13,7 +15,7 @@
             <!-- Logo -->
             <NavLink href="" Match="NavLinkMatch.All" class="logo">
                 <span class="logo__icon">🎬</span>
-                <span class="logo__text">KinoApp</span>
+                <span class="logo__text">SeeSharper</span>
             </NavLink>
 
             <!-- NAVIGATION -->
@@ -32,24 +34,59 @@
                         <a href="#coming-soon" class="main-nav__link">Coming Soon</a>
                     </li>
 
-                    <li class="main-nav__item">
-                        <a href="#special-events" class="main-nav__link">Special Events</a>
-                    </li>
+                    @* Special Events + About: only when NOT admin *@
+                    @if (!UserSession.IsAdmin)
+                    {
+                        <li class="main-nav__item">
+                            <a href="#special-events" class="main-nav__link">Special Events</a>
+                        </li>
 
-                    <li class="main-nav__item">
-                        <a href="#about" class="main-nav__link">About</a>
-                    </li>
+                        <li class="main-nav__item">
+                            <a href="#about" class="main-nav__link">About</a>
+                        </li>
+                    }
 
-                    <!-- Your Blazor-only items -->
-                    <li class="main-nav__item">
-                        <NavLink href="dashboard" class="main-nav__link">Dashboard</NavLink>
-                    </li>
+                    @if (UserSession.IsAuthenticated)
+                    {
+                        @* Dashboard only for normal users, not admins *@
+                        @if (!UserSession.IsAdmin)
+                        {
+                            <li class="main-nav__item">
+                                <NavLink href="dashboard" class="main-nav__link">Dashboard</NavLink>
+                            </li>
+                        }
 
-                    <li class="main-nav__item">
-                        <NavLink href="login" class="main-nav__link">Login</NavLink>
-                    </li>
+                        @* ADMIN-ONLY STUFF *@
+                        @if (UserSession.IsAdmin)
+                        {
+                            <li class="main-nav__item">
+                                <NavLink href="admin/films" class="main-nav__link">Manage Films</NavLink>
+                            </li>
+                            <li class="main-nav__item">
+                                <NavLink href="admin/showtimes" class="main-nav__link">Manage Showtimes</NavLink>
+                            </li>
+                        }
+
+                        @* Logout / user name *@
+                        <li class="main-nav__item">
+                            <button class="main-nav__link main-nav__link--button"
+                                    type="button"
+                                    @onclick="Logout">
+                                Logout (@UserSession.DisplayName)
+                            </button>
+                        </li>
+                    }
+                    else
+                    {
+                        @* Only when NOT logged in *@
+                        <li class="main-nav__item">
+                            <NavLink href="login" class="main-nav__link">Login</NavLink>
+                        </li>
+                    }
                 </ul>
             </nav>
+
+
 
             <!-- Tickets CTA -->
             <button class="header-cta" type="button">
@@ -111,3 +148,18 @@
     </footer>
 
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Ensure we load session from sessionStorage once
+        await UserSession.InitializeAsync();
+    }
+
+    private async Task Logout()
+    {
+        await UserSession.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+}
+

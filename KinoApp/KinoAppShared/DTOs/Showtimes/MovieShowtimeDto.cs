@@ -15,7 +15,7 @@ namespace KinoAppShared.DTOs.Showtimes
         public string PosterUrl { get; set; } = string.Empty;
 
         public int DurationMinutes { get; set; }          // e.g. 128
-        public string AgeRating { get; set; } = "FSK 12"; // e.g. "FSK 12"
+        public string AgeRating { get; set; } = "FSK"; // e.g. "FSK 12"
         public string Genres { get; set; } = string.Empty; // e.g. "Sci-Fi · Thriller"
 
         public IReadOnlyList<ShowtimeDto> Showtimes { get; set; } = Array.Empty<ShowtimeDto>();
