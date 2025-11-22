@@ -1,4 +1,5 @@
-﻿using KinoAppWeb;
+﻿using KinoAppCore.Services;
+using KinoAppWeb;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -21,6 +22,7 @@ namespace KinoAppWeb
             });
 
             // Client auth + session
+            builder.Services.AddScoped<IMovieShowtimeService, MovieShowtimeService>();
             builder.Services.AddScoped<IClientLoginService, ClientLoginService>();
             builder.Services.AddScoped<UserSession>();
 

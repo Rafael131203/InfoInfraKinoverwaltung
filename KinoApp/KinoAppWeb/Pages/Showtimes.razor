@@ -1,0 +1,175 @@
+﻿@page "/showtimes"
+<PageTitle>Showtime</PageTitle>
+
+<div class="page-shell showtimes-page">
+    <!-- Neon header / filters -->
+    <section class="showtimes-header">
+        <div class="showtimes-header__top">
+            <div>
+                <p class="eyebrow">Today at the cinema</p>
+                <h1 class="showtimes-title">
+                    Showtimes
+                    <span class="showtimes-title__glow"></span>
+                </h1>
+                <p class="showtimes-subtitle">
+                    Pick a film, choose a time and we&apos;ll take you straight to seat selection.
+                </p>
+
+                <div class="showtimes-stats">
+                    <div class="showtimes-stat">
+                        <span class="showtimes-stat__value">@TotalMovies</span>
+                        <span class="showtimes-stat__label">Movies</span>
+                    </div>
+                    <div class="showtimes-stat">
+                        <span class="showtimes-stat__value">@TotalShowtimes</span>
+                        <span class="showtimes-stat__label">Showtimes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="showtimes-date-panel">
+                <div class="showtimes-date">
+                    <label class="showtimes-date__label" for="datePicker">Date</label>
+                    <div class="showtimes-date__field">
+                        <span class="showtimes-date__icon">📅</span>
+                        <input id="datePicker"
+                               type="date"
+                               class="showtimes-date__input"
+                               value="@_currentDate.ToString("yyyy-MM-dd")"
+                               @onchange="OnDateChanged" />
+                    </div>
+                    <p class="showtimes-date__hint">
+                        @CurrentDateFormatted
+                    </p>
+                </div>
+
+                <div class="showtimes-header__chips">
+                    <button type="button"
+                            class="chip @GetDayChipClass(0)"
+                            @onclick="() => SetDayOffset(0)">
+                        Today
+                    </button>
+                    <button type="button"
+                            class="chip @GetDayChipClass(1)"
+                            @onclick="() => SetDayOffset(1)">
+                        Tomorrow
+                    </button>
+                    <button type="button"
+                            class="chip @GetDayChipClass(2)"
+                            @onclick="() => SetDayOffset(2)">
+                        +2 days
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="showtimes-ribbon">
+            <span class="showtimes-ribbon__dot"></span>
+            <span class="showtimes-ribbon__text">
+                Neon nights · Fresh popcorn · Big screen stories
+            </span>
+        </div>
+    </section>
+
+    <!-- Movie list -->
+    <section class="showtimes-list">
+        @if (_isLoading)
+        {
+            <div class="showtimes-loading">
+                <div class="loading-spinner">
+                    <div class="loading-spinner__ring"></div>
+                    <div class="loading-spinner__reel"></div>
+                </div>
+                <div>
+                    <p>Loading showtimes…</p>
+                    <p class="showtimes-loading__hint">
+                        Fetching tonight&apos;s features from the projection room.
+                    </p>
+                </div>
+            </div>
+        }
+        else if (_movies.Count == 0)
+        {
+            <div class="showtimes-empty">
+                <h2>No screenings planned.</h2>
+                <p>
+                    We don&apos;t have any sessions for this date yet.
+                    Try another day or check back later.
+                </p>
+            </div>
+        }
+        else
+        {
+            @foreach (var movie in _movies)
+            {
+                <article class="movie-card js-showtime-card"
+                         @onclick="@(() => GoToMovie(movie.Id))">
+                    <div class="movie-card__poster-wrap">
+                        <div class="movie-card__poster-glow"></div>
+                        <img class="movie-card__poster"
+                             src="@movie.PosterUrl"
+                             alt="Poster for @movie.Title" />
+                        <div class="movie-card__badge">
+                            <span>Now showing</span>
+                        </div>
+                    </div>
+
+                    <div class="movie-card__body">
+                        <header class="movie-card__header">
+                            <h2 class="movie-card__title">@movie.Title</h2>
+                            @if (!string.IsNullOrWhiteSpace(movie.Tagline))
+                            {
+                                <p class="movie-card__tagline">@movie.Tagline</p>
+                            }
+                        </header>
+
+                        <div class="movie-card__meta">
+                            <span class="meta-pill meta-pill--accent">
+                                ⏱ @FormatDuration(movie.DurationMinutes)
+                            </span>
+
+                            <span class="meta-pill meta-pill--age">
+                                @movie.AgeRating
+                            </span>
+
+                            @if (!string.IsNullOrWhiteSpace(movie.Genres))
+                            {
+                                <span class="meta-pill meta-pill--soft">
+                                    @movie.Genres
+                                </span>
+                            }
+                        </div>
+
+                        <p class="movie-card__description">
+                            @movie.Description
+                        </p>
+
+                        <div class="movie-card__showtimes">
+                            <p class="movie-card__showtimes-label">Showtimes</p>
+                            <div class="movie-card__showtimes-grid">
+                                @foreach (var show in movie.Showtimes.OrderBy(s => s.StartsAt))
+                                {
+                                    <button type="button"
+                                            class="showtime-chip"
+                                            @onclick:stopPropagation="true"
+                                            @onclick="@(e => GoToSeating(movie.Id, show.Id))">
+                                        <span class="showtime-chip__time">
+                                            @show.StartsAt.ToString("HH:mm")
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(show.ScreenName) ||
+                                                                    !string.IsNullOrWhiteSpace(show.Version))
+                                        {
+                                            <span class="showtime-chip__meta">
+                                                @show.ScreenName @show.Version
+                                            </span>
+                                        }
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            }
+        }
+    </section>
+</div>

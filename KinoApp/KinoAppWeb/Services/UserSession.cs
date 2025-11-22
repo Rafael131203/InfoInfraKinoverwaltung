@@ -1,12 +1,15 @@
-﻿using System.Text.Json;
-using KinoAppShared.DTOs.Authentication;
+﻿using KinoAppShared.DTOs.Authentication;
+using KinoAppShared.DTOs.Imdb;
 using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace KinoAppWeb.Services
 {
     public class UserSession
     {
         private const string StorageKey = "kinoapp_session";
+        private const string FilmCacheKey = "kinoapp_filmcached";
+
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -18,6 +21,11 @@ namespace KinoAppWeb.Services
         private bool _initialized;
         private bool _refreshInProgress;
         private LoginResponseDTO? _session;
+
+        /// <summary>
+        /// Cached films for this browser session, mirrored in sessionStorage.
+        /// </summary>
+        public List<FilmDto> CachedFilms { get; private set; } = new();
 
         public UserSession(IJSRuntime js, IClientLoginService auth)
         {
@@ -34,22 +42,38 @@ namespace KinoAppWeb.Services
         /// <summary>The current access token string (may be null).</summary>
         public string? CurrentAccessToken => _session?.Token?.Token;
 
-        /// <summary>Load session from sessionStorage once at startup.</summary>
+        /// <summary>
+        /// Load session and film cache from sessionStorage once at startup.
+        /// </summary>
         public async Task InitializeAsync()
         {
             if (_initialized) return;
 
             try
             {
+                // auth/session
                 var json = await _js.InvokeAsync<string?>("sessionStorage.getItem", StorageKey);
                 if (!string.IsNullOrWhiteSpace(json))
                 {
                     _session = JsonSerializer.Deserialize<LoginResponseDTO>(json, JsonOptions);
                 }
+
+                // film cache
+                var filmJson = await _js.InvokeAsync<string?>("sessionStorage.getItem", FilmCacheKey);
+                if (!string.IsNullOrWhiteSpace(filmJson))
+                {
+                    var films = JsonSerializer.Deserialize<List<FilmDto>>(filmJson, JsonOptions);
+                    CachedFilms = films ?? new List<FilmDto>();
+                }
+                else
+                {
+                    CachedFilms = new List<FilmDto>();
+                }
             }
             catch
             {
-                // ignore, treat as no session
+                // ignore, treat as no session/films
+                CachedFilms = new List<FilmDto>();
             }
 
             _initialized = true;
@@ -64,13 +88,15 @@ namespace KinoAppWeb.Services
             await _js.InvokeVoidAsync("sessionStorage.setItem", StorageKey, json);
         }
 
-        /// <summary>Clears all session data (tokens + flags + storage).</summary>
+        /// <summary>Clears all session data (tokens + film cache + flags + storage).</summary>
         private async Task ClearAsync()
         {
             _session = null;
             _refreshInProgress = false;
+            CachedFilms = new List<FilmDto>();
 
             await _js.InvokeVoidAsync("sessionStorage.removeItem", StorageKey);
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", FilmCacheKey);
         }
 
         /// <summary>
@@ -80,8 +106,6 @@ namespace KinoAppWeb.Services
         {
             try
             {
-                // Optional: tell backend we're logging out (no-op on your current API,
-                // but ready if you later add server-side refresh token invalidation)
                 await _auth.LogoutAsync(ct);
             }
             catch
@@ -106,7 +130,6 @@ namespace KinoAppWeb.Services
             var now = DateTime.UtcNow;
             var expires = _session.Token.ExpiresAt;
 
-            // How much lifetime left?
             var secondsLeft = (expires - now).TotalSeconds;
 
             // If expired or less than 2 minutes left, refresh
@@ -146,6 +169,35 @@ namespace KinoAppWeb.Services
             {
                 _refreshInProgress = false;
             }
+        }
+
+        /// <summary>
+        /// Stores the given films in memory and in sessionStorage.
+        /// </summary>
+        public async Task StoreFilmsAsync(List<FilmDto> films)
+        {
+            CachedFilms = films ?? new List<FilmDto>();
+
+            var json = JsonSerializer.Serialize(CachedFilms, JsonOptions);
+            await _js.InvokeVoidAsync("sessionStorage.setItem", FilmCacheKey, json);
+        }
+
+        /// <summary>
+        /// Returns films from cache if available; otherwise fetches from the backend
+        /// via ImdbApiClient (DB-backed endpoint), stores them and returns them.
+        /// </summary>
+        public async Task<List<FilmDto>> GetFilmsAsync(ImdbApiClient client, CancellationToken ct = default)
+        {
+            // Ensure we've read from sessionStorage at least once
+            await InitializeAsync();
+
+            if (CachedFilms is { Count: > 0 })
+                return CachedFilms;
+
+            var films = await client.GetLocalFilmsAsync(ct);
+            await StoreFilmsAsync(films);
+
+            return CachedFilms;
         }
     }
 }

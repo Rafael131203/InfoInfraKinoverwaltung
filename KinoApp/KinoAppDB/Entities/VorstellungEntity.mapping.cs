@@ -17,7 +17,7 @@ namespace KinoAppDB.Entities
 
             b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
             b.Property(x => x.Datum).HasColumnName("Datum").IsRequired();
-            b.Property(x => x.Status).HasColumnName("Status").IsRequired();
+            b.Property(x => x.Status).HasColumnName("Status").HasConversion<int>().IsRequired();
 
             b.Property(x => x.FilmId).HasColumnName("FilmId");
             b.Property(x => x.KinosaalId).HasColumnName("KinosaalId");

@@ -1,4 +1,5 @@
 ﻿// KinoAppDB/KinoAppDbContext.cs
+using KinoAppDB.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace KinoAppDB;
@@ -21,6 +22,12 @@ public class KinoAppDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         // Discover all IEntityTypeConfiguration<T> in this assembly
+        modelBuilder.Entity<VorstellungEntity>(entity =>
+        {
+            // Map enum <-> int for Status
+            entity.Property(v => v.Status)
+                  .HasConversion<int>();   // uses underlying int value of the enum
+        });
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinoAppDbContext).Assembly);
     }
 }

@@ -52,5 +52,15 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(results);
             }, ct);
 
+        [HttpGet("local")]
+        public Task<IActionResult> GetLocalFilms(CancellationToken ct = default) =>
+            ExecuteAsync(async token =>
+            {
+                var films = await _imdbService.GetAllLocalFilmsAsync(token);
+                return new OkObjectResult(films);
+            }, ct);
+
+
+
     }
 }

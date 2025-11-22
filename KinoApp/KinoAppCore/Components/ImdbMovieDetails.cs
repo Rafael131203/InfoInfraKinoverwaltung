@@ -9,3 +9,4 @@
         public string? PosterUrl { get; set; }
         public double? Rating { get; set; }
     }
+
