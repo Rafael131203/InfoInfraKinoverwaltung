@@ -34,7 +34,7 @@ namespace KinoAppService.Controllers
         [HttpPost("buy")]
         public async Task<IActionResult> BuyTicket([FromBody] BuyTicketDTO request)
         {
-            // 1. Transaktion starten
+            // 1. Scope/Transaktion starten
             await _dbScope.BeginAsync();
 
             try
@@ -51,10 +51,10 @@ namespace KinoAppService.Controllers
                 // 3. PREIS LADEN (Aus Sitzplatz-Tabelle)
                 var sitzplatz = await _sitzplatzRepo.GetByIdAsync(request.SitzplatzId);
 
-                // Fallback, falls DB leer ist (damit wir testen können):
+                // Fallback
                 decimal ticketPreis = sitzplatz != null ? sitzplatz.Preis : request.PreisVorschlag;
 
-                // 4. DB-ENTITY ERSTELLEN (Ohne Warenkorb!)
+                // 4. DB-ENTITY ERSTELLEN
                 var dbTicket = new TicketEntity
                 {
                     VorstellungId = request.VorstellungId,
@@ -63,11 +63,11 @@ namespace KinoAppService.Controllers
                     KundeId = kundenId
                 };
 
-                // 5. SPEICHERN IN TRANS
+                // 5. SPEICHERN
                 await _ticketRepo.AddAsync(dbTicket);
                 await _ticketRepo.SaveAsync(); // Generiert ID
 
-                // 6. EVENT SENDEN (Für MongoDB)
+                // 6. EVENT SENDEN
                 await _bus.PublishAsync(new TicketSold(
                     dbTicket.Id,
                     request.VorstellungId,
@@ -76,8 +76,8 @@ namespace KinoAppService.Controllers
                     DateTime.UtcNow
                 ));
 
-                // 7. COMMIT 
-                await _dbScope.CommitAsync(); 
+                // 7. COMMIT
+                await _dbScope.CommitAsync();
 
                 return Ok(new
                 {
@@ -88,8 +88,51 @@ namespace KinoAppService.Controllers
             }
             catch (Exception ex)
             {
-                // Optional: Fehler loggen
                 return StatusCode(500, $"Fehler beim Ticketkauf: {ex.Message}");
+            }
+        }
+
+        [HttpPost("cancel/{id}")]
+        public async Task<IActionResult> CancelTicket(long id)
+        {
+            await _dbScope.BeginAsync();
+            try
+            {
+                // 1. Ticket laden (inkl. Sitzplatz für den Preis!)
+                // Wir brauchen den Preis, um die Statistik zu korrigieren.
+                // Dazu müssen wir "Include" nutzen, oder den Sitzplatz separat laden.
+                var ticket = await _ticketRepo.GetByIdAsync(id);
+
+                if (ticket == null) return NotFound("Ticket nicht gefunden.");
+                if (ticket.Status == 2) return BadRequest("Ticket ist bereits storniert.");
+
+                // Preis ermitteln (für die Rückerstattung/Statistik)
+                var sitzplatz = await _sitzplatzRepo.GetByIdAsync(ticket.SitzplatzId);
+                decimal erstattung = sitzplatz?.Preis ?? 0;
+
+                // 2. Status ändern (2 = Storniert)
+                ticket.Status = 2;
+
+                // Update & Save
+                await _ticketRepo.UpdateAsync(ticket);
+                await _ticketRepo.SaveAsync();
+
+                // 3. Event senden (Minus-Geschäft für die Statistik)
+                await _bus.PublishAsync(new TicketCancelled(
+                    ticket.Id,
+                    ticket.VorstellungId,
+                    erstattung,
+                    DateTime.UtcNow
+                ));
+
+                // Transaktion bestätigen
+                await _dbScope.CommitAsync();
+
+                return Ok(new { Message = "Ticket erfolgreich storniert." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
         }
 

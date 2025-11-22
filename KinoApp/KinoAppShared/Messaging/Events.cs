@@ -32,4 +32,11 @@ namespace KinoAppShared.Messaging
         decimal TotalPrice,
         DateTime SoldAtUtc
     );
+
+    public record TicketCancelled(
+    long TicketId,
+    long ShowId,
+    decimal AmountToRefund, // Der Betrag, der abgezogen wird
+    DateTime CancelledAtUtc
+    );
 }

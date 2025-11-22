@@ -77,11 +77,13 @@ namespace KinoAppService
                     r.AddConsumer<TicketSoldProjectionConsumer>();
                     r.AddConsumer<KundeRegisteredConsumer>();
                     r.AddConsumer<ShowCreatedConsumer>();
+                    
 
                     // Producer registrieren (für IMessageBus)
                     r.AddProducer<TicketSold>("ticket-sold");
                     r.AddProducer<KundeRegistered>("kunde-registered");
                     r.AddProducer<ShowCreated>("show-created");
+                    r.AddProducer<TicketCancelled>("ticket-cancelled");
 
                     r.UsingKafka((ctx, k) =>
                     {
@@ -130,6 +132,14 @@ namespace KinoAppService
                         {
                             e.AutoOffsetReset = AutoOffsetReset.Earliest;
                             e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
+                            e.CreateIfMissing();
+                        });
+
+                        // NEU: Storno-Event registrieren
+                        k.TopicEndpoint<TicketCancelled>("ticket-cancelled", groupId, e =>
+                        {
+                            e.AutoOffsetReset = AutoOffsetReset.Earliest;
+                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx); // <--- Derselbe Consumer!
                             e.CreateIfMissing();
                         });
                     });

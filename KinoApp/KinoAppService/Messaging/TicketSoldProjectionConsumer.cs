@@ -2,7 +2,7 @@
 using MassTransit;
 using MongoDB.Driver;
 
-public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>
+public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>, IConsumer<TicketCancelled> // Wichtig: Beide Interfaces!
 {
     private readonly IMongoCollection<DailyShowRevenue> _col;
 
@@ -11,14 +11,12 @@ public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>
         _col = client.GetDatabase("stats").GetCollection<DailyShowRevenue>("daily_revenue");
     }
 
+    // KAUF
     public async Task Consume(ConsumeContext<TicketSold> ctx)
     {
         var e = ctx.Message;
-
-        // Wir schneiden die Uhrzeit ab, um nur das Datum zu haben (00:00:00)
         var verkaufsTag = e.SoldAtUtc.Date;
 
-        // Der Filter sucht jetzt nach: GLEICHE Show UND GLEICHER Tag
         var filter = Builders<DailyShowRevenue>.Filter.And(
             Builders<DailyShowRevenue>.Filter.Eq(x => x.ShowId, e.ShowId),
             Builders<DailyShowRevenue>.Filter.Eq(x => x.Day, verkaufsTag)
@@ -29,16 +27,37 @@ public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>
             .Inc(x => x.Revenue, e.TotalPrice)
             .Set(x => x.LastUpdatedUtc, DateTime.UtcNow);
 
-        // Upsert: Wenn es für HEUTE noch keinen Eintrag gibt -> Erstellen!
         await _col.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
     }
 
-    // Angepasste Klasse
+    // STORNO
+    public async Task Consume(ConsumeContext<TicketCancelled> ctx)
+    {
+        var e = ctx.Message;
+
+        var stornoTag = e.CancelledAtUtc.Date;
+
+        var filter = Builders<DailyShowRevenue>.Filter.And(
+            Builders<DailyShowRevenue>.Filter.Eq(x => x.ShowId, e.ShowId),
+            Builders<DailyShowRevenue>.Filter.Eq(x => x.Day, stornoTag) //
+        );
+
+        var update = Builders<DailyShowRevenue>.Update
+            .Inc(x => x.SoldTickets, -1)
+            .Inc(x => x.Revenue, -e.AmountToRefund)
+            .Set(x => x.LastUpdatedUtc, DateTime.UtcNow);
+
+        // Upsert hier auch true lassen (falls Storno am selben Tag wie Kauf passiert und noch nichts geschrieben war - unwahrscheinlich, aber sicher)
+        await _col.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+
+        Console.WriteLine($"STORNO: Ticket {e.TicketId} storniert. Umsatz korrigiert.");
+    }
+
     public class DailyShowRevenue
     {
-        public object Id { get; set; } // Mongo ObjectId
+        public object Id { get; set; }
         public long ShowId { get; set; }
-        public DateTime Day { get; set; } 
+        public DateTime Day { get; set; }
         public int SoldTickets { get; set; }
         public decimal Revenue { get; set; }
         public DateTime LastUpdatedUtc { get; set; }
