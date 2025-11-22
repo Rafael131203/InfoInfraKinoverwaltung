@@ -21,8 +21,8 @@ public class KundeEntityConfig : IEntityTypeConfiguration<UserEntity>
 
         // tickets 1:n
         b.HasMany(x => x.Tickets)
-          .WithOne(x => x.Kunde)
-          .HasForeignKey(x => x.KundeId)
+          .WithOne(x => x.User)
+          .HasForeignKey(x => x.UserId)
           .OnDelete(DeleteBehavior.SetNull);
     }
 }

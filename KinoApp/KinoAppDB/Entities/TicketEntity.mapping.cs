@@ -16,11 +16,11 @@ public class TicketEntityConfig : IEntityTypeConfiguration<TicketEntity>
         // WICHTIG: Hier haben wir die Unterstriche entfernt, damit es zur DB passt!
         b.Property(x => x.VorstellungId).HasColumnName("VorstellungId").IsRequired();
         b.Property(x => x.SitzplatzId).HasColumnName("SitzplatzId").IsRequired();
-        b.Property(x => x.KundeId).HasColumnName("KundeId");
+        b.Property(x => x.UserId).HasColumnName("UserId");
 
-        b.HasOne(x => x.Kunde)
+        b.HasOne(x => x.User)
           .WithMany(k => k.Tickets)
-          .HasForeignKey(x => x.KundeId)
+          .HasForeignKey(x => x.UserId)
           .OnDelete(DeleteBehavior.SetNull);
 
         // unique seat per show

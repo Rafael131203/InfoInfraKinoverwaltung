@@ -60,7 +60,7 @@ namespace KinoAppService.Controllers
                     VorstellungId = request.VorstellungId,
                     SitzplatzId = request.SitzplatzId,
                     Status = 1,
-                    KundeId = kundenId
+                    UserId = kundenId
                 };
 
                 // 5. SPEICHERN

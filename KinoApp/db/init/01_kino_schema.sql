@@ -65,6 +65,6 @@ CREATE TABLE IF NOT EXISTS "Ticket" (
     "Status"        INTEGER,
     "SitzplatzId"   INTEGER NOT NULL REFERENCES "Sitzplatz"("Id") ON DELETE CASCADE,
     "VorstellungId" INTEGER NOT NULL REFERENCES "Vorstellung"("Id") ON DELETE CASCADE,
-    "KundeId"       INTEGER REFERENCES "Kunde"("Id") ON DELETE SET NULL,
+    "UserId"       INTEGER REFERENCES "User"("Id") ON DELETE SET NULL,
     CONSTRAINT "UQ_Ticket_Seat_Per_Show" UNIQUE ("VorstellungId","SitzplatzId")
 );
