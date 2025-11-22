@@ -115,6 +115,72 @@ namespace KinoAppCore.Services
             return _mapper.Map<List<VorstellungDTO>>(data);
         }
 
+        public async Task<UpdateVorstellungResultDTO?> UpdateVorstellungAsync(UpdateVorstellungDTO dto,CancellationToken ct)
+        {
+            var vorstellung = await _repoVorstellung
+                .Query(false)
+                .Include(v => v.Film)
+                .Include(v => v.Kinosaal)
+                    .ThenInclude(k => k.Sitzreihen)
+                        .ThenInclude(r => r.Sitzplätze)
+                .FirstOrDefaultAsync(v => v.Id == dto.Id, ct);
+
+            if (vorstellung == null)
+                throw new ArgumentException($"Vorstellung mit Id {dto.Id} existiert nicht.");
+
+            // ALTE VERSION MAPPEN
+            var alteVersion = _mapper.Map<VorstellungDTO>(vorstellung);
+
+
+            var neuesDatum = dto.Datum ?? vorstellung.Datum;
+
+            var neuerFilmId =
+                    string.IsNullOrWhiteSpace(dto.FilmId) || dto.FilmId == "string"
+                    ? vorstellung.FilmId
+                    : dto.FilmId;
+
+            // Film laden
+            var film = await _repoFilm.GetByIdAsync(neuerFilmId, ct);
+            if (film == null)
+                throw new ArgumentException($"Film mit Id {neuerFilmId} existiert nicht.");
+
+            // Endzeit berechnen
+            var endZeit = neuesDatum.AddSeconds(film.Dauer ?? 0);
+
+            // Überschneidungsprüfung
+            var existing = (await _repoVorstellung.GetAllAsync(ct))
+                .Where(v => v.KinosaalId == vorstellung.KinosaalId && v.Id != dto.Id);
+
+            foreach (var v in existing)
+            {
+                var vFilm = await _repoFilm.GetByIdAsync(v.FilmId, ct);
+                if (vFilm == null) continue;
+
+                var vStart = v.Datum;
+                var vEnd = vStart.AddSeconds(vFilm.Dauer ?? 0);
+
+                if (neuesDatum < vEnd && endZeit > vStart)
+                    throw new InvalidOperationException("Die aktualisierte Vorstellung überschneidet sich mit einer anderen Vorstellung.");
+            }
+
+            // ÄNDERUNGEN ÜBERNEHMEN
+            vorstellung.Datum = neuesDatum;
+            vorstellung.FilmId = neuerFilmId;
+
+            await _repoVorstellung.UpdateAsync(vorstellung, ct);
+            await _repoVorstellung.SaveAsync(ct);
+
+            // NEUE VERSION MAPPEN (mit geladenem Film/Kinosaal)
+            var neueVersion = _mapper.Map<VorstellungDTO>(vorstellung);
+
+            return new UpdateVorstellungResultDTO
+            {
+                VorstellungAlt = alteVersion,
+                VorstellungNeu = neueVersion
+            };
+        }
+
+
         public async Task<bool> DeleteVorstellungAsync(long id, CancellationToken ct)
         {
             var vorstellung = await _repoVorstellung.GetByIdAsync(id, ct);
