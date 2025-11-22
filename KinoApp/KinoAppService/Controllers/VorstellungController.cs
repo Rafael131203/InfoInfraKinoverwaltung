@@ -3,10 +3,12 @@ using KinoAppDB;
 using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.DTOs.Vorstellung;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class VorstellungController : BaseController
