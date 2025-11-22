@@ -1,15 +1,8 @@
 ﻿using AutoMapper;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
-using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.DTOs.Vorstellung;
-using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppCore.Services
 {
@@ -19,7 +12,10 @@ namespace KinoAppCore.Services
         private readonly IFilmRepository _repoFilm;
         private readonly IMapper _mapper;
 
-        public VorstellungService(IVorstellungRepository repoVorstellung, IFilmRepository repoFilm, IMapper mapper)
+        public VorstellungService(
+            IVorstellungRepository repoVorstellung,
+            IFilmRepository repoFilm,
+            IMapper mapper)
         {
             _repoVorstellung = repoVorstellung;
             _repoFilm = repoFilm;
@@ -28,21 +24,17 @@ namespace KinoAppCore.Services
 
         public async Task CreateVorstellungAsync(CreateVorstellungDTO vorstellungDto, CancellationToken ct)
         {
-            // Berechne Start- und Endzeit der neuen Vorstellung
             var startZeit = vorstellungDto.Datum;
 
             var film = await _repoFilm.GetByIdAsync(vorstellungDto.FilmId, ct);
             if (film == null)
                 throw new ArgumentException($"Film mit Id {vorstellungDto.FilmId} existiert nicht.");
 
-            // Dauer in Sekunden -> Endzeit berechnen
             var endZeit = startZeit.AddSeconds(film.Dauer ?? 0);
 
-            // Alle Vorstellungen im gleichen Kinosaal laden
             var existingVorstellungen = (await _repoVorstellung.GetAllAsync(ct))
                 .Where(v => v.KinosaalId == vorstellungDto.KinosaalId);
 
-            // Überschneidung prüfen
             foreach (var v in existingVorstellungen)
             {
                 var vFilm = await _repoFilm.GetByIdAsync(v.FilmId, ct);
@@ -51,12 +43,10 @@ namespace KinoAppCore.Services
                 var vStart = v.Datum;
                 var vEnd = vStart.AddSeconds(vFilm.Dauer ?? 0);
 
-                bool overlaps = startZeit < vEnd && endZeit > vStart;
-                if (overlaps)
+                if (startZeit < vEnd && endZeit > vStart)
                     throw new InvalidOperationException("Die Vorstellung überschneidet sich mit einer bestehenden Vorstellung im selben Kinosaal.");
             }
 
-            // Keine Überschneidung -> Vorstellung erstellen
             var entity = new VorstellungEntity
             {
                 Datum = vorstellungDto.Datum,
@@ -69,51 +59,71 @@ namespace KinoAppCore.Services
             await _repoVorstellung.SaveAsync(ct);
         }
 
-        public async Task<List<VorstellungEntity>> GetVorstellungVonTagAsync(DateTime datum, CancellationToken ct = default)
+        private IQueryable<VorstellungEntity> BaseQuery()
+        {
+            return _repoVorstellung
+                .Query()
+                .Include(v => v.Film)
+                .Include(v => v.Kinosaal)
+                    .ThenInclude(k => k.Sitzreihen)
+                        .ThenInclude(r => r.Sitzplätze);
+        }
+
+        public async Task<List<VorstellungDTO>> GetVorstellungVonTagAsync(DateTime datum, CancellationToken ct)
         {
             var start = datum.Date;
             var end = start.AddDays(1);
 
-            return await _repoVorstellung
-                .Query()
+            var data = await BaseQuery()
                 .Where(v => v.Datum >= start && v.Datum < end)
+                .OrderBy(v => v.Datum)
                 .ToListAsync(ct);
+
+            return _mapper.Map<List<VorstellungDTO>>(data);
         }
 
-        public async Task<List<VorstellungEntity>> GetVorstellungVonKinosaalAsync(long kinosaalId, CancellationToken ct)
+        public async Task<List<VorstellungDTO>> GetVorstellungVonKinosaalAsync(long kinosaalId, CancellationToken ct)
         {
-            return await _repoVorstellung
-                .Query()
+            var data = await BaseQuery()
                 .Where(v => v.KinosaalId == kinosaalId)
                 .OrderBy(v => v.Datum)
                 .ToListAsync(ct);
+
+            return _mapper.Map<List<VorstellungDTO>>(data);
         }
 
-        public async Task<List<VorstellungEntity>> GetVorstellungVonKinosaalUndTagAsync(DateTime datum, long kinosaalId, CancellationToken ct)
+        public async Task<List<VorstellungDTO>> GetVorstellungVonKinosaalUndTagAsync(DateTime datum, long kinosaalId, CancellationToken ct)
         {
             var start = datum.Date;
             var end = start.AddDays(1);
 
-            return await _repoVorstellung
-                .Query()
+            var data = await BaseQuery()
                 .Where(v => v.KinosaalId == kinosaalId && v.Datum >= start && v.Datum < end)
                 .OrderBy(v => v.Datum)
                 .ToListAsync(ct);
+
+            return _mapper.Map<List<VorstellungDTO>>(data);
+        }
+
+        public async Task<List<VorstellungDTO>> GetVorstellungVonFilm(string filmId, CancellationToken ct)
+        {
+            var data = await BaseQuery()
+                .Where(v => v.FilmId == filmId)
+                .OrderBy(v => v.Datum)
+                .ToListAsync(ct);
+
+            return _mapper.Map<List<VorstellungDTO>>(data);
         }
 
         public async Task<bool> DeleteVorstellungAsync(long id, CancellationToken ct)
         {
-            // Hole die Vorstellung aus der Datenbank
             var vorstellung = await _repoVorstellung.GetByIdAsync(id, ct);
             if (vorstellung == null)
                 return false;
 
-            // Lösche die Vorstellung
             await _repoVorstellung.DeleteAsync(vorstellung, ct);
             await _repoVorstellung.SaveAsync(ct);
             return true;
         }
-
-
     }
 }

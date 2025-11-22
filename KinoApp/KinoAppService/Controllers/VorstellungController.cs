@@ -66,7 +66,19 @@ namespace KinoAppService.Controllers
                 var vorstellungen = await _vorstellungService.GetVorstellungVonKinosaalUndTagAsync(datum, kinosaalId, token);
 
                 if (!vorstellungen.Any())
-                return new NotFoundObjectResult($"Keine Vorstellungen gefunden.");
+                    return new NotFoundObjectResult($"Keine Vorstellungen gefunden.");
+
+                return new OkObjectResult(vorstellungen);
+            }, ct);
+
+        [HttpGet("VonFilm")]
+        public Task<IActionResult> GetVorstellungenVonFilm(string filmId, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var vorstellungen = await _vorstellungService.GetVorstellungVonFilm(filmId, token);
+
+                if (!vorstellungen.Any())
+                    return new NotFoundObjectResult($"Keine Vorstellungen für FilmId {filmId} gefunden.");
 
                 return new OkObjectResult(vorstellungen);
             }, ct);
