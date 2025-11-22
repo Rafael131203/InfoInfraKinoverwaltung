@@ -115,7 +115,7 @@ namespace KinoAppCore.Services
                 new SetPreisDTO
                 {
                     Kategorie = SitzreihenKategorie.Parkett,
-                    Preis = 10.00m
+                    Preis = 15.00m
                 },
                 ct);
 
@@ -123,7 +123,7 @@ namespace KinoAppCore.Services
                 new SetPreisDTO
                 {
                     Kategorie = SitzreihenKategorie.LOGE,
-                    Preis = 12.50m
+                    Preis = 25.50m
                 },
                 ct);
 
@@ -131,7 +131,7 @@ namespace KinoAppCore.Services
                 new SetPreisDTO
                 {
                     Kategorie = SitzreihenKategorie.LOGEPLUS,
-                    Preis = 15.00m
+                    Preis = 40.00m
                 },
                 ct);
         }

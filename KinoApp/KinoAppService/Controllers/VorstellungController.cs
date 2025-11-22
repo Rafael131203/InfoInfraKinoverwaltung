@@ -83,6 +83,18 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(vorstellungen);
             }, ct);
 
+        [HttpPut]
+        public Task<IActionResult> VorstellungAktualisieren(UpdateVorstellungDTO dto, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var result = await _vorstellungService.UpdateVorstellungAsync(dto, token);
+
+                if (result == null)
+                    return new NotFoundObjectResult($"Vorstellung mit Id {dto.Id} nicht gefunden.");
+
+                return new OkObjectResult(result);
+            }, ct);
+
 
 
         [HttpDelete("{id:long}")]
