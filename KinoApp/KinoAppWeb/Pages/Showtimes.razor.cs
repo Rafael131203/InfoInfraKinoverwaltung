@@ -18,10 +18,16 @@ namespace KinoAppWeb.Pages
         [Inject] public NavigationManager Nav { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
 
-        protected bool _isLoading = true;
+        protected bool _isLoading = false;
+        protected bool _hasLoadedOnce = false;
+
         protected DateTime _currentDate = DateTime.Today;
 
-        // IMPORTANT: initialise list here so it's never null during first render
+        // Retry config
+        private const int RetryDelaySeconds = 5;
+        private const int MaxRetryAttempts = 12; // 12 * 5s = 1 minute
+
+        // initialise list here so it's never null during first render
         protected List<MovieShowtimeDto> _movies { get; set; } = new();
 
         protected int TotalMovies => _movies?.Count ?? 0;
@@ -30,14 +36,20 @@ namespace KinoAppWeb.Pages
             _movies?.Sum(m => m.Showtimes?.Count ?? 0) ?? 0;
 
         protected string CurrentDateFormatted =>
-            _currentDate.ToString("dddd, dd. MMMM yyyy");
+            _hasLoadedOnce
+                ? _currentDate.ToString("dddd, dd. MMMM yyyy")
+                : "No date selected";
 
         // ------------------------------------------------------------
 
         protected override async Task OnInitializedAsync()
         {
             await UserSession.InitializeAsync();
-            await LoadShowtimesFor(_currentDate);
+
+            // First render: no auto-load, user must pick a date / chip
+            _isLoading = false;
+            _hasLoadedOnce = false;
+            _movies.Clear();
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -56,21 +68,51 @@ namespace KinoAppWeb.Pages
         }
 
         // ------------------------------------------------------------
-        // LOADING DATA
+        // LOADING DATA (with retry)
         // ------------------------------------------------------------
 
         private async Task LoadShowtimesFor(DateTime date)
         {
             _isLoading = true;
-            var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            _currentDate = date.Date;
             _movies.Clear();
             await InvokeAsync(StateHasChanged);
 
-            // 1) Load Vorstellungen for this date
-            var vorstellungen = await VorstellungService.GetVorstellungVonTagAsync(utcDate, CancellationToken.None)?? new List<VorstellungDTO>();
+            var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
 
-            if (vorstellungen.Count == 0)   
+            List<VorstellungDTO>? vorstellungen = null;
+
+            for (var attempt = 1; attempt <= MaxRetryAttempts; attempt++)
             {
+                try
+                {
+                    vorstellungen = await VorstellungService
+                        .GetVorstellungVonTagAsync(utcDate, CancellationToken.None)
+                        ?? new List<VorstellungDTO>();
+                }
+                catch
+                {
+                    // treat as "no data yet" and retry
+                    vorstellungen = new List<VorstellungDTO>();
+                }
+
+                if (vorstellungen.Count > 0)
+                {
+                    // success – break the retry loop
+                    break;
+                }
+
+                if (attempt < MaxRetryAttempts)
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(RetryDelaySeconds));
+                }
+            }
+
+            _hasLoadedOnce = true;
+
+            if (vorstellungen == null || vorstellungen.Count == 0)
+            {
+                // no data after all retries -> show "No screenings planned"
                 _isLoading = false;
                 await InvokeAsync(StateHasChanged);
                 return;
@@ -116,7 +158,6 @@ namespace KinoAppWeb.Pages
                     Showtimes = showtimes
                 };
 
-
                 movies.Add(movie);
             }
 
@@ -140,12 +181,16 @@ namespace KinoAppWeb.Pages
 
         protected async Task SetDayOffset(int offset)
         {
-            await LoadShowtimesFor(DateTime.Today.AddDays(offset));
+            var target = DateTime.Today.AddDays(offset);
+            await LoadShowtimesFor(target);
             await RefreshAnimations();
         }
 
         protected string GetDayChipClass(int offset)
         {
+            if (!_hasLoadedOnce)
+                return string.Empty;
+
             var target = DateTime.Today.AddDays(offset);
             return target.Date == _currentDate.Date ? "chip--active" : string.Empty;
         }
@@ -196,7 +241,6 @@ namespace KinoAppWeb.Pages
 
             Nav.NavigateTo("/seating");
         }
-
 
         protected void GoToEditMovies()
         {

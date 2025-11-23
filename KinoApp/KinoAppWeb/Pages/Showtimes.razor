@@ -102,6 +102,16 @@
                 </div>
             </div>
         }
+        else if (!_hasLoadedOnce)
+        {
+            <div class="showtimes-empty">
+                <h2>Select a date to see showtimes.</h2>
+                <p>
+                    Use the Today / Tomorrow chips or the date picker above
+                    to load available screenings.
+                </p>
+            </div>
+        }
         else if (_movies.Count == 0)
         {
             <div class="showtimes-empty">

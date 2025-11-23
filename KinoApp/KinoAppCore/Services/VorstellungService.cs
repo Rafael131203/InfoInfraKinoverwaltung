@@ -30,7 +30,7 @@ namespace KinoAppCore.Services
             if (film == null)
                 throw new ArgumentException($"Film mit Id {vorstellungDto.FilmId} existiert nicht.");
 
-            var endZeit = startZeit.AddSeconds(film.Dauer ?? 0);
+            var endZeit = startZeit.AddMinutes(GetRuntimeMinutes(film.Dauer));
 
             var existingVorstellungen = (await _repoVorstellung.GetAllAsync(ct))
                 .Where(v => v.KinosaalId == vorstellungDto.KinosaalId);
@@ -41,7 +41,7 @@ namespace KinoAppCore.Services
                 if (vFilm == null) continue;
 
                 var vStart = v.Datum;
-                var vEnd = vStart.AddSeconds(vFilm.Dauer ?? 0);
+                var vEnd = vStart.AddMinutes(GetRuntimeMinutes(vFilm.Dauer));
 
                 if (startZeit < vEnd && endZeit > vStart)
                     throw new InvalidOperationException("Die Vorstellung überschneidet sich mit einer bestehenden Vorstellung im selben Kinosaal.");
@@ -58,6 +58,23 @@ namespace KinoAppCore.Services
             await _repoVorstellung.AddAsync(entity, ct);
             await _repoVorstellung.SaveAsync(ct);
         }
+
+
+        private static int GetRuntimeMinutes(int? dauer)
+        {
+            if (!dauer.HasValue)
+                return 120; // default 2h
+
+            var d = dauer.Value;
+
+            // If it looks like seconds (e.g. 5400), convert to minutes.
+            if (d > 300)         // > 5h is unrealistic in minutes, so treat as seconds
+                return d / 60;
+
+            return d;            // already minutes
+        }
+
+
 
         private IQueryable<VorstellungEntity> BaseQuery()
         {

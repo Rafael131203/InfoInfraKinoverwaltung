@@ -24,6 +24,9 @@ namespace KinoAppCore.Services
 
         Task<IReadOnlyList<FilmDto>> GetAllLocalFilmsAsync(CancellationToken ct = default);
 
+        Task<FilmEntity> AddMovieAsync(FilmEntity movie, CancellationToken ct = default);
+        Task<bool> DeleteMovieAsync(string movieId, CancellationToken ct = default);
+
 
     }
 }

@@ -329,6 +329,32 @@ namespace KinoAppCore.Services
             return dto;
         }
 
+        public async Task<FilmEntity> AddMovieAsync(FilmEntity movie, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(movie.Id))
+                throw new ArgumentException("Film Id cannot be empty.");
+
+            bool exists = await _filmRepository.AnyAsync(f => f.Id == movie.Id, ct);
+            if (exists)
+                return movie;
+
+            await _filmRepository.AddAsync(movie, ct);
+            await _filmRepository.SaveAsync(ct);
+            return movie;
+        }
+
+        public async Task<bool> DeleteMovieAsync(string movieId, CancellationToken ct = default)
+        {
+            var film = await _filmRepository.GetByIdAsync(movieId, ct);
+            if (film == null)
+                return false;
+
+            await _filmRepository.DeleteAsync(film, ct);
+            await _filmRepository.SaveAsync(ct);
+            return true;
+        }
+
+
 
     }
 }
