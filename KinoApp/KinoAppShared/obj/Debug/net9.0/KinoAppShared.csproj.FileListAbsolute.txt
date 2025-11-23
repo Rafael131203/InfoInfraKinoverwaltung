@@ -1,0 +1,12 @@
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\bin\Debug\net9.0\KinoAppShared.deps.json
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\bin\Debug\net9.0\KinoAppShared.dll
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\bin\Debug\net9.0\KinoAppShared.pdb
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.AssemblyInfoInputs.cache
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.AssemblyInfo.cs
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.csproj.CoreCompileInputs.cache
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.sourcelink.json
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.dll
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\refint\KinoAppShared.dll
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\KinoAppShared.pdb
+C:\Users\admin\source\repos\Rafael131203\InfoInfraKinoverwaltung\KinoApp\KinoAppShared\obj\Debug\net9.0\ref\KinoAppShared.dll

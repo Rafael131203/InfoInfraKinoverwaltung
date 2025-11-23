@@ -6,51 +6,56 @@ Kinosaal "1" <-- "0..m" Vorstellung
 Vorstellung "1" <-- "0..m" Ticket
 Sitzreihe "1" *-- "1..m" Sitzplatz
 Kinosaal *-- "1..m" Sitzreihe
-Warenkorb "0..1" <-- "0..m" Ticket
 Sitzplatz "1" <-- Ticket
+Benutzer "1" <-- "0..m" Ticket
 
 
-Gast *-- "1" Warenkorb
-Kunde *-- "1" Warenkorb
-
-Gast --|> Benutzer
-Kunde --|> Benutzer
-Mitarbeiter --|> Benutzer
 
 class Film {
+id: String
 titel: String
 beschreibung: String
 dauer: Int
 fsk: Int
 genre: String
-'play()
+imageURL: String
 }
 
 class Kinosaal {
+id: int
 name: String
 }
 
 class Vorstellung {
-datum: Date
-zeit: Time
+id: int
+beginn: DateTime
 status: Vorstellungsstatus
 }
 
 class Sitzreihe{
+id: int
 kategorie: Platzkategorie
-nummer: Int
+bezeichnung: String
 }
 
 class Sitzplatz{
+id: int
 gebucht: Boolean
 nummer: Int
-preis: Int
+preis: Decimal
 }
 
 class Ticket{
 id: Int
 status: Ticketstatus
 }
+
+class PreisZuKategorie{
+id: Int
+Kategorie: Platzkategorie
+Preis: Decimal
+}
+
 
 
 enum Platzkategorie{
@@ -59,17 +64,16 @@ LOGE
 PARKETT
 }
 
-abstract class Benutzer {
-  name: String
+class Benutzer {
+  id: int
+  vorname: String
+  nachname: String
   email: String
+  passwort: String
+  rolle: String
 }
 
-class Gast
-class Kunde
-class Mitarbeiter
-class Warenkorb {
-  gesamtpreis: Int
-}
+
 
 
 enum Ticketstatus {
