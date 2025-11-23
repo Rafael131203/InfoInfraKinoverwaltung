@@ -10,6 +10,8 @@ namespace KinoAppWeb.Services
     {
         private const string StorageKey = "kinoapp_session";
         private const string FilmCacheKey = "kinoapp_filmcached";
+        private const string SelectedSeatsKey = "kinoapp_selected_seats";
+        private const string SelectedShowtimeKey = "kinoapp_selected_showtime";
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -26,9 +28,8 @@ namespace KinoAppWeb.Services
         public bool IsAdmin => string.Equals(_session?.Role, "Admin", StringComparison.OrdinalIgnoreCase);
         public bool IsUser => string.Equals(_session?.Role, "User", StringComparison.OrdinalIgnoreCase);
         public string? DisplayName => string.IsNullOrWhiteSpace(_session?.Vorname) ? _session?.Email : _session?.Vorname;
-
-        private const string SelectedShowtimeKey = "kinoapp_selected_showtime";
         public SelectedShowtimeDto? SelectedShowtime { get; private set; }
+        public List<SelectedSeatClientDto> SelectedSeats { get; private set; } = new();
 
 
 
@@ -88,6 +89,18 @@ namespace KinoAppWeb.Services
                 {
                     SelectedShowtime = JsonSerializer.Deserialize<SelectedShowtimeDto>(selectedShowtimeJson, JsonOptions);
                 }
+                // selected seats
+                var selectedSeatsJson = await _js.InvokeAsync<string?>("sessionStorage.getItem", SelectedSeatsKey);
+                if (!string.IsNullOrWhiteSpace(selectedSeatsJson))
+                {
+                    var seats = JsonSerializer.Deserialize<List<SelectedSeatClientDto>>(selectedSeatsJson, JsonOptions);
+                    SelectedSeats = seats ?? new List<SelectedSeatClientDto>();
+                }
+                else
+                {
+                    SelectedSeats = new List<SelectedSeatClientDto>();
+                }
+
             }
             catch
             {
@@ -117,6 +130,8 @@ namespace KinoAppWeb.Services
 
             await _js.InvokeVoidAsync("sessionStorage.removeItem", StorageKey);
             await _js.InvokeVoidAsync("sessionStorage.removeItem", FilmCacheKey);
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedShowtimeKey);
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedSeatsKey);
         }
 
         /// <summary>
@@ -240,6 +255,21 @@ namespace KinoAppWeb.Services
             SelectedShowtime = null;
             await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedShowtimeKey);
         }
+
+        public async Task SetSelectedSeatsAsync(List<SelectedSeatClientDto> seats)
+        {
+            SelectedSeats = seats ?? new List<SelectedSeatClientDto>();
+
+            var json = JsonSerializer.Serialize(SelectedSeats, JsonOptions);
+            await _js.InvokeVoidAsync("sessionStorage.setItem", SelectedSeatsKey, json);
+        }
+
+        public async Task ClearSelectedSeatsAsync()
+        {
+            SelectedSeats = new List<SelectedSeatClientDto>();
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedSeatsKey);
+        }
+
 
     }
 }

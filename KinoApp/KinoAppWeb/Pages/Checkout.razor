@@ -1,0 +1,67 @@
+﻿@page "/checkout"
+
+<PageTitle>Checkout</PageTitle>
+
+<div class="page-shell checkout-page">
+    @if (UserSession.SelectedShowtime is null || Seats.Count == 0)
+    {
+        <section class="checkout-empty">
+            <h1>No tickets in your basket</h1>
+            <p>
+                You don&apos;t have any selected seats yet.
+                Go back to the <a href="/showtimes">showtimes</a> to choose a session.
+            </p>
+        </section>
+    }
+    else
+    {
+        var s = UserSession.SelectedShowtime!;
+
+        <section class="checkout-card">
+            <h1>Review your tickets</h1>
+
+            <p class="checkout-meta">
+                @s.MovieTitle<br />
+                @s.Showtime!.StartsAt.ToString("dddd, dd.MM.yyyy HH:mm")
+                @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
+                {
+                    @: · @s.Showtime.KinosaalName
+                }
+            </p>
+
+            <div class="checkout-seats">
+                @foreach (var seat in Seats)
+                {
+                    <div class="checkout-seatline">
+                        <span class="checkout-seatline__seat">
+                            @seat.RowLabel@seat.SeatNumber
+                        </span>
+                        <span class="checkout-seatline__price">
+                            @seat.Price.ToString("0.00") €
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <div class="checkout-total">
+                <span>Total</span>
+                <strong>@Total.ToString("0.00") €</strong>
+            </div>
+
+            <div class="checkout-actions">
+                <button class="btn btn--navback" @onclick="BackToSeats">
+                    Back to seats
+                </button>
+
+                <button class="btn btn--neon" @onclick="Confirm">
+                    Confirm booking
+                </button>
+            </div>
+
+            @if (_confirmationMessage is not null)
+            {
+                <p class="checkout-confirmation">@_confirmationMessage</p>
+            }
+        </section>
+    }
+</div>

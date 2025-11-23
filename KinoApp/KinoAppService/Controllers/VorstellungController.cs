@@ -21,6 +21,7 @@ namespace KinoAppService.Controllers
             _vorstellungService = vorstellungService;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("Erstellen")]
         public Task<IActionResult> VorstellungErstellen(CreateVorstellungDTO vorstellung, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -37,6 +38,7 @@ namespace KinoAppService.Controllers
                 }
             }, ct);
 
+        [AllowAnonymous]
         [HttpGet("VonTag")]
         public Task<IActionResult> GetVorstellungenVonTag(DateTime datum, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -49,6 +51,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(vorstellungen);
             }, ct);
 
+        [AllowAnonymous]
         [HttpGet("VonKinosaal")]
         public Task<IActionResult> GetVorstellungVonKinosaal(long kinosaalId, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -61,6 +64,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(vorstellungen);
             }, ct);
 
+        [AllowAnonymous]
         [HttpGet("VonKinosaalUndTag")]
         public Task<IActionResult> GetVorstellungVonKinosaalUndTag(DateTime datum, long kinosaalId, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -73,6 +77,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(vorstellungen);
             }, ct);
 
+        [AllowAnonymous]
         [HttpGet("VonFilm")]
         public Task<IActionResult> GetVorstellungenVonFilm(string filmId, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -85,6 +90,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(vorstellungen);
             }, ct);
 
+        [Authorize(Roles = "Admin")]
         [HttpPut]
         public Task<IActionResult> VorstellungAktualisieren(UpdateVorstellungDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -97,8 +103,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(result);
             }, ct);
 
-
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id:long}")]
         public Task<IActionResult> VorstellungLoeschen(long id, CancellationToken ct) =>
             ExecuteAsync(async token =>

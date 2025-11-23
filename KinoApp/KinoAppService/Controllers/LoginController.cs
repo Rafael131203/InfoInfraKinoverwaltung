@@ -1,6 +1,7 @@
 ﻿using KinoAppCore.Services;
 using KinoAppDB;
 using KinoAppShared.DTOs.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
@@ -17,6 +18,7 @@ namespace KinoAppService.Controllers
             _loginService = loginService;
         }
 
+        [AllowAnonymous]
         [HttpPost]
         public Task<IActionResult> Login([FromBody] LoginRequestDTO request, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -31,6 +33,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(result);
             }, ct);
 
+        [Authorize]
         [HttpPost("refresh")]
         public Task<IActionResult> Refresh([FromBody] RefreshRequestDTO request, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -45,6 +48,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(result);
             }, ct);
 
+        [AllowAnonymous]
         [HttpPost("register")]
         public Task<IActionResult> Register([FromBody] RegisterRequestDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -74,7 +78,7 @@ namespace KinoAppService.Controllers
                 }
             }, ct);
 
-
+        [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
         {

@@ -1,32 +1,130 @@
 ﻿@page "/admin/films"
-@inject KinoAppWeb.Services.UserSession UserSession
-@inject NavigationManager Navigation
 
-<h1>Admin – Manage Films</h1>
+<PageTitle>Admin – Films &amp; Showtimes</PageTitle>
 
-@if (!UserSession.IsAuthenticated)
-{
-    <p>You must be logged in.</p>
-}
-else if (!UserSession.IsAdmin)
-{
-    <p>You are not authorized to view this page.</p>
-}
-else
-{
-    <!-- actual admin UI here -->
-    <p>Here you can manage films. 🎬</p>
-}
-
-@code {
-    protected override async Task OnInitializedAsync()
+<div class="page-shell admin-films-page">
+    @if (!IsInitialized)
     {
-        await UserSession.InitializeAsync();
-
-        // Optionally: redirect instead of showing messages
-        if (!UserSession.IsAdmin)
-        {
-            Navigation.NavigateTo("/");
-        }
+        <p>Loading…</p>
     }
-}
+    else if (!IsAdmin)
+    {
+        <div class="admin-films-denied">
+            <h1>Access denied</h1>
+            <p>You need admin rights to manage films and showtimes.</p>
+        </div>
+    }
+    else
+    {
+        <section class="admin-films-header">
+            <div>
+                <p class="eyebrow">Backoffice</p>
+                <h1>Films &amp; Showtimes</h1>
+                <p class="subtitle">
+                    Choose a date to see all programmed films. Click a showtime to open the
+                    seating editor for that screening.
+                </p>
+
+                <div class="admin-films-stats">
+                    <span>@MovieCount film(s)</span>
+                    <span>@ShowtimeCount showtime(s)</span>
+                </div>
+            </div>
+
+            <div class="admin-films-datepanel">
+                <div class="admin-films-date">
+                    <label for="datePickerAdmin">Date</label>
+                    <input id="datePickerAdmin"
+                           type="date"
+                           value="@CurrentDate.ToString("yyyy-MM-dd")"
+                           @onchange="OnDateChanged" />
+                    <p class="hint">@CurrentDate.ToString("dddd, dd.MM.yyyy")</p>
+                </div>
+
+                <div class="admin-films-chips">
+                    <button class="chip @GetDayChipClass(0)"
+                            @onclick="() => SetDayOffset(0)">
+                        Today
+                    </button>
+                    <button class="chip @GetDayChipClass(1)"
+                            @onclick="() => SetDayOffset(1)">
+                        Tomorrow
+                    </button>
+                    <button class="chip @GetDayChipClass(2)"
+                            @onclick="() => SetDayOffset(2)">
+                        +2 days
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="admin-films-list">
+            @if (IsLoading)
+            {
+                <p>Loading showtimes…</p>
+            }
+            else if (Movies.Count == 0)
+            {
+                <p>No showtimes programmed for this day.</p>
+            }
+            else
+            {
+                @foreach (var movie in Movies)
+                {
+                    <article class="admin-films-card">
+                        <div class="admin-films-card__poster">
+                            @if (!string.IsNullOrWhiteSpace(movie.PosterUrl))
+                            {
+                                <img src="@movie.PosterUrl" alt="@movie.Title" />
+                            }
+                        </div>
+
+                        <div class="admin-films-card__body">
+                            <header>
+                                <h2>@movie.Title</h2>
+                                <div class="admin-films-card__meta">
+                                    <span>@FormatDuration(movie.DurationMinutes)</span>
+                                    <span>@movie.AgeRating</span>
+                                    @if (!string.IsNullOrWhiteSpace(movie.Genres))
+                                    {
+                                        <span>@movie.Genres</span>
+                                    }
+                                </div>
+                            </header>
+
+                            <p class="admin-films-card__description">
+                                @movie.Description
+                            </p>
+
+                            <div class="admin-films-card__showtimes">
+                                @if (movie.Showtimes is { Count: > 0 })
+                                {
+                                    @foreach (var st in movie.Showtimes.OrderBy(s => s.StartsAt))
+                                    {
+                                        <button class="admin-showtime-pill"
+                                                title="Edit seating for this showtime"
+                                                @onclick="() => OpenSeating(movie.Id, st.Id)">
+                                            <span class="admin-showtime-pill__time">
+                                                @st.StartsAt.ToLocalTime().ToString("HH:mm")
+                                            </span>
+                                            @if (!string.IsNullOrWhiteSpace(st.KinosaalName))
+                                            {
+                                                <span class="admin-showtime-pill__hall">
+                                                    @st.KinosaalName
+                                                </span>
+                                            }
+                                        </button>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="muted">No showtimes for this film.</span>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                }
+            }
+        </section>
+    }
+</div>

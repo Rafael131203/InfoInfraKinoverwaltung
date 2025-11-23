@@ -1,8 +1,9 @@
 ﻿@page "/seating"
+
 @using KinoAppWeb.Services
 @using KinoAppShared.DTOs.Showtimes
-@inject UserSession UserSession
-@inject NavigationManager NavManager
+@using KinoAppShared.DTOs.Kinosaal
+@using KinoAppShared.Enums
 
 <PageTitle>Seat Selection</PageTitle>
 
@@ -25,42 +26,268 @@
             <button class="btn btn--ghost"
                     type="button"
                     @onclick="GoBack">
-                ← Back to showtimes
+                Back to showtimes
             </button>
 
-            <h1>@s!.MovieTitle</h1>
+            <div class="seating-header__info">
+                <!-- LEFT: Big movie title -->
+                <div class="seating-header__titleblock">
+                    <h1 class="seating-header__title">@s!.MovieTitle</h1>
+                    <p class="seating-header__subtitle">
+                        Seat selection
+                    </p>
 
-            <p class="seating-header__meta">
-                @s.Showtime!.StartsAt.ToString("dddd, dd.MM.yyyy HH:mm")
-                @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
-                {
-                    @: · @s.Showtime.KinosaalName
-                }
-            </p>
+                    <div class="seating-legend">
+                        <div class="seating-legend__item">
+                            <span class="legend-pill legend-pill--parkett"></span>
+                            <span>Parkett (Standard)</span>
+                        </div>
+                        <div class="seating-legend__item">
+                            <span class="legend-pill legend-pill--loge"></span>
+                            <span>Loge (Premium)</span>
+                        </div>
+                        <div class="seating-legend__item">
+                            <span class="legend-pill legend-pill--logeplus"></span>
+                            <span>Loge Plus (Luxury)</span>
+                        </div>
+                        <div class="seating-legend__item">
+                            <span class="legend-pill legend-pill--taken"></span>
+                            <span>Booked</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: date, hall + hint text -->
+                <div class="seating-header__details">
+                    <p class="seating-header__meta">
+                        @s.Showtime!.StartsAt.ToString("dddd, dd.MM.yyyy HH:mm")
+                        @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
+                        {
+                            @: · @s.Showtime.KinosaalName
+                        }
+                    </p>
+
+                    <div class="seating-header__divider"></div>
+
+                    <p class="seating-header__hint">
+                        Choose one or more seats.<br />Click again to unselect.
+                    </p>
+                </div>
+            </div>
         </section>
 
+
         <section class="seating-layout">
-            @* TODO: your actual seat map goes here *@
-            <p>Seat selection UI coming soon…</p>
+
+            @if (_isLoading)
+            {
+                <div class="seating-loading">
+                    <div class="loading-spinner">
+                        <div class="loading-spinner__ring"></div>
+                        <div class="loading-spinner__reel"></div>
+                    </div>
+                    <p>Loading seating plan…</p>
+                </div>
+            }
+            else if (!string.IsNullOrWhiteSpace(_loadError))
+            {
+                <div class="seating-error">
+                    <h2>Couldn&apos;t load hall</h2>
+                    <p>@_loadError</p>
+                </div>
+            }
+            else if (_kinosaal is null || _kinosaal.Sitzreihen is null || _kinosaal.Sitzreihen.Count == 0)
+            {
+                <div class="seating-empty">
+                    <h2>No seat layout found</h2>
+                    <p>This hall doesn&apos;t have any rows yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="seating-grid-wrapper">
+                    <div class="seating-screen">
+                        <span class="seating-screen__label">SCREEN</span>
+                    </div>
+                    @* A at the top, last row at the bottom *@
+                    @foreach (var row in _kinosaal.Sitzreihen.OrderBy(r => r.Bezeichnung))
+                    {
+                        <div class="seating-row @GetRowCategoryClass(row.Kategorie)">
+                            <div class="seating-row__label">
+                                @row.Bezeichnung
+                            </div>
+
+                            <div class="seating-row__seats">
+                                @if (row.Sitzplätze is not null && row.Sitzplätze.Count > 0)
+                                {
+                                    foreach (var seat in row.Sitzplätze.OrderBy(p => p.Nummer))
+                                    {
+                                        var seatTitle = BuildSeatTitle(row, seat);
+                                        var selected = IsSeatSelected(seat.Id);
+
+                                        <button class="seat @GetSeatCategoryClass(row.Kategorie) @GetSeatStateClass(seat, selected)"
+                                                title="@seatTitle"
+                                                @onclick="@(() => ToggleSeat(row, seat))"
+                                                @onmouseover="@(() => ShowSeatInfo(row, seat, selected))"
+                                                @onmouseout="@ClearSeatInfo">
+                                            <span class="seat__shape">
+                                                <span class="seat__back"></span>
+                                                <span class="seat__neck"></span>
+                                                <span class="seat__base"></span>
+                                            </span>
+                                            <span class="seat__number">@seat.Nummer</span>
+                                        </button>
+
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="seating-footer-panel">
+                    <div class="seating-footer-panel__copy">
+                        <h3>Your seat details</h3>
+                        <div class="seating-footer-panel__divider"></div>
+                        <p>
+                            Hover any seat to preview its code, category and price.
+                            Click to add it to your tickets, click again to remove it.
+                        </p>
+                    </div>
+
+                    <div class="seating-hoverinfo">
+                        @if (_hoverSeat is null)
+                        {
+                            <div class="seating-hoverinfo__placeholder">
+                                <p class="seating-hoverinfo__headline">
+                                    No seat highlighted
+                                </p>
+                                <p class="seating-hoverinfo__text">
+                                    Move over a seat to see its section, seat code and exact price.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="seating-hoverinfo__content">
+                                <div class="seating-hoverinfo__row seating-hoverinfo__row--top">
+                                    <div>
+                                        <span class="seating-hoverinfo__label">Seat</span>
+                                        <div class="seating-hoverinfo__value seating-hoverinfo__value--code">
+                                            @_hoverSeat.Code
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="seating-hoverinfo__label">Category</span>
+                                        <div class="seating-hoverinfo__value">
+                                            @_hoverSeat.Category
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <span class="seating-hoverinfo__label">Price</span>
+                                        <div class="seating-hoverinfo__value">
+                                            @_hoverSeat.Price.ToString("0.00") €
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (_hoverSeat.IsTaken)
+                                {
+                                    <p class="seating-hoverinfo__status seating-hoverinfo__status--taken">
+                                        This seat is already booked.
+                                    </p>
+                                }
+                                else if (_hoverSeat.IsSelected)
+                                {
+                                    <p class="seating-hoverinfo__status seating-hoverinfo__status--selected">
+                                        This seat is in your selection – click again to remove.
+                                    </p>
+                                }
+                                else
+                                {
+                                    <p class="seating-hoverinfo__status seating-hoverinfo__status--free">
+                                        Available – click to add it to your tickets.
+                                    </p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="seating-ticketbar">
+                    @if (_selectedSeats.Count == 0)
+                    {
+                        <div class="seating-ticketbar__empty">
+                            <p>No seats selected yet.</p>
+                            <p class="seating-ticketbar__hint">
+                                Click on one or more seats to build your ticket bundle.
+                            </p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="seating-ticketbar__summary">
+                            <div class="seating-ticketbar__left">
+                                <h3 class="seating-ticketbar__title">Your tickets</h3>
+                                <div class="seating-ticketbar__divider"></div>
+
+                                <div class="seating-ticketbar__categories">
+                                    @foreach (var cat in CategorySummaries)
+                                    {
+                                        var seatsForCategory = _selectedSeats
+                                        .Where(s => s.Category == cat.Category)
+                                        .OrderBy(s => s.RowLabel)
+                                        .ThenBy(s => s.SeatNumber)
+                                        .ToList();
+
+                                        <div class="ticket-category">
+                                            <div class="ticket-category__header">
+                                                <span class="ticket-category__label">@cat.CategoryLabel</span>
+                                                <span class="ticket-category__meta">
+                                                    @cat.Count ticket@(cat.Count == 1 ? "" : "s") ·
+                                                    @cat.TotalPrice.ToString("0.00") €
+                                                </span>
+                                            </div>
+
+                                            <div class="ticket-category__divider"></div>
+
+                                            <div class="ticket-category__list">
+                                                @foreach (var seat in seatsForCategory)
+                                                {
+                                                    <div class="ticket-chip">
+                                                        <span class="ticket-chip__seat">@seat.RowLabel@seat.SeatNumber</span>
+                                                        <span class="ticket-chip__price">@seat.Price.ToString("0.00") €</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="seating-ticketbar__actions">
+                                <button type="button"
+                                        class="btn btn--ghost"
+                                        @onclick="AddToBasket">
+                                    Add to basket
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn--neon"
+                                        @onclick="GoToCheckout">
+                                    Go to checkout
+                                </button>
+                                <div class="seating-ticketbar__total">
+                                    <span>Total</span>
+                                    <strong style="font-size: 40px; padding-bottom: 28px">@TotalPrice.ToString("0.00") €</strong>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
         </section>
     }
 </div>
-
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        await UserSession.InitializeAsync();
-
-        // Redirect back if someone opens /seating with no selection
-        if (UserSession.SelectedShowtime is null)
-        {
-            NavManager.NavigateTo("/showtimes");
-        }
-    }
-
-    private async Task GoBack()
-    {
-        await UserSession.ClearSelectedShowtimeAsync();
-        NavManager.NavigateTo("/showtimes");
-    }
-}

@@ -1,0 +1,246 @@
+﻿/* Admin Films / Showtimes page
+   Scoped to Admin/Films.razor
+-------------------------------------- */
+
+.admin-films-page {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 2rem var(--page-gutter) 2.5rem;
+    min-height: calc(100vh - 160px); /* align with .page-shell */
+}
+
+/* Access denied state */
+
+.admin-films-denied {
+    padding: 2.5rem 0;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* Header ------------------------------------------------ */
+
+.admin-films-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 2.5rem;
+    margin-bottom: 1.75rem;
+    align-items: flex-start;
+}
+
+    .admin-films-header h1 {
+        font-size: var(--font-size-hero-title);
+        margin-bottom: 0.35rem;
+    }
+
+    .admin-films-header .eyebrow {
+        font-size: var(--font-size-small);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--accent-soft);
+        margin-bottom: 0.2rem;
+    }
+
+    .admin-films-header .subtitle {
+        opacity: 0.8;
+        font-size: var(--font-size-body);
+        max-width: 32rem;
+        color: var(--text-muted);
+    }
+
+/* Small stats row */
+
+.admin-films-stats {
+    margin-top: 0.9rem;
+    display: inline-flex;
+    gap: 1.25rem;
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+    .admin-films-stats span::before {
+        content: "●";
+        margin-right: 0.4rem;
+        font-size: 0.55rem;
+        color: var(--accent-soft);
+    }
+
+/* Date panel + chips ----------------------------------- */
+
+.admin-films-datepanel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+    text-align: right;
+}
+
+.admin-films-date label {
+    font-size: var(--font-size-small);
+    opacity: 0.8;
+    display: block;
+    margin-bottom: 0.15rem;
+}
+
+.admin-films-date input[type="date"] {
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: radial-gradient(circle at top, rgba(255,255,255,0.04), transparent 70%), var(--bg-chip);
+    color: inherit;
+    font-size: 0.85rem;
+}
+
+.admin-films-date .hint {
+    font-size: var(--font-size-small);
+    opacity: 0.7;
+    margin-top: 0.25rem;
+}
+
+.admin-films-chips {
+    display: flex;
+    gap: 0.5rem;
+}
+
+    .admin-films-chips .chip {
+        padding-inline: 0.95rem;
+        padding-block: 0.35rem;
+        font-size: var(--font-size-small);
+    }
+
+    .admin-films-chips .chip--active {
+        border-color: var(--accent);
+        box-shadow: 0 0 14px rgba(255, 204, 85, 0.4);
+    }
+
+/* List + cards ----------------------------------------- */
+
+.admin-films-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* film card */
+
+.admin-films-card {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.1rem 1.3rem;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 70%), var(--bg-card-soft);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.admin-films-card__poster img {
+    width: 100%;
+    max-width: 140px;
+    border-radius: var(--radius-md);
+    object-fit: cover;
+    display: block;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+}
+
+/* card body */
+
+.admin-films-card__body header h2 {
+    margin-bottom: 0.25rem;
+    font-size: var(--font-size-section-title);
+}
+
+.admin-films-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+    margin-bottom: 0.4rem;
+}
+
+    .admin-films-card__meta span {
+        padding: 0.12rem 0.55rem;
+        border-radius: var(--radius-pill);
+        background: rgba(5, 5, 15, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+        .admin-films-card__meta span:first-child {
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+
+.admin-films-card__description {
+    margin: 0.4rem 0 0.8rem;
+    font-size: var(--font-size-body);
+    color: var(--text-main);
+    opacity: 0.9;
+    max-width: 40rem;
+}
+
+/* showtime pills */
+
+.admin-films-card__showtimes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.admin-showtime-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.28rem 0.8rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    cursor: pointer;
+    background: linear-gradient( 135deg, rgba(255, 204, 85, 0.1), rgba(255, 138, 214, 0.25) );
+    color: #fff;
+    font-size: var(--font-size-small);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.admin-showtime-pill__time {
+    font-weight: 600;
+}
+
+.admin-showtime-pill__hall {
+    opacity: 0.85;
+}
+
+.admin-showtime-pill:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    background: linear-gradient( 135deg, var(--accent), var(--accent-pink) );
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+}
+
+/* muted text helper (used when no showtimes for a film) */
+.admin-films-card__showtimes .muted {
+    font-size: var(--font-size-small);
+    color: var(--text-muted);
+}
+
+/* Responsive tweaks ------------------------------------ */
+
+@media (max-width: 960px) {
+    .admin-films-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .admin-films-datepanel {
+        align-items: flex-start;
+        text-align: left;
+    }
+}
+
+@media (max-width: 720px) {
+    .admin-films-card {
+        grid-template-columns: 1fr;
+        padding: 0.9rem 0.95rem;
+    }
+
+    .admin-films-card__poster img {
+        max-width: 100px;
+    }
+}

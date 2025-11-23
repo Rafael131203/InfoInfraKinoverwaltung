@@ -26,7 +26,7 @@ namespace KinoAppService.Controllers
             _preisService = preisService;
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         public Task<IActionResult> GetKinosaal(long id, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -35,7 +35,7 @@ namespace KinoAppService.Controllers
                 return Ok(kinosaal);
             }, ct);
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("Erstellen")]
         public Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -45,7 +45,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(new { id });
             }, ct);
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("SitzreiheKategorieÄndern")]
         public Task<IActionResult> SitzreiheKategorieÄndern(ChangeKategorieSitzreiheDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -54,7 +54,7 @@ namespace KinoAppService.Controllers
                 return Ok(sitzreihe);
             }, ct);
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpPost("KategoriePreisÄndern")]
         public Task<IActionResult> KategoriePreisÄndenr(SetPreisDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -63,7 +63,7 @@ namespace KinoAppService.Controllers
                 return Ok();
             }, ct);
 
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [HttpDelete]
         public Task<IActionResult> KinosaalLöschen(long Id, CancellationToken ct) =>
             ExecuteAsync(async token =>
