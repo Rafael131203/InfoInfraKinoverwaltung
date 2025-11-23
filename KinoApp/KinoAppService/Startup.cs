@@ -259,8 +259,8 @@ namespace KinoAppService
             app.UseSwaggerUI();
 
             // Uncomment once you actually secure endpoints
-            //app.UseAuthentication();
-            //app.UseAuthorization();
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
         }

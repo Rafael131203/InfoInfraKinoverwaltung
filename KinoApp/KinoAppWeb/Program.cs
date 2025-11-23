@@ -31,6 +31,24 @@ namespace KinoAppWeb
             // IMDb API client (talks to your API's /api/imdb endpoints)
             builder.Services.AddScoped<ImdbApiClient>();
 
+            builder.Services.AddScoped<JwtAuthHandler>();
+
+
+            builder.Services.AddHttpClient<Services.IVorstellungService, Services.VorstellungService>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5170/"); // Deine API-URL
+            })
+            .AddHttpMessageHandler<JwtAuthHandler>();
+
+            builder.Services.AddHttpClient<Services.IKinosaalService, Services.KinosaalService>(client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5170/");
+            })
+            .AddHttpMessageHandler<JwtAuthHandler>();
+
+
+
+
             await builder.Build().RunAsync();
         }
     }

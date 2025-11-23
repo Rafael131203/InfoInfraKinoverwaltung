@@ -24,6 +24,20 @@ namespace KinoAppWeb.Services
             }
         }
 
+        public async Task<UpdateVorstellungResultDTO?> UpdateVorstellungAsync(UpdateVorstellungDTO vorstellung, CancellationToken ct)
+        {
+            var response = await _http.PutAsJsonAsync("api/vorstellung/Aktualisieren", vorstellung, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync(ct);
+                throw new InvalidOperationException(error);
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<UpdateVorstellungResultDTO>(cancellationToken: ct);
+            return result ?? new UpdateVorstellungResultDTO();
+        }
+
         public async Task<List<VorstellungDTO>> GetVorstellungVonTagAsync(DateTime datum, CancellationToken ct)
         {
             var url = $"api/vorstellung/VonTag?datum={datum:O}";

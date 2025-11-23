@@ -3,6 +3,7 @@ using KinoAppDB;
 using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Principal;
@@ -10,6 +11,7 @@ using System.Threading.RateLimiting;
 
 namespace KinoAppService.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class KinosaalController : BaseController
@@ -24,6 +26,7 @@ namespace KinoAppService.Controllers
             _preisService = preisService;
         }
 
+        [Authorize]
         [HttpGet]
         public Task<IActionResult> GetKinosaal(long id, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -32,6 +35,7 @@ namespace KinoAppService.Controllers
                 return Ok(kinosaal);
             }, ct);
 
+        [Authorize]
         [HttpPost("Erstellen")]
         public Task<IActionResult> KinosaalErstellen(CreateKinosaalDTO dto, int AnzahlSitzreihen, int GrößeSitzreihen, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -41,6 +45,7 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(new { id });
             }, ct);
 
+        [Authorize]
         [HttpPost("SitzreiheKategorieÄndern")]
         public Task<IActionResult> SitzreiheKategorieÄndern(ChangeKategorieSitzreiheDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -49,6 +54,7 @@ namespace KinoAppService.Controllers
                 return Ok(sitzreihe);
             }, ct);
 
+        [Authorize]
         [HttpPost("KategoriePreisÄndern")]
         public Task<IActionResult> KategoriePreisÄndenr(SetPreisDTO dto, CancellationToken ct) =>
             ExecuteAsync(async token =>
@@ -57,7 +63,7 @@ namespace KinoAppService.Controllers
                 return Ok();
             }, ct);
 
-
+        [Authorize]
         [HttpDelete]
         public Task<IActionResult> KinosaalLöschen(long Id, CancellationToken ct) =>
             ExecuteAsync(async token =>

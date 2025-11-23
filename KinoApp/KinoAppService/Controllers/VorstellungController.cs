@@ -3,10 +3,12 @@ using KinoAppDB;
 using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.DTOs.Vorstellung;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class VorstellungController : BaseController
@@ -81,6 +83,18 @@ namespace KinoAppService.Controllers
                     return new NotFoundObjectResult($"Keine Vorstellungen für FilmId {filmId} gefunden.");
 
                 return new OkObjectResult(vorstellungen);
+            }, ct);
+
+        [HttpPut]
+        public Task<IActionResult> VorstellungAktualisieren(UpdateVorstellungDTO dto, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var result = await _vorstellungService.UpdateVorstellungAsync(dto, token);
+
+                if (result == null)
+                    return new NotFoundObjectResult($"Vorstellung mit Id {dto.Id} nicht gefunden.");
+
+                return new OkObjectResult(result);
             }, ct);
 
 
