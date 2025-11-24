@@ -25,9 +25,9 @@ BEGIN
     FOR k IN
         SELECT *
         FROM (VALUES
-            ('Saal 1 (20x20)', 20, 20),
-            ('Saal 2 (15x15)', 15, 15),
-            ('Saal 3 (23x23)', 23, 23)
+            ('Saal 1', 20, 20),
+            ('Saal 2', 15, 15),
+            ('Saal 3', 15, 23)
         ) AS t("Name", "Rows", "SeatsPerRow")
     LOOP
         -- Skip if this Kinosaal already exists
