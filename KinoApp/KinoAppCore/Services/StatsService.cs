@@ -1,35 +1,30 @@
-﻿using MongoDB.Bson;
-using MongoDB.Driver;
-using System;
+﻿using MongoDB.Driver;
+using KinoAppCore.Documents;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
-
 
 namespace KinoAppCore.Services
 {
     public class StatsService
     {
-        private readonly IMongoDatabase _db;
+        private readonly IMongoCollection<DailyShowRevenue> _statsCollection;
 
-        public StatsService(IMongoDatabase db)
+        public StatsService(IMongoClient mongoClient)
         {
-            _db = db;
+            var db = mongoClient.GetDatabase("stats");
+            _statsCollection = db.GetCollection<DailyShowRevenue>("daily_revenue");
         }
 
-        public async Task<List<BsonDocument>> GetAllAsync(string collectionName)
+        // READ: Alle Statistiken holen
+        public async Task<List<DailyShowRevenue>> GetAllAsync()
         {
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            return await collection.Find(FilterDefinition<BsonDocument>.Empty).ToListAsync();
+            return await _statsCollection.Find(_ => true).ToListAsync();
         }
 
-        public async Task AddAsync(string collectionName, BsonDocument doc)
+        // CREATE: Manuell Statistik anlegen (falls nötig für Tests)
+        public async Task CreateAsync(DailyShowRevenue stat)
         {
-            var collection = _db.GetCollection<BsonDocument>(collectionName);
-            await collection.InsertOneAsync(doc);
+            await _statsCollection.InsertOneAsync(stat);
         }
     }
-
 }

@@ -27,6 +27,7 @@ namespace KinoAppWeb
             builder.Services.AddScoped<Services.IKinosaalService, Services.KinosaalService>();
             builder.Services.AddScoped<Services.IVorstellungService, Services.VorstellungService>();
             builder.Services.AddScoped<UserSession>();
+            builder.Services.AddScoped<ITicketApiService, TicketApiService>();
 
             // IMDb API client (talks to your API's /api/imdb endpoints)
             builder.Services.AddScoped<ImdbApiClient>();

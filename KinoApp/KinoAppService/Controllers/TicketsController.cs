@@ -1,151 +1,117 @@
-﻿using KinoAppCore.Abstractions;
+﻿using KinoAppCore.Services;
 using KinoAppDB;
-using KinoAppDB.Entities;       // NUR eure DB-Entities
-using KinoAppDB.Repository;
 using KinoAppShared.DTOs;
-using KinoAppShared.Messaging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace KinoAppService.Controllers
 {
+    [Authorize] // Ensures only logged-in users (Admins or standard Users) can access this
     [ApiController]
     [Route("api/[controller]")]
-    public class TicketsController : ControllerBase
+    public class TicketsController : BaseController
     {
-        // Wir arbeiten direkt mit der TicketEntity
-        private readonly IRepository<TicketEntity> _ticketRepo;
-        private readonly IRepository<SitzplatzEntity> _sitzplatzRepo;
-        private readonly IMessageBus _bus;
-        private readonly IKinoAppDbContextScope _dbScope;
+        private readonly ITicketService _ticketService;
 
-        public TicketsController(
-            IRepository<TicketEntity> ticketRepo,
-            IRepository<SitzplatzEntity> sitzplatzRepo,
-            IMessageBus bus,
-            IKinoAppDbContextScope dbScope)
+        // Inject IKinoAppDbContextScope and pass it to the base constructor
+        public TicketsController(ITicketService ticketService, IKinoAppDbContextScope scope)
+            : base(scope)
         {
-            _ticketRepo = ticketRepo;
-            _sitzplatzRepo = sitzplatzRepo;
-            _bus = bus;
-            _dbScope = dbScope;
+            _ticketService = ticketService;
         }
 
+        // POST: api/tickets/buy
         [HttpPost("buy")]
-        public async Task<IActionResult> BuyTicket([FromBody] BuyTicketDTO request)
-        {
-            // 1. Scope/Transaktion starten
-            await _dbScope.BeginAsync();
-
-            try
+        [AllowAnonymous]
+        public Task<IActionResult> BuyTickets([FromBody] BuyTicketDTO request, CancellationToken ct) =>
+            ExecuteAsync(async token =>
             {
-                // 2. USER IDENTIFIZIEREN (JWT vs. Gast)
-                long? kundenId = GetCurrentUserId();
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
 
-                // Validierung für Gast
-                if (kundenId == null && string.IsNullOrWhiteSpace(request.GastEmail))
+                try
                 {
-                    return BadRequest("Als Gast müssen Sie eine E-Mail-Adresse angeben.");
+                    long? userId = GetCurrentUserId();
+
+                    // Service call inside the transaction scope
+                    var ticketIds = await _ticketService.BuyTicketsAsync(request, userId);
+
+                    return Ok(new
+                    {
+                        Message = $"{ticketIds.Count} Ticket(s) erfolgreich gekauft!",
+                        TicketIds = ticketIds
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Logic error (e.g. seat taken) - return 400
+                    return BadRequest(ex.Message);
+                }
+                catch (ArgumentException ex)
+                {
+                    // Input error - return 400
+                    return BadRequest(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    // Unexpected error - return 500
+                    return StatusCode(500, $"Interner Fehler: {ex.Message}");
+                }
+            }, ct);
+
+        // POST: api/tickets/cancel/{id}
+        [HttpPost("cancel/{id}")]
+        public Task<IActionResult> CancelTicket(long id, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                try
+                {
+                    // Note: Usually you might want to check here if the ticket belongs to the current user
+                    // or if the user is an Admin, unless the Service handles that logic.
+
+                    await _ticketService.CancelTicketsAsync(new List<long> { id });
+
+                    return Ok(new { Message = "Ticket erfolgreich storniert." });
+                }
+                catch (KeyNotFoundException ex)
+                {
+                    return NotFound(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, $"Fehler beim Stornieren: {ex.Message}");
+                }
+            }, ct);
+
+        // GET: api/tickets/user/{userId}
+        [HttpGet("user/{userId}")]
+        public Task<IActionResult> GetTicketsByUser(long userId, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                // Security check: Ensure user can only see their own tickets, unless they are Admin
+                long? currentId = GetCurrentUserId();
+                if (currentId != userId && !User.IsInRole("Admin"))
+                {
+                    return Forbid(); // or Unauthorized()
                 }
 
-                // 3. PREIS LADEN (Aus Sitzplatz-Tabelle)
-                var sitzplatz = await _sitzplatzRepo.GetByIdAsync(request.SitzplatzId);
+                var tickets = await _ticketService.GetTicketsByUserIdAsync(userId);
+                return Ok(tickets);
+            }, ct);
 
-                // Fallback
-                decimal ticketPreis = sitzplatz != null ? sitzplatz.Preis : request.PreisVorschlag;
-
-                // 4. DB-ENTITY ERSTELLEN
-                var dbTicket = new TicketEntity
-                {
-                    VorstellungId = request.VorstellungId,
-                    SitzplatzId = request.SitzplatzId,
-                    Status = 1,
-                    UserId = kundenId
-                };
-
-                // 5. SPEICHERN
-                await _ticketRepo.AddAsync(dbTicket);
-                await _ticketRepo.SaveAsync(); // Generiert ID
-
-                // 6. EVENT SENDEN
-                await _bus.PublishAsync(new TicketSold(
-                    dbTicket.Id,
-                    request.VorstellungId,
-                    request.Anzahl,
-                    request.Anzahl * ticketPreis,
-                    DateTime.UtcNow
-                ));
-
-                // 7. COMMIT
-                await _dbScope.CommitAsync();
-
-                return Ok(new
-                {
-                    Message = "Ticket erfolgreich gekauft!",
-                    TicketId = dbTicket.Id,
-                    KundeId = kundenId
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Fehler beim Ticketkauf: {ex.Message}");
-            }
-        }
-
-        [HttpPost("cancel/{id}")]
-        public async Task<IActionResult> CancelTicket(long id)
-        {
-            await _dbScope.BeginAsync();
-            try
-            {
-                // 1. Ticket laden (inkl. Sitzplatz für den Preis!)
-                // Wir brauchen den Preis, um die Statistik zu korrigieren.
-                // Dazu müssen wir "Include" nutzen, oder den Sitzplatz separat laden.
-                var ticket = await _ticketRepo.GetByIdAsync(id);
-
-                if (ticket == null) return NotFound("Ticket nicht gefunden.");
-                if (ticket.Status == 2) return BadRequest("Ticket ist bereits storniert.");
-
-                // Preis ermitteln (für die Rückerstattung/Statistik)
-                var sitzplatz = await _sitzplatzRepo.GetByIdAsync(ticket.SitzplatzId);
-                decimal erstattung = sitzplatz?.Preis ?? 0;
-
-                // 2. Status ändern (2 = Storniert)
-                ticket.Status = 2;
-
-                // Update & Save
-                await _ticketRepo.UpdateAsync(ticket);
-                await _ticketRepo.SaveAsync();
-
-                // 3. Event senden (Minus-Geschäft für die Statistik)
-                await _bus.PublishAsync(new TicketCancelled(
-                    ticket.Id,
-                    ticket.VorstellungId,
-                    erstattung,
-                    DateTime.UtcNow
-                ));
-
-                // Transaktion bestätigen
-                await _dbScope.CommitAsync();
-
-                return Ok(new { Message = "Ticket erfolgreich storniert." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-        }
-
-        // Hilfsmethode für JWT
+        // --- HILFSMETHODE ---
         private long? GetCurrentUserId()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated) return null;
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+                return null;
 
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier)
-                        ?? User.FindFirst("id")
-                        ?? User.FindFirst("sub");
+                          ?? User.FindFirst("id")
+                          ?? User.FindFirst("sub");
 
-            if (idClaim != null && long.TryParse(idClaim.Value, out long id)) return id;
+            if (idClaim != null && long.TryParse(idClaim.Value, out long id))
+                return id;
 
             return null;
         }

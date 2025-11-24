@@ -1,19 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic; // Für List<>
 
 namespace KinoAppShared.DTOs
 {
     public class BuyTicketDTO
     {
         public long VorstellungId { get; set; }
-        public long SitzplatzId { get; set; }
 
-        [Range(1, 10, ErrorMessage = "Man muss mindestens 1 Ticket kaufen!")]
-        public int Anzahl { get; set; } = 1;
+        [Required]
+        [MinLength(1, ErrorMessage = "Mindestens ein Sitzplatz muss gewählt werden.")]
+        public List<long> SitzplatzIds { get; set; } = new();
 
-        public decimal PreisVorschlag { get; set; }
-
-        // WICHTIG: Das Feld für den Gast-Kauf.
-        // Es ist nullable (string?), weil eingeloggte User es leer lassen.
         public string? GastEmail { get; set; }
+
+        // --- HIER DEN TRICK EINFÜGEN ---
+        // Das berechnet die Anzahl automatisch, damit der Controller nicht meckert.
+        // (Wird nicht in der Datenbank gespeichert, ist nur ein Helfer)
+        public int Anzahl => SitzplatzIds.Count;
     }
 }

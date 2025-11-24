@@ -1,4 +1,5 @@
 ﻿using KinoAppShared.Messaging;
+using KinoAppCore.Documents;
 using MassTransit;
 using MongoDB.Driver;
 
@@ -51,15 +52,5 @@ public sealed class TicketSoldProjectionConsumer : IConsumer<TicketSold>, IConsu
         await _col.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
 
         Console.WriteLine($"STORNO: Ticket {e.TicketId} storniert. Umsatz korrigiert.");
-    }
-
-    public class DailyShowRevenue
-    {
-        public object Id { get; set; }
-        public long ShowId { get; set; }
-        public DateTime Day { get; set; }
-        public int SoldTickets { get; set; }
-        public decimal Revenue { get; set; }
-        public DateTime LastUpdatedUtc { get; set; }
     }
 }

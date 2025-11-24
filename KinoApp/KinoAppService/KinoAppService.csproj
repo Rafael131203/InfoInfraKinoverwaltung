@@ -23,4 +23,8 @@
 	<ProjectReference Include="..\KinoAppDB\KinoAppDB.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+  </ItemGroup>
+
 </Project>

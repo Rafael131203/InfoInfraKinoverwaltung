@@ -1,4 +1,5 @@
 ﻿using System;
+using KinoAppCore.Documents;
 using System.Threading.Tasks;
 using KinoAppShared.Messaging;
 using MassTransit;
@@ -49,14 +50,5 @@ public sealed class KundeRegisteredConsumer : IConsumer<KundeRegistered>
             // Fehler weiterwerfen, damit MassTransit es merkt und ggf. wiederholt
             throw;
         }
-    }
-
-    public sealed class KundeRegistrationProjection
-    {
-        public long KundeId { get; set; }
-        public string Email { get; set; } = null!;
-        public string Vorname { get; set; } = null!;
-        public string Nachname { get; set; } = null!;
-        public DateTime RegisteredAtUtc { get; set; }
     }
 }

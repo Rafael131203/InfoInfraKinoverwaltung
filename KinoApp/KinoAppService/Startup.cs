@@ -77,7 +77,6 @@ namespace KinoAppService
                     // Consumers registrieren
                     r.AddConsumer<TicketSoldProjectionConsumer>();
                     r.AddConsumer<KundeRegisteredConsumer>();
-                    r.AddConsumer<ShowCreatedConsumer>();
                     
 
                     // Producer registrieren (für IMessageBus)
@@ -125,14 +124,6 @@ namespace KinoAppService
                         {
                             e.AutoOffsetReset = AutoOffsetReset.Earliest;
                             e.ConfigureConsumer<KundeRegisteredConsumer>(ctx);
-                            e.CreateIfMissing();
-                        });
-
-                        // ShowCreated -> ShowCreatedConsumer
-                        k.TopicEndpoint<ShowCreated>("show-created", groupId, e =>
-                        {
-                            e.AutoOffsetReset = AutoOffsetReset.Earliest;
-                            e.ConfigureConsumer<ShowCreatedConsumer>(ctx);
                             e.CreateIfMissing();
                         });
 
@@ -246,7 +237,9 @@ namespace KinoAppService
             services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();  // from KinoAppDB
             services.AddScoped<IVorstellungRepository, VorstellungRepository>();  // from KinoAppDB
             services.AddScoped<IFilmRepository, FilmRepository>();  // from KinoAppDB
+            services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITokenService, JwtTokenService>();
+            services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
             services.AddHostedService<FilmRefreshBackgroundService>();
         }

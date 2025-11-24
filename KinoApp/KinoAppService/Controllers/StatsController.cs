@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
 {
+    using KinoAppCore.Documents;
     using KinoAppCore.Services;
     using KinoAppShared.Messaging;
     using MongoDB.Bson;
@@ -12,24 +13,25 @@ namespace KinoAppService.Controllers
     [Route("api/[controller]")]
     public class StatsController : ControllerBase
     {
-        private readonly TicketService _ticketService;
+        private readonly StatsService _statsService;
 
-        public StatsController(TicketService ticketService)
+        public StatsController(StatsService statsService)
         {
-            _ticketService = ticketService;
+            _statsService = statsService;
         }
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var allStats = await _ticketService.GetAllAsync();
+            var allStats = await _statsService.GetAllAsync();
             return Ok(allStats);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody] TicketStat stat)
+        public async Task<IActionResult> Post([FromBody] DailyShowRevenue stat)
         {
-            await _ticketService.CreateAsync(stat);
+            // 2. ÄNDERUNG: Aufruf geht jetzt an den StatsService
+            await _statsService.CreateAsync(stat);
             return Ok(stat);
         }
     }
