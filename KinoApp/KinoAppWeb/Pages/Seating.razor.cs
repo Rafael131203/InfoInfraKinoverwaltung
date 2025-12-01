@@ -1,9 +1,12 @@
-﻿using Microsoft.JSInterop;
+﻿using KinoAppShared.DTOs;
 using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.DTOs.Showtimes;
+using KinoAppShared.DTOs.Ticket;
 using KinoAppShared.Enums;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System.Linq;
 
 namespace KinoAppWeb.Pages
 {
@@ -12,21 +15,14 @@ namespace KinoAppWeb.Pages
         [Inject] public UserSession UserSession { get; set; } = default!;
         [Inject] public NavigationManager NavManager { get; set; } = default!;
         [Inject] public IKinosaalService KinosaalService { get; set; } = default!;
+        [Inject] public ITicketApiService TicketService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
 
         private bool _initializedJs;
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender && !_initializedJs)
-            {
-                _initializedJs = true;
-                await JS.InvokeVoidAsync("KinoSeating.init");
-            }
-        }
-
         protected bool _isLoading;
         protected string? _loadError;
+        protected string? _reserveError;
         protected KinosaalDTO? _kinosaal;
 
         protected SeatHoverInfo? _hoverSeat;
@@ -36,7 +32,6 @@ namespace KinoAppWeb.Pages
 
         protected decimal TotalPrice => _selectedSeats.Sum(s => s.Price);
 
-        // grouped ticket summary by category
         protected IEnumerable<SeatCategorySummary> CategorySummaries =>
             _selectedSeats
                 .GroupBy(s => s.Category)
@@ -47,7 +42,16 @@ namespace KinoAppWeb.Pages
                     Count = g.Count(),
                     TotalPrice = g.Sum(x => x.Price)
                 })
-                .OrderBy(c => c.Category); // Parkett, Loge, LogePlus
+                .OrderBy(c => c.Category);
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender && !_initializedJs)
+            {
+                _initializedJs = true;
+                await JS.InvokeVoidAsync("KinoSeating.init");
+            }
+        }
 
         protected override async Task OnInitializedAsync()
         {
@@ -80,11 +84,13 @@ namespace KinoAppWeb.Pages
 
             _isLoading = true;
             _loadError = null;
+            _reserveError = null;
 
             try
             {
                 _kinosaal = await KinosaalService.GetKinosaalAsync(
                     selected.Showtime.KinosaalId,
+                    _currentVorstellungId,
                     CancellationToken.None);
 
                 if (_kinosaal == null)
@@ -135,7 +141,12 @@ namespace KinoAppWeb.Pages
 
         protected string GetSeatStateClass(SitzplatzDTO seat, bool selected)
         {
-            if (seat.Gebucht)
+            // Status 0 = Nothing -> hidden (we also skip rendering in Razor)
+            if (seat.Status == TicketStatus.Nothing)
+                return "seat--hidden";
+
+            // Reserved or Booked => show as taken (gray)
+            if (seat.Status == TicketStatus.Reserved || seat.Status == TicketStatus.Booked)
                 return "seat--taken";
 
             if (selected)
@@ -149,7 +160,10 @@ namespace KinoAppWeb.Pages
 
         protected async Task ToggleSeat(SitzreiheDTO row, SitzplatzDTO seat)
         {
-            if (seat.Gebucht)
+            // Cannot modify seats that are Reserved/Booked or Nothing
+            if (seat.Status == TicketStatus.Reserved ||
+                seat.Status == TicketStatus.Booked ||
+                seat.Status == TicketStatus.Nothing)
                 return;
 
             var existing = _selectedSeats.FirstOrDefault(s => s.SeatId == seat.Id);
@@ -170,18 +184,21 @@ namespace KinoAppWeb.Pages
                 });
             }
 
+            _reserveError = null;
             await UserSession.SetSelectedSeatsAsync(_selectedSeats);
             await InvokeAsync(StateHasChanged);
         }
 
         protected void ShowSeatInfo(SitzreiheDTO row, SitzplatzDTO seat, bool isSelected)
         {
+            var isTaken = seat.Status == TicketStatus.Reserved || seat.Status == TicketStatus.Booked;
+
             _hoverSeat = new SeatHoverInfo
             {
                 Code = $"{row.Bezeichnung}{seat.Nummer}",
                 Category = GetCategoryLabel(row.Kategorie),
                 Price = seat.Preis,
-                IsTaken = seat.Gebucht,
+                IsTaken = isTaken,
                 IsSelected = isSelected
             };
         }
@@ -191,16 +208,74 @@ namespace KinoAppWeb.Pages
         protected string BuildSeatTitle(SitzreiheDTO row, SitzplatzDTO seat) =>
             $"{row.Bezeichnung}{seat.Nummer} · {seat.Preis:0.00} €";
 
+        // ------------------- RESERVATION HELPERS ------------------------
+
+        private async Task<bool> ReserveCurrentSelectionAsync()
+        {
+            _reserveError = null;
+
+            if (!_selectedSeats.Any())
+                return true; // nothing to reserve
+
+            var request = new ReserveTicketDTO
+            {
+                VorstellungId = _currentVorstellungId,
+                SitzplatzIds = _selectedSeats.Select(s => s.SeatId).ToList()
+            };
+
+            try
+            {
+                var token = await UserSession.GetValidAccessTokenAsync();
+                await TicketService.ReserveTicketsAsync(request, token);
+
+                // 🔥 Immediately reload hall so the new Reserved state is visible
+                await LoadKinosaalAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _reserveError = ex.Message;
+                return false;
+            }
+            finally
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+        }
         protected async Task AddToBasket()
         {
-            await UserSession.SetSelectedSeatsAsync(_selectedSeats);
+            var success = await ReserveCurrentSelectionAsync();
+            if (!success) return;
+
+            // 🔥 add current selection to cart
+            await UserSession.AddToCartAsync(_selectedSeats);
+
+            // clear selection (both in memory and storage)
+            _selectedSeats.Clear();
+            await UserSession.ClearSelectedSeatsAsync();
+
+            // optional: reload hall so reserved seats show immediately
+            await LoadKinosaalAsync();
         }
 
         protected async Task GoToCheckout()
         {
-            await UserSession.SetSelectedSeatsAsync(_selectedSeats);
+            var success = await ReserveCurrentSelectionAsync();
+            if (!success) return;
+
+            // 🔥 add current selection to cart
+            await UserSession.AddToCartAsync(_selectedSeats);
+
+            // clear selection
+            _selectedSeats.Clear();
+            await UserSession.ClearSelectedSeatsAsync();
+
             NavManager.NavigateTo("/checkout");
         }
+
+
+        // ----------------------------------------------------------------
 
         protected sealed class SeatHoverInfo
         {

@@ -46,10 +46,12 @@ namespace KinoAppWeb.Pages
         {
             await UserSession.InitializeAsync();
 
-            // First render: no auto-load, user must pick a date / chip
-            _isLoading = false;
-            _hasLoadedOnce = false;
             _movies.Clear();
+            _hasLoadedOnce = false;
+
+            // Auto-load today's showtimes so it's consistent with Home showing today's content
+            await LoadShowtimesFor(DateTime.Today);
+            _hasLoadedOnce = true;
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -145,6 +147,13 @@ namespace KinoAppWeb.Pages
                     })
                     .ToList();
 
+                // Normalize runtime similar to Home
+                var durationMinutes = film.Dauer ?? 0;
+                if (durationMinutes > 180) // assume > 3h means it's in seconds
+                {
+                    durationMinutes /= 60;
+                }
+
                 var movie = new MovieShowtimeDto
                 {
                     Id = uiId++,                            // local UI id
@@ -152,11 +161,12 @@ namespace KinoAppWeb.Pages
                     Tagline = string.Empty,
                     Description = film.Beschreibung ?? string.Empty,
                     PosterUrl = film.ImageURL ?? string.Empty,
-                    DurationMinutes = film.Dauer ?? 0,
+                    DurationMinutes = durationMinutes,
                     AgeRating = film.Fsk.HasValue ? $"FSK {film.Fsk.Value}" : "FSK",
                     Genres = film.Genre ?? string.Empty,
                     Showtimes = showtimes
                 };
+
 
                 movies.Add(movie);
             }

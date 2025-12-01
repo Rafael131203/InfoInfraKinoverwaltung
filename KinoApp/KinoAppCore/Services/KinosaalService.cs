@@ -21,14 +21,16 @@ namespace KinoAppCore.Services
         private readonly ISitzreiheRepository _repoSitzreihe;
         private readonly ISitzplatzRepository _repoSitzplatz;
         private readonly IPreisZuKategorieService _preisService;
+        private readonly ITicketRepository _ticketRepo;
         private readonly IMapper _mapper;
 
-        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisZuKategorieService preisService, IMapper mapper)
+        public KinosaalService(IKinosaalRepository repoKinosaal, ISitzreiheRepository repoSitzreihe, ISitzplatzRepository repoSitzplatz, IPreisZuKategorieService preisService, ITicketRepository ticketRepo, IMapper mapper)
         {
             _repoKinosaal = repoKinosaal;
             _repoSitzreihe = repoSitzreihe;
             _repoSitzplatz = repoSitzplatz;
             _preisService = preisService;
+            _ticketRepo = ticketRepo;
             _mapper = mapper;
         }
 
@@ -64,7 +66,6 @@ namespace KinoAppCore.Services
                     // 3. Sitzplatz erstellen (Jetzt sicher, da nicht null)
                     var sitzplatz = new SitzplatzEntity
                     {
-                        Gebucht = false,
                         Nummer = countSeat,
                         Preis = preisZuKategorie.Preis // Sicherer Zugriff
                     };
@@ -82,21 +83,71 @@ namespace KinoAppCore.Services
             return kinosaal.Id;
         }
 
-        public async Task<KinosaalDTO?> GetKinosaalAsync(long id, CancellationToken ct)
+        public async Task<KinosaalDTO?> GetKinosaalAsync(long id, long? vorstellungId, CancellationToken ct)
         {
+            // 1. Load hall with rows + seats
             var kinosaal = await _repoKinosaal.Query()
                 .Where(k => k.Id == id)
                 .Include(k => k.Sitzreihen)
                     .ThenInclude(r => r.Sitzplätze)
                 .FirstOrDefaultAsync(ct);
 
-            if (kinosaal == null) return null;
+            if (kinosaal == null)
+                return null;
 
-            var dto = _mapper.Map<KinosaalDTO>(kinosaal);
+            // 2. Load tickets for this Vorstellung (if given)
+            var ticketsBySeat = new Dictionary<long, TicketEntity>();
+
+            if (vorstellungId.HasValue)
+            {
+                var tickets = await _ticketRepo.Query()
+                    .Where(t => t.VorstellungId == vorstellungId.Value)
+                    .ToListAsync(ct);
+
+                ticketsBySeat = tickets.ToDictionary(t => t.SitzplatzId);
+            }
+
+            // 3. Manually map to DTO so Sitzplätze is ALWAYS filled
+            var dto = new KinosaalDTO
+            {
+                Id = kinosaal.Id,
+                Name = kinosaal.Name,
+                Sitzreihen = kinosaal.Sitzreihen
+                    .OrderBy(r => r.Bezeichnung)
+                    .Select(r => new SitzreiheDTO
+                    {
+                        Id = r.Id,
+                        Bezeichnung = r.Bezeichnung,
+                        Kategorie = r.Kategorie, // already SitzreihenKategorie enum
+                        Sitzplätze = r.Sitzplätze
+                            .OrderBy(s => s.Nummer)
+                            .Select(s =>
+                            {
+                                ticketsBySeat.TryGetValue(s.Id, out var ticket);
+
+                                // If no ticket exists for this seat+show, seat is free
+                                var status = ticket == null
+                                    ? TicketStatus.Free
+                                    : (TicketStatus)ticket.Status;
+
+                                return new SitzplatzDTO
+                                {
+                                    Id = s.Id,
+                                    Nummer = s.Nummer,
+                                    Preis = s.Preis,
+                                    Status = status,
+                                    // reserved OR booked = taken for everyone else
+                                    Gebucht = status == TicketStatus.Reserved || status == TicketStatus.Booked
+                                };
+                            })
+                            .ToList()
+                    })
+                    .ToList()
+            };
+
             return dto;
-
-
         }
+
 
         public async Task<SitzreiheEntity?> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct)
         {

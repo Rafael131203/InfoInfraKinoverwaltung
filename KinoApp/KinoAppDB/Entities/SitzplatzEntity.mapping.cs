@@ -16,7 +16,6 @@ namespace KinoAppDB.Entities
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
-            b.Property(x => x.Gebucht).HasColumnName("Gebucht").IsRequired();
             b.Property(x => x.Nummer).HasColumnName("Nummer").IsRequired();
             b.Property(x => x.Preis).HasColumnName("Preis").HasColumnType("numeric(10,2)").HasDefaultValue(0).IsRequired();
 

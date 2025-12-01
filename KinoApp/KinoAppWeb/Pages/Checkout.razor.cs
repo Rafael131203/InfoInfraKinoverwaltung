@@ -1,6 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Globalization;
+using KinoAppShared.DTOs;
 using KinoAppShared.DTOs.Showtimes;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components;
@@ -11,14 +10,20 @@ namespace KinoAppWeb.Pages
     {
         [Inject] public UserSession UserSession { get; set; } = default!;
         [Inject] public NavigationManager Nav { get; set; } = default!;
+        [Inject] public ITicketApiService TicketService { get; set; } = default!;
 
-        // Exposed to the .razor markup
+        // Data for the View
         public IReadOnlyList<SelectedSeatClientDto> Seats { get; private set; }
             = new List<SelectedSeatClientDto>();
-
         public decimal Total { get; private set; }
 
-        protected string? _confirmationMessage;
+        // Form Fields
+        public string? GuestEmail { get; set; }
+
+        // State Flags
+        protected bool _isBusy;
+        protected bool _isSuccess;
+        protected string? _errorMessage;
 
         protected override async Task OnInitializedAsync()
         {
@@ -33,13 +38,19 @@ namespace KinoAppWeb.Pages
 
             var s = UserSession.SelectedShowtime;
 
-            Seats = UserSession.SelectedSeats
+            // 🔥 use Cart, but only seats for this showtime
+            Seats = UserSession.Cart
                 .Where(x => x.VorstellungId == s.Showtime!.Id)
                 .OrderBy(x => x.RowLabel)
                 .ThenBy(x => x.SeatNumber)
                 .ToList();
 
             Total = Seats.Sum(x => x.Price);
+
+            if (UserSession.IsAuthenticated && !string.IsNullOrEmpty(UserSession.Current?.Email))
+            {
+                GuestEmail = UserSession.Current.Email;
+            }
         }
 
         protected void BackToSeats()
@@ -47,10 +58,52 @@ namespace KinoAppWeb.Pages
             Nav.NavigateTo("/seating");
         }
 
-        protected void Confirm()
+        protected async Task Confirm()
         {
-            // Placeholder – here you would call your booking API.
-            _confirmationMessage = "This is where your real booking call would happen.";
+            if (_isBusy) return;
+            _isBusy = true;
+            _errorMessage = null;
+
+            try
+            {
+                if (UserSession.SelectedShowtime?.Showtime == null || !Seats.Any())
+                {
+                    _errorMessage = "Your cart is empty.";
+                    return;
+                }
+
+                if (!UserSession.IsAuthenticated && string.IsNullOrWhiteSpace(GuestEmail))
+                {
+                    _errorMessage = "Please enter an email address for your tickets.";
+                    return;
+                }
+
+                var request = new BuyTicketDTO
+                {
+                    VorstellungId = UserSession.SelectedShowtime.Showtime.Id,
+                    SitzplatzIds = Seats.Select(s => s.SeatId).ToList(),
+                    GastEmail = !UserSession.IsAuthenticated ? GuestEmail : null
+                };
+
+                var token = await UserSession.GetValidAccessTokenAsync();
+                await TicketService.BuyTicketAsync(request, token);
+
+                _isSuccess = true;
+
+                // 🔥 clear cart + showtime + any leftover selection
+                await UserSession.ClearCartAsync();
+                await UserSession.ClearSelectedSeatsAsync();
+                await UserSession.ClearSelectedShowtimeAsync();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = ex.Message;
+            }
+            finally
+            {
+                _isBusy = false;
+            }
         }
+
     }
 }

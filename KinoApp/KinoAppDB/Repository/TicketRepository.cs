@@ -1,4 +1,5 @@
 ﻿using KinoAppDB.Entities;
+using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,10 +31,23 @@ namespace KinoAppDB.Repository
         // KORREKTUR: Rückgabetyp ist jetzt Task<List<long>>
         public Task<List<long>> GetBookedSeatIdsAsync(long vorstellungId, CancellationToken ct = default)
         {
+            int booked = (int)TicketStatus.Booked;
+            int reserved = (int)TicketStatus.Reserved;
+
             return Query()
-                .Where(t => t.VorstellungId == vorstellungId)
-                .Select(t => t.SitzplatzId) // Da SitzplatzId 'long' ist, kommt hier 'long' raus
+                .Where(t => t.VorstellungId == vorstellungId &&
+                            (t.Status == booked || t.Status == reserved))
+                .Select(t => t.SitzplatzId)
                 .ToListAsync(ct);
+        }
+
+        public Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct = default)
+        {
+            int free = (int)TicketStatus.Free;
+
+            return Query()
+                .Where(t => t.VorstellungId == vorstellungId && t.Status == free)
+                .CountAsync(ct);
         }
     }
 }

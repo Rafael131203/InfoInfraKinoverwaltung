@@ -32,7 +32,6 @@ CREATE TABLE IF NOT EXISTS "Sitzreihe" (
 
 CREATE TABLE IF NOT EXISTS "Sitzplatz" (
     "Id"          SERIAL PRIMARY KEY,
-    "Gebucht"     BOOLEAN NOT NULL DEFAULT FALSE,
     "Nummer"      INTEGER NOT NULL,
     "Preis"       DECIMAL(10,2),
     "SitzreiheId" INTEGER NOT NULL REFERENCES "Sitzreihe"("Id") ON DELETE CASCADE,

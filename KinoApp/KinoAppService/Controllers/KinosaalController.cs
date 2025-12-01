@@ -28,10 +28,10 @@ namespace KinoAppService.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public Task<IActionResult> GetKinosaal(long id, CancellationToken ct) =>
+        public Task<IActionResult> GetKinosaal(long id, long? vorstellungId, CancellationToken ct) =>
             ExecuteAsync(async token =>
             {
-                var kinosaal = await _kinosaalService.GetKinosaalAsync(id, ct);
+                var kinosaal = await _kinosaalService.GetKinosaalAsync(id, vorstellungId, token);
                 return Ok(kinosaal);
             }, ct);
 

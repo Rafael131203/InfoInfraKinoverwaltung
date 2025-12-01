@@ -11,13 +11,6 @@ namespace KinoAppCore.Mappings
     {
         public UserMappingProfile()
         {
-            // 1) Domain <-> DTOs
-
-            // Domain Kunde <-> FullKundeDTO
-            CreateMap<Kunde, FullKundeDTO>().ReverseMap();
-
-            // Domain Kunde <-> GetKundeDTO
-            CreateMap<Kunde, GetKundeDTO>().ReverseMap();
 
             // 2) Domain <-> Entity
 

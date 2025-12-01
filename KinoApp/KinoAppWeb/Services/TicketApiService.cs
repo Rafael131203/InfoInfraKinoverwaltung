@@ -1,4 +1,5 @@
 ﻿using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Ticket;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
@@ -35,6 +36,23 @@ namespace KinoAppWeb.Services
             {
                 var error = await response.Content.ReadAsStringAsync();
                 throw new InvalidOperationException($"Fehler beim Kauf: {error}");
+            }
+        }
+
+        public async Task ReserveTicketsAsync(ReserveTicketDTO request, string? token)
+        {
+            if (!string.IsNullOrEmpty(token))
+                _http.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            else
+                _http.DefaultRequestHeaders.Authorization = null;
+
+            var response = await _http.PostAsJsonAsync("api/Tickets/reserve", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                throw new InvalidOperationException($"Fehler bei der Reservierung: {error}");
             }
         }
     }

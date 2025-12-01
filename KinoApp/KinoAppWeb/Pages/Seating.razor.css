@@ -388,6 +388,13 @@
     --seat-color: #ffb347; /* amber / luxury */
 }
 
+/* Hide seats whose status is "Nothing" (0) */
+.seat--hidden {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 
 /* -------------------------
    Animations

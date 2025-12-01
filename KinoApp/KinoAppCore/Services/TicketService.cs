@@ -3,12 +3,11 @@ using KinoAppCore.Abstractions;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Ticket;
+using KinoAppShared.Enums;
 using KinoAppShared.Messaging;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 
 namespace KinoAppCore.Services
 {
@@ -31,84 +30,99 @@ namespace KinoAppCore.Services
             _mapper = mapper;
         }
 
-        // --------------- 1. Change return to DTO ---------------
+        // ---------------- BUY = from Reserved -> Booked ----------------
         public async Task<List<BuyTicketDTO>> BuyTicketsAsync(BuyTicketDTO request, long? userId)
         {
-            // A. Prüfen
-            var gebuchtePlatzIds = await _ticketRepo.GetBookedSeatIdsAsync(request.VorstellungId);
-            if (request.SitzplatzIds.Any(id => gebuchtePlatzIds.Contains(id)))
-            {
-                throw new InvalidOperationException($"Einer der gewählten Plätze ist bereits vergeben.");
-            }
-
-            // B. Preise laden
-            var sitzplaetze = await _sitzplatzRepo.Query()
-                .Where(s => request.SitzplatzIds.Contains(s.Id))
+            // Load tickets for this Vorstellung + seats
+            var tickets = await _ticketRepo.Query(false)
+                .Where(t => t.VorstellungId == request.VorstellungId &&
+                            request.SitzplatzIds.Contains(t.SitzplatzId))
+                .Include(t => t.Sitzplatz)
                 .ToListAsync();
 
-            if (sitzplaetze.Count != request.SitzplatzIds.Count)
-                throw new ArgumentException("Ungültige Sitzplatz-IDs übermittelt.");
+            // Ensure all requested seats exist
+            if (tickets.Count != request.SitzplatzIds.Count)
+                throw new ArgumentException("Einer oder mehrere Sitzplätze sind für diese Vorstellung nicht vorhanden.");
 
-            // C. Erstellen
-            var neueTickets = new List<TicketEntity>();
+            // All must currently be RESERVED
+            if (tickets.Any(t => t.Status != (int)TicketStatus.Reserved))
+                throw new InvalidOperationException("Einer der gewählten Plätze ist nicht (mehr) reserviert.");
 
-            foreach (var platz in sitzplaetze)
+            // Optional: ensure the same logged-in user is buying their own reservation
+            if (userId.HasValue && tickets.Any(t => t.UserId != userId))
+                throw new InvalidOperationException("Einer der gewählten Plätze ist nicht mehr für Sie reserviert.");
+
+            // Book them
+            foreach (var ticket in tickets)
             {
-                var ticket = new TicketEntity
-                {
-                    VorstellungId = request.VorstellungId,
-                    SitzplatzId = platz.Id,
-                    UserId = userId,
-                    Status = 1
-                };
-
-                neueTickets.Add(ticket);
-                await _ticketRepo.AddAsync(ticket);
+                ticket.Status = (int)TicketStatus.Booked;
+                ticket.UserId = userId;  // keep/assign owner
             }
 
             await _ticketRepo.SaveAsync();
 
-            // D. Event senden
-            var gesamtPreis = sitzplaetze.Sum(s => s.Preis);
+            // Pricing
+            var gesamtPreis = tickets.Sum(t => t.Sitzplatz?.Preis ?? 0m);
 
+            // Event senden (z.B. erste TicketId als Ref)
             await _messageBus.PublishAsync(new TicketSold(
-                neueTickets[0].Id,       // TicketId (Wir nehmen die erste ID als Referenz)
-                request.VorstellungId,   // ShowId
-                neueTickets.Count,       // Quantity
-                gesamtPreis,             // TotalPrice
-                DateTime.UtcNow          // SoldAtUtc
+                tickets[0].Id,
+                request.VorstellungId,
+                tickets.Count,
+                gesamtPreis,
+                DateTime.UtcNow
             ));
 
-            // UMSETZUNG KOMMENTAR: Return as DTO (via Mapper)
-            return _mapper.Map<List<BuyTicketDTO>>(neueTickets);
+            return _mapper.Map<List<BuyTicketDTO>>(tickets);
         }
 
-        // --------------- 2. Loop for refund change to list ---------------
-        // Signatur geändert von (long ticketId) zu (List<long> ticketIds)
+        // ---------------- RESERVE = from Free -> Reserved ---------------
+        public async Task ReserveTicketsAsync(ReserveTicketDTO request, long? userId, CancellationToken ct)
+        {
+            // Load tickets for this Vorstellung + seats
+            var tickets = await _ticketRepo.Query(false)
+                .Where(t => t.VorstellungId == request.VorstellungId &&
+                            request.SitzplatzIds.Contains(t.SitzplatzId))
+                .ToListAsync(ct);
+
+            if (tickets.Count != request.SitzplatzIds.Count)
+                throw new ArgumentException("Einer oder mehrere Sitzplätze sind für diese Vorstellung nicht vorhanden.");
+
+            // Only FREE seats can be reserved
+            if (tickets.Any(t => t.Status != (int)TicketStatus.Free))
+                throw new InvalidOperationException("Einer der gewählten Plätze ist bereits reserviert oder gebucht.");
+
+            foreach (var ticket in tickets)
+            {
+                ticket.Status = (int)TicketStatus.Reserved;
+                ticket.UserId = userId; // null for guests, or actual user if logged-in
+            }
+
+            await _ticketRepo.SaveAsync(ct);
+        }
+
+        // ---------------- CANCEL = back to Free -------------------------
         public async Task CancelTicketsAsync(List<long> ticketIds)
         {
-            // Wir laden alle betroffenen Tickets inkl. Sitzplatz (für den Preis)
-            var ticketsToCancel = await _ticketRepo.Query()
+            var ticketsToCancel = await _ticketRepo.Query(false)
                 .Where(t => ticketIds.Contains(t.Id))
                 .Include(t => t.Sitzplatz)
                 .ToListAsync();
 
-            // UMSETZUNG KOMMENTAR: Loop for refund
             foreach (var ticket in ticketsToCancel)
             {
-                // 1. Zum Löschen markieren
-                await _ticketRepo.DeleteAsync(ticket);
+                // mark as free again
+                ticket.Status = (int)TicketStatus.Free;
+                ticket.UserId = null;
 
-                // 2. Event senden (pro Ticket, damit die Statistik stimmt)
                 await _messageBus.PublishAsync(new TicketCancelled(
-                    ticket.Id,                      // 1. TicketId
-                    ticket.VorstellungId,           // 2. ShowId
-                    ticket.Sitzplatz?.Preis ?? 0,   // 3. AmountToRefund (Preis oder 0 falls null)
-                    DateTime.UtcNow                 // 4. CancelledAtUtc
-            ));
+                    ticket.Id,
+                    ticket.VorstellungId,
+                    ticket.Sitzplatz?.Preis ?? 0,
+                    DateTime.UtcNow
+                ));
             }
 
-            // Am Ende einmal speichern für alle Löschvorgänge
             await _ticketRepo.SaveAsync();
         }
 
@@ -120,13 +134,9 @@ namespace KinoAppCore.Services
             return _mapper.Map<BuyTicketDTO>(ticket);
         }
 
-        // --------------- 3. Add get ticket with userid ---------------
         public async Task<List<BuyTicketDTO>> GetTicketsByUserIdAsync(long userId)
         {
-            // Holt die Tickets aus der DB (Repo Methode haben wir vorher erstellt)
             var userTickets = await _ticketRepo.GetTicketsByUserIdAsync(userId);
-
-            // UMSETZUNG KOMMENTAR: Loop logic (wird hier vom Mapper übernommen, der durch die Liste iteriert)
             return _mapper.Map<List<BuyTicketDTO>>(userTickets);
         }
 
@@ -134,6 +144,67 @@ namespace KinoAppCore.Services
         {
             var allTickets = await _ticketRepo.Query().ToListAsync();
             return _mapper.Map<List<BuyTicketDTO>>(allTickets);
+        }
+
+        private static TicketStatus ParseStatus(string status)
+        {
+            if (string.IsNullOrWhiteSpace(status))
+                throw new ArgumentException("Status darf nicht leer sein.");
+
+            return status.Trim().ToLower() switch
+            {
+                "nothing" => TicketStatus.Nothing,
+                "free" => TicketStatus.Free,
+                "reserved" => TicketStatus.Reserved,
+                "booked" => TicketStatus.Booked,
+                _ => throw new ArgumentException($"Unbekannter Ticket-Status: {status}")
+            };
+        }
+
+        public async Task CreateTicketsForVorstellungAsync(long vorstellungId, long? kinosaalId, CancellationToken ct)
+        {
+            var sitzplaetze = await _sitzplatzRepo.Query()
+                .Include(s => s.Sitzreihe)
+                .Where(s => s.Sitzreihe.KinosaalId == kinosaalId)
+                .ToListAsync(ct);
+
+            var tickets = new List<TicketEntity>();
+
+            foreach (var platz in sitzplaetze)
+            {
+                var ticket = new TicketEntity
+                {
+                    VorstellungId = vorstellungId,
+                    SitzplatzId = platz.Id,
+                    UserId = null,
+                    Status = (int)TicketStatus.Free
+                };
+
+                tickets.Add(ticket);
+                await _ticketRepo.AddAsync(ticket, ct);
+            }
+
+            await _ticketRepo.SaveAsync(ct);
+        }
+
+        public Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct)
+        {
+            return _ticketRepo.GetFreeSeatCountAsync(vorstellungId, ct);
+        }
+
+        public async Task UpdateTicketStatusAsync(UpdateTicketStatusDTO dto, CancellationToken ct)
+        {
+            var ticket = await _ticketRepo.Query(false)
+                .FirstOrDefaultAsync(t => t.Id == dto.TicketId, ct);
+
+            if (ticket == null)
+                throw new KeyNotFoundException($"Ticket mit Id {dto.TicketId} nicht gefunden.");
+
+            var status = ParseStatus(dto.Status);
+            ticket.Status = (int)status;
+            ticket.UserId = dto.UserId;
+
+            await _ticketRepo.SaveAsync(ct);
         }
     }
 }

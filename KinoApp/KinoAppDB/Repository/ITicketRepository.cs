@@ -1,4 +1,5 @@
 ﻿using KinoAppDB.Entities;
+using KinoAppShared.DTOs.Ticket;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,5 +18,8 @@ namespace KinoAppDB.Repository
         // WICHTIG: Gibt nur die IDs der besetzten Plätze zurück.
         // Das ist performanter als ganze Entities zu laden, wenn wir nur prüfen wollen, was frei ist.
         Task<List<long>> GetBookedSeatIdsAsync(long vorstellungId, CancellationToken ct = default);
+
+        Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct = default);
+
     }
 }

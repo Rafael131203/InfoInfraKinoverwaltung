@@ -10,7 +10,6 @@ namespace KinoAppDB.Entities
     public class SitzplatzEntity
     {
         public long Id { get; set; }
-        public Boolean Gebucht { get; set; }
         public int Nummer { get; set; }
         public decimal Preis { get; set; }
         public long SitzreiheId { get; set; }

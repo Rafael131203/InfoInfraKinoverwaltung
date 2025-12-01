@@ -1,4 +1,5 @@
 ﻿using KinoAppShared.DTOs.Imdb;
+using KinoAppShared.DTOs.Vorstellung;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -7,7 +8,7 @@ namespace KinoAppWeb.Pages
 {
     public partial class Home : ComponentBase
     {
-        [Inject] public ImdbApiClient Imdb { get; set; } = default!;
+        [Inject] public IVorstellungService VorstellungService { get; set; } = default!;
         [Inject] public IJSRuntime JS { get; set; } = default!;
         [Inject] public UserSession Session { get; set; } = default!;
 
@@ -31,23 +32,37 @@ namespace KinoAppWeb.Pages
             {
                 await Session.InitializeAsync();
 
-                // load from cache or DB via UserSession
-                _allFilms = await Session.GetFilmsAsync(Imdb);
+                // 1) Decide which date you want to show on the home page.
+                //    Here: today's Vorstellungen.
+                var todayLocal = DateTime.Today;
+                var todayUtc = DateTime.SpecifyKind(todayLocal, DateTimeKind.Utc);
 
-                // ensure Dauer stored as minutes in session (if not already)
+                // 2) Load Vorstellungen for this date
+                var vorstellungen = await VorstellungService
+                    .GetVorstellungVonTagAsync(todayUtc, CancellationToken.None);
+
+                // 3) Extract unique films from the Vorstellungen
+                _allFilms = ExtractUniqueFilmsFromVorstellungen(vorstellungen);
+
+                // 4) Normalize Dauer as minutes (same logic as before)
                 foreach (var f in _allFilms)
                 {
-                    if (f.Dauer.HasValue && f.Dauer.Value > 180) // crude: assume > 3h means seconds
+                    if (f.Dauer.HasValue && f.Dauer.Value > 180) // assume > 3h means seconds
                     {
                         f.Dauer = f.Dauer.Value / 60;
                     }
                 }
 
+                // 5) Optionally: store in session cache so other pages (like "Now Showing")
+                //    can reuse this subset of films without loading all local films.
+                await Session.StoreFilmsAsync(_allFilms);
+
+                // 6) Build featured + grid
                 ApplyFilterAndSort();
             }
             catch (Exception ex)
             {
-                _error = "Fehler beim Laden der Filmdaten.";
+                _error = "Fehler beim Laden der Vorstellungen / Filmdaten.";
                 Console.Error.WriteLine(ex);
                 _allFilms.Clear();
                 _featured.Clear();
@@ -58,6 +73,7 @@ namespace KinoAppWeb.Pages
                 _loading = false;
             }
         }
+
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -132,5 +148,18 @@ namespace KinoAppWeb.Pages
         {
             return film.Dauer;
         }
+
+        private static List<FilmDto> ExtractUniqueFilmsFromVorstellungen(List<VorstellungDTO> vorstellungen)
+        {
+            if (vorstellungen == null || vorstellungen.Count == 0)
+                return new List<FilmDto>();
+
+            return vorstellungen
+                .Where(v => v.Film != null)
+                .GroupBy(v => v.Film!.Id)
+                .Select(g => g.First().Film!)
+                .ToList();
+        }
+
     }
 }

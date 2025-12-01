@@ -1,20 +1,20 @@
 ﻿using KinoAppCore.Services;
 using KinoAppDB;
 using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Ticket;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace KinoAppService.Controllers
 {
-    [Authorize] // Ensures only logged-in users (Admins or standard Users) can access this
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class TicketsController : BaseController
     {
         private readonly ITicketService _ticketService;
 
-        // Inject IKinoAppDbContextScope and pass it to the base constructor
         public TicketsController(ITicketService ticketService, IKinoAppDbContextScope scope)
             : base(scope)
         {
@@ -34,28 +34,59 @@ namespace KinoAppService.Controllers
                 {
                     long? userId = GetCurrentUserId();
 
-                    // Service call inside the transaction scope
-                    var ticketIds = await _ticketService.BuyTicketsAsync(request, userId);
+                    var tickets = await _ticketService.BuyTicketsAsync(request, userId);
 
                     return Ok(new
                     {
-                        Message = $"{ticketIds.Count} Ticket(s) erfolgreich gekauft!",
-                        TicketIds = ticketIds
+                        Message = $"{tickets.Count} Ticket(s) erfolgreich gekauft!",
+                        Tickets = tickets
                     });
                 }
                 catch (InvalidOperationException ex)
                 {
-                    // Logic error (e.g. seat taken) - return 400
                     return BadRequest(ex.Message);
                 }
                 catch (ArgumentException ex)
                 {
-                    // Input error - return 400
                     return BadRequest(ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    // Unexpected error - return 500
+                    return StatusCode(500, $"Interner Fehler: {ex.Message}");
+                }
+            }, ct);
+
+        // 🔥 NEW: POST api/tickets/reserve
+        [HttpPost("reserve")]
+        [AllowAnonymous]
+        public Task<IActionResult> ReserveTickets([FromBody] ReserveTicketDTO request, CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+
+                try
+                {
+                    long? userId = GetCurrentUserId();
+
+                    await _ticketService.ReserveTicketsAsync(request, userId, token);
+
+                    return Ok(new
+                    {
+                        Message = $"{request.SitzplatzIds.Count} Ticket(s) erfolgreich reserviert!"
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // e.g. already reserved / booked
+                    return BadRequest(ex.Message);
+                }
+                catch (ArgumentException ex)
+                {
+                    return BadRequest(ex.Message);
+                }
+                catch (Exception ex)
+                {
                     return StatusCode(500, $"Interner Fehler: {ex.Message}");
                 }
             }, ct);
@@ -67,9 +98,6 @@ namespace KinoAppService.Controllers
             {
                 try
                 {
-                    // Note: Usually you might want to check here if the ticket belongs to the current user
-                    // or if the user is an Admin, unless the Service handles that logic.
-
                     await _ticketService.CancelTicketsAsync(new List<long> { id });
 
                     return Ok(new { Message = "Ticket erfolgreich storniert." });
@@ -89,18 +117,16 @@ namespace KinoAppService.Controllers
         public Task<IActionResult> GetTicketsByUser(long userId, CancellationToken ct) =>
             ExecuteAsync(async token =>
             {
-                // Security check: Ensure user can only see their own tickets, unless they are Admin
                 long? currentId = GetCurrentUserId();
                 if (currentId != userId && !User.IsInRole("Admin"))
                 {
-                    return Forbid(); // or Unauthorized()
+                    return Forbid();
                 }
 
                 var tickets = await _ticketService.GetTicketsByUserIdAsync(userId);
                 return Ok(tickets);
             }, ct);
 
-        // --- HILFSMETHODE ---
         private long? GetCurrentUserId()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)

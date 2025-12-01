@@ -29,11 +29,15 @@ namespace KinoAppWeb.Services
             return result?["id"] ?? 0;
         }
 
-        public async Task<KinosaalDTO?> GetKinosaalAsync(long id, CancellationToken ct)
+        public async Task<KinosaalDTO?> GetKinosaalAsync(long id, long? vorstellungId, CancellationToken ct)
         {
-            var url = $"api/kinosaal?id={id}";
+            string url = vorstellungId.HasValue
+                ? $"api/kinosaal?id={id}&vorstellungId={vorstellungId.Value}"
+                : $"api/kinosaal?id={id}";
+
             return await _http.GetFromJsonAsync<KinosaalDTO>(url, ct);
         }
+
 
         public async Task<SitzreiheEntity> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct)
         {

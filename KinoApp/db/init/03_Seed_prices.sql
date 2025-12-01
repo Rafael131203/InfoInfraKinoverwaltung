@@ -77,8 +77,8 @@ BEGIN
 
             -- Create seats in this row
             FOR v_seat IN 1..k."SeatsPerRow" LOOP
-                INSERT INTO "Sitzplatz" ("Gebucht", "Nummer", "Preis", "SitzreiheId")
-                VALUES (FALSE, v_seat, v_preis, v_reihe_id);
+                INSERT INTO "Sitzplatz" ("Nummer", "Preis", "SitzreiheId")
+                VALUES (v_seat, v_preis, v_reihe_id);
             END LOOP;
 
         END LOOP; -- rows

@@ -12,6 +12,7 @@ namespace KinoAppWeb.Services
         private const string FilmCacheKey = "kinoapp_filmcached";
         private const string SelectedSeatsKey = "kinoapp_selected_seats";
         private const string SelectedShowtimeKey = "kinoapp_selected_showtime";
+        private const string CartKey = "kinoapp_cart";         // 🔥 NEW
 
         private static readonly JsonSerializerOptions JsonOptions = new()
         {
@@ -31,13 +32,10 @@ namespace KinoAppWeb.Services
         public SelectedShowtimeDto? SelectedShowtime { get; private set; }
         public List<SelectedSeatClientDto> SelectedSeats { get; private set; } = new();
 
+        // 🔥 NEW: persistent cart
+        public List<SelectedSeatClientDto> Cart { get; private set; } = new();
 
-
-
-
-        /// <summary>
-        /// Cached films for this browser session, mirrored in sessionStorage.
-        /// </summary>
+        /// <summary>Cached films for this browser session, mirrored in sessionStorage.</summary>
         public List<FilmDto> CachedFilms { get; private set; } = new();
 
         public UserSession(IJSRuntime js, IClientLoginService auth)
@@ -46,18 +44,10 @@ namespace KinoAppWeb.Services
             _auth = auth;
         }
 
-        /// <summary>True if there is a current session with tokens.</summary>
         public bool IsAuthenticated => _session?.Token is not null;
-
-        /// <summary>The current full login payload (tokens + user info).</summary>
         public LoginResponseDTO? Current => _session;
-
-        /// <summary>The current access token string (may be null).</summary>
         public string? CurrentAccessToken => _session?.Token?.Token;
 
-        /// <summary>
-        /// Load session and film cache from sessionStorage once at startup.
-        /// </summary>
         public async Task InitializeAsync()
         {
             if (_initialized) return;
@@ -89,7 +79,8 @@ namespace KinoAppWeb.Services
                 {
                     SelectedShowtime = JsonSerializer.Deserialize<SelectedShowtimeDto>(selectedShowtimeJson, JsonOptions);
                 }
-                // selected seats
+
+                // selected seats (current selection)
                 var selectedSeatsJson = await _js.InvokeAsync<string?>("sessionStorage.getItem", SelectedSeatsKey);
                 if (!string.IsNullOrWhiteSpace(selectedSeatsJson))
                 {
@@ -101,18 +92,27 @@ namespace KinoAppWeb.Services
                     SelectedSeats = new List<SelectedSeatClientDto>();
                 }
 
+                // 🔥 cart
+                var cartJson = await _js.InvokeAsync<string?>("sessionStorage.getItem", CartKey);
+                if (!string.IsNullOrWhiteSpace(cartJson))
+                {
+                    var cartSeats = JsonSerializer.Deserialize<List<SelectedSeatClientDto>>(cartJson, JsonOptions);
+                    Cart = cartSeats ?? new List<SelectedSeatClientDto>();
+                }
+                else
+                {
+                    Cart = new List<SelectedSeatClientDto>();
+                }
             }
             catch
             {
-                // ignore, treat as no session/films
                 CachedFilms = new List<FilmDto>();
+                Cart = new List<SelectedSeatClientDto>();
             }
 
             _initialized = true;
         }
 
-
-        /// <summary>Stores the login payload in memory and sessionStorage.</summary>
         public async Task SetSessionAsync(LoginResponseDTO dto)
         {
             _session = dto;
@@ -121,22 +121,22 @@ namespace KinoAppWeb.Services
             await _js.InvokeVoidAsync("sessionStorage.setItem", StorageKey, json);
         }
 
-        /// <summary>Clears all session data (tokens + film cache + flags + storage).</summary>
         private async Task ClearAsync()
         {
             _session = null;
             _refreshInProgress = false;
             CachedFilms = new List<FilmDto>();
+            Cart = new List<SelectedSeatClientDto>();
+            SelectedSeats = new List<SelectedSeatClientDto>();
+            SelectedShowtime = null;
 
             await _js.InvokeVoidAsync("sessionStorage.removeItem", StorageKey);
             await _js.InvokeVoidAsync("sessionStorage.removeItem", FilmCacheKey);
             await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedShowtimeKey);
             await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedSeatsKey);
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", CartKey);   // 🔥
         }
 
-        /// <summary>
-        /// Performs a full logout: optionally notifies the API and then clears local session state.
-        /// </summary>
         public async Task LogoutAsync(CancellationToken ct = default)
         {
             try
@@ -145,7 +145,6 @@ namespace KinoAppWeb.Services
             }
             catch
             {
-                // Ignore API errors, local logout still proceeds
             }
             finally
             {
@@ -153,10 +152,6 @@ namespace KinoAppWeb.Services
             }
         }
 
-        /// <summary>
-        /// Returns a valid access token. If the current one is expired or about to expire,
-        /// tries to refresh using the refresh token.
-        /// </summary>
         public async Task<string?> GetValidAccessTokenAsync(CancellationToken ct = default)
         {
             if (_session?.Token is null)
@@ -167,7 +162,6 @@ namespace KinoAppWeb.Services
 
             var secondsLeft = (expires - now).TotalSeconds;
 
-            // If expired or less than 2 minutes left, refresh
             if (secondsLeft <= 0 || secondsLeft < 120)
             {
                 await RefreshAsync(ct);
@@ -178,7 +172,7 @@ namespace KinoAppWeb.Services
 
         private async Task RefreshAsync(CancellationToken ct)
         {
-            if (_refreshInProgress) return; // avoid concurrent refreshes
+            if (_refreshInProgress) return;
 
             if (_session?.RefreshToken == null)
             {
@@ -190,7 +184,6 @@ namespace KinoAppWeb.Services
             {
                 _refreshInProgress = true;
 
-                // IClientLoginService.RefreshAsync must return a fresh LoginResponseDTO
                 var refreshed = await _auth.RefreshAsync(_session.RefreshToken.Token, ct);
                 if (refreshed is null)
                 {
@@ -206,9 +199,6 @@ namespace KinoAppWeb.Services
             }
         }
 
-        /// <summary>
-        /// Stores the given films in memory and in sessionStorage.
-        /// </summary>
         public async Task StoreFilmsAsync(List<FilmDto> films)
         {
             CachedFilms = films ?? new List<FilmDto>();
@@ -217,13 +207,8 @@ namespace KinoAppWeb.Services
             await _js.InvokeVoidAsync("sessionStorage.setItem", FilmCacheKey, json);
         }
 
-        /// <summary>
-        /// Returns films from cache if available; otherwise fetches from the backend
-        /// via ImdbApiClient (DB-backed endpoint), stores them and returns them.
-        /// </summary>
         public async Task<List<FilmDto>> GetFilmsAsync(ImdbApiClient client, CancellationToken ct = default)
         {
-            // Ensure we've read from sessionStorage at least once
             await InitializeAsync();
 
             if (CachedFilms is { Count: > 0 })
@@ -234,7 +219,6 @@ namespace KinoAppWeb.Services
 
             return CachedFilms;
         }
-
 
         public async Task SetSelectedShowtimeAsync(int movieId, string movieTitle, string? posterUrl, ShowtimeDto showtime)
         {
@@ -270,6 +254,32 @@ namespace KinoAppWeb.Services
             await _js.InvokeVoidAsync("sessionStorage.removeItem", SelectedSeatsKey);
         }
 
+        // 🔥 NEW: Cart helpers ------------------------------------------
 
+        public async Task AddToCartAsync(IEnumerable<SelectedSeatClientDto> seats)
+        {
+            if (seats == null) return;
+
+            // ensure initialized
+            Cart ??= new List<SelectedSeatClientDto>();
+
+            foreach (var seat in seats)
+            {
+                // avoid duplicates: same seat + same showtime
+                if (!Cart.Any(c => c.SeatId == seat.SeatId && c.VorstellungId == seat.VorstellungId))
+                {
+                    Cart.Add(seat);
+                }
+            }
+
+            var json = JsonSerializer.Serialize(Cart, JsonOptions);
+            await _js.InvokeVoidAsync("sessionStorage.setItem", CartKey, json);
+        }
+
+        public async Task ClearCartAsync()
+        {
+            Cart = new List<SelectedSeatClientDto>();
+            await _js.InvokeVoidAsync("sessionStorage.removeItem", CartKey);
+        }
     }
 }

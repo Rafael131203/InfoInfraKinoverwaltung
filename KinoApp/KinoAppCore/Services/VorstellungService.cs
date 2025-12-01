@@ -11,15 +11,18 @@ namespace KinoAppCore.Services
         private readonly IVorstellungRepository _repoVorstellung;
         private readonly IFilmRepository _repoFilm;
         private readonly IMapper _mapper;
+        private readonly ITicketService _ticketService;
 
         public VorstellungService(
             IVorstellungRepository repoVorstellung,
             IFilmRepository repoFilm,
-            IMapper mapper)
+            IMapper mapper,
+            ITicketService ticketService)
         {
             _repoVorstellung = repoVorstellung;
             _repoFilm = repoFilm;
             _mapper = mapper;
+            _ticketService = ticketService;
         }
 
         public async Task CreateVorstellungAsync(CreateVorstellungDTO vorstellungDto, CancellationToken ct)
@@ -57,6 +60,8 @@ namespace KinoAppCore.Services
 
             await _repoVorstellung.AddAsync(entity, ct);
             await _repoVorstellung.SaveAsync(ct);
+
+            await _ticketService.CreateTicketsForVorstellungAsync(entity.Id, entity.KinosaalId, ct);
         }
 
 

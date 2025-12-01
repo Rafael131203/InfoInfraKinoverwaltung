@@ -122,6 +122,12 @@
                                 {
                                     foreach (var seat in row.Sitzplätze.OrderBy(p => p.Nummer))
                                     {
+                                        // 🔥 SeatStatus 0 (Nothing) -> don't render at all
+                                        if (seat.Status == TicketStatus.Nothing)
+                                        {
+                                            continue;
+                                        }
+
                                         var seatTitle = BuildSeatTitle(row, seat);
                                         var selected = IsSeatSelected(seat.Id);
 
@@ -137,12 +143,12 @@
                                             </span>
                                             <span class="seat__number">@seat.Nummer</span>
                                         </button>
-
                                     }
                                 }
                             </div>
                         </div>
                     }
+
                 </div>
 
                 <div class="seating-footer-panel">

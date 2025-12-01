@@ -1,4 +1,5 @@
 ﻿using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Ticket;
 
 namespace KinoAppCore.Services // Namespace anpassen!
 {
@@ -15,5 +16,15 @@ namespace KinoAppCore.Services // Namespace anpassen!
 
         Task<BuyTicketDTO> GetTicketAsync(long ticketId);
         Task<List<BuyTicketDTO>> GetAllAsync();
+
+        Task CreateTicketsForVorstellungAsync(long vorstellungId, long? kinosaalId, CancellationToken ct);
+
+        // NEW: helper for querying free seats
+        Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct);
+
+        // NEW: generic status change
+        Task UpdateTicketStatusAsync(UpdateTicketStatusDTO dto, CancellationToken ct);
+
+        Task ReserveTicketsAsync(ReserveTicketDTO request, long? userId, CancellationToken ct);
     }
 }
