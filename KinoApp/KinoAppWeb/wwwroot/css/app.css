@@ -25,7 +25,7 @@ html, body, .app-root {
 }
 
 .page-shell {
-    min-height: calc(100vh - 160px); /* keep footer at bottom */
+    min-height: calc(100vh - 360px); /* keep footer at bottom */
 }
 
 
