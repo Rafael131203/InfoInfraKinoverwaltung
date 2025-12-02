@@ -248,14 +248,21 @@ namespace KinoAppWeb.Pages
             var success = await ReserveCurrentSelectionAsync();
             if (!success) return;
 
-            // 🔥 add current selection to cart
-            await UserSession.AddToCartAsync(_selectedSeats);
+            var st = UserSession.SelectedShowtime!;
 
-            // clear selection (both in memory and storage)
+            await UserSession.AddToCartAsync(
+                _selectedSeats,
+                st.MovieId,
+                st.MovieTitle,
+                st.PosterUrl,
+                st.Showtime!
+            );
+
+            // clear selection
             _selectedSeats.Clear();
             await UserSession.ClearSelectedSeatsAsync();
 
-            // optional: reload hall so reserved seats show immediately
+            // reload hall (optional)
             await LoadKinosaalAsync();
         }
 
@@ -264,15 +271,22 @@ namespace KinoAppWeb.Pages
             var success = await ReserveCurrentSelectionAsync();
             if (!success) return;
 
-            // 🔥 add current selection to cart
-            await UserSession.AddToCartAsync(_selectedSeats);
+            var st = UserSession.SelectedShowtime!;
 
-            // clear selection
+            await UserSession.AddToCartAsync(
+                _selectedSeats,
+                st.MovieId,
+                st.MovieTitle,
+                st.PosterUrl,
+                st.Showtime!
+            );
+
             _selectedSeats.Clear();
             await UserSession.ClearSelectedSeatsAsync();
 
             NavManager.NavigateTo("/checkout");
         }
+
 
 
         // ----------------------------------------------------------------

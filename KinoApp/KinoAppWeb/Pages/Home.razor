@@ -38,111 +38,6 @@
                     View Schedule
                 </button>
             </div>
-
-            <!-- ENHANCED OLD CINEMA CAMERA BLOCK -->
-            @* <aside class="camera-block" aria-label="Retro cinema projector illustration">
-                <div class="camera-block__inner">
-                    <!-- Top bar for extra depth -->
-                    <div class="camera-top">
-                        <div class="camera-top__plate">
-                            <span class="camera-top__bolt camera-top__bolt--left"></span>
-                            <span class="camera-top__bolt camera-top__bolt--right"></span>
-                            <span class="camera-top__handle"></span>
-                        </div>
-                    </div>
-
-                    <!-- Reels assembly -->
-                    <div class="camera-reels">
-                        <div class="camera-reel camera-reel--left">
-                            <span class="camera-reel__ring"></span>
-                            <span class="camera-reel__spoke camera-reel__spoke--v"></span>
-                            <span class="camera-reel__spoke camera-reel__spoke--h"></span>
-                            <span class="camera-reel__hub"></span>
-                        </div>
-                        <div class="camera-reel camera-reel--right">
-                            <span class="camera-reel__ring"></span>
-                            <span class="camera-reel__spoke camera-reel__spoke--v"></span>
-                            <span class="camera-reel__spoke camera-reel__spoke--h"></span>
-                            <span class="camera-reel__hub"></span>
-                        </div>
-                    </div>
-
-                    <!-- Main body -->
-                    <div class="camera-body">
-                        <div class="camera-body__front">
-                            <!-- Lens stack -->
-                            <div class="camera-lens">
-                                <div class="camera-lens__ring camera-lens__ring--outer"></div>
-                                <div class="camera-lens__ring camera-lens__ring--mid"></div>
-                                <div class="camera-lens__ring camera-lens__ring--inner"></div>
-                                <div class="camera-lens__glass">
-                                    <div class="camera-lens__reflection camera-lens__reflection--primary"></div>
-                                    <div class="camera-lens__reflection camera-lens__reflection--secondary"></div>
-                                </div>
-                                <div class="camera-lens__glow"></div>
-                            </div>
-
-                            <!-- Viewfinder & controls -->
-                            <div class="camera-body__panel">
-                                <div class="camera-panel__row camera-panel__row--status">
-                                    <span class="camera-status-dot camera-status-dot--red"></span>
-                                    <span class="camera-status-dot camera-status-dot--amber"></span>
-                                    <span class="camera-status-dot camera-status-dot--green"></span>
-                                    <span class="camera-panel__label">REC</span>
-                                </div>
-
-                                <div class="camera-panel__row camera-panel__row--slider">
-                                    <span class="camera-slider__track">
-                                        <span class="camera-slider__fill"></span>
-                                        <span class="camera-slider__thumb"></span>
-                                    </span>
-                                </div>
-
-                                <div class="camera-panel__row camera-panel__row--meters">
-                                    <span class="camera-meter camera-meter--left"></span>
-                                    <span class="camera-meter camera-meter--right"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Side panel with film door -->
-                        <div class="camera-body__side">
-                            <div class="camera-side__door">
-                                <span class="camera-side__hinge"></span>
-                                <span class="camera-side__screw camera-side__screw--top"></span>
-                                <span class="camera-side__screw camera-side__screw--bottom"></span>
-                                <span class="camera-side__label">35mm</span>
-                            </div>
-
-                            <div class="camera-side__vents">
-                                <span class="camera-vent"></span>
-                                <span class="camera-vent"></span>
-                                <span class="camera-vent"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tripod / base -->
-                    <div class="camera-base">
-                        <div class="camera-base__plate"></div>
-                        <div class="camera-tripod">
-                            <span class="camera-tripod__leg camera-tripod__leg--left"></span>
-                            <span class="camera-tripod__leg camera-tripod__leg--center"></span>
-                            <span class="camera-tripod__leg camera-tripod__leg--right"></span>
-                        </div>
-                    </div>
-
-                    <!-- Light cone pointing towards the slider -->
-                    <div class="camera-light-cone">
-                        <div class="camera-light-cone__inner"></div>
-                    </div>
-                </div>
-
-                <p class="camera-block__caption">
-                    Authentic projector-inspired animation: spinning reels, layered lens glow,
-                    film-door details and a warm beam casting across the feature slider.
-                </p>
-            </aside> *@
         </div>
 
         <!-- RIGHT: IMAGE SLIDER -->
@@ -301,52 +196,6 @@
             <h2 id="now-showing-title" class="section__title">Pick your feature</h2>
         </div>
         <div class="section__header-right">
-            <form class="movie-filters" aria-label="Filter movies">
-                <!-- GENRE FILTER -->
-                <label class="movie-filters__group">
-                    <span class="movie-filters__label">Genre</span>
-                    <select class="movie-filters__select"
-                            value="@_selectedGenre"
-                            @onchange="OnGenreChanged">
-                        <option value="">All</option>
-                        <option value="Action">Action</option>
-                        <option value="Adventure">Adventure</option>
-                        <option value="Comedy">Comedy</option>
-                        <option value="Drama">Drama</option>
-                        <option value="Sci-Fi">Sci-Fi</option>
-                        <option value="Horror">Horror</option>
-                        <option value="Animation">Animation</option>
-                    </select>
-                </label>
-
-                <!-- LANGUAGE FILTER (placeholder, no effect until stored on FilmDto) -->
-                <label class="movie-filters__group">
-                    <span class="movie-filters__label">Language</span>
-                    <select class="movie-filters__select"
-                            value="@_selectedLanguage"
-                            @onchange="OnLanguageChanged">
-                        <option value="all">All</option>
-                        <option value="US">English</option>
-                        <option value="DE">Deutsch</option>
-                        <option value="FR">Français</option>
-                        <option value="NL">Nederlands</option>
-                    </select>
-                </label>
-
-                <!-- SORT BY -->
-                <label class="movie-filters__group">
-                    <span class="movie-filters__label">Sort by</span>
-                    <select class="movie-filters__select"
-                            value="@_selectedSort"
-                            @onchange="OnSortChanged">
-                        <option value="SORT_BY_POPULARITY">Popularity (by title)</option>
-                        <option value="SORT_BY_RELEASE_DATE">Release date</option>
-                        <option value="SORT_BY_USER_RATING">User rating</option>
-                        <option value="SORT_BY_USER_RATING_COUNT">Rating count</option>
-                        <option value="SORT_BY_YEAR">Year</option>
-                    </select>
-                </label>
-            </form>
         </div>
     </header>
 
@@ -376,19 +225,9 @@
 
                         <!-- META INFO -->
                         <p class="movie-card__meta">
-                        @if (movie.Fsk.HasValue)
-                            {
-                                @($"FSK {movie.Fsk} · ")
-                            }
-
                             @if (!string.IsNullOrWhiteSpace(movie.Genre))
                             {
                                 @movie.Genre
-                            }
-
-                            @if (movie.Dauer.HasValue)
-                            {
-                                @($" · {movie.Dauer} min")
                             }
                         </p>
 

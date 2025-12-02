@@ -72,5 +72,17 @@ namespace KinoAppWeb.Services
             var resp = await _http.DeleteAsync($"api/vorstellung/{id}", ct);
             return resp.IsSuccessStatusCode;
         }
+
+        public async Task<List<VorstellungDTO>> GetAlleVorstellungenAsync(CancellationToken ct = default)
+        {
+            var url = $"api/vorstellung/Alle";
+            var result = await _http.GetFromJsonAsync<List<VorstellungDTO>>(url, ct);
+            return result ?? new List<VorstellungDTO>();
+        }
+
+        public Task<List<VorstellungDTO>> GetAlleVorstellungenAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using KinoAppShared.DTOs.Showtimes;
+﻿using KinoAppShared.DTOs.Showtimes;
 using KinoAppShared.DTOs.Vorstellung;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components;
@@ -23,10 +18,6 @@ namespace KinoAppWeb.Pages
 
         protected DateTime _currentDate = DateTime.Today;
 
-        // Retry config
-        private const int RetryDelaySeconds = 5;
-        private const int MaxRetryAttempts = 12; // 12 * 5s = 1 minute
-
         // initialise list here so it's never null during first render
         protected List<MovieShowtimeDto> _movies { get; set; } = new();
 
@@ -35,10 +26,8 @@ namespace KinoAppWeb.Pages
         protected int TotalShowtimes =>
             _movies?.Sum(m => m.Showtimes?.Count ?? 0) ?? 0;
 
-        protected string CurrentDateFormatted =>
-            _hasLoadedOnce
-                ? _currentDate.ToString("dddd, dd. MMMM yyyy")
-                : "No date selected";
+        protected string CurrentDateFormatted => _currentDate.ToString("dddd, dd. MMMM yyyy");
+
 
         // ------------------------------------------------------------
 
@@ -47,7 +36,6 @@ namespace KinoAppWeb.Pages
             await UserSession.InitializeAsync();
 
             _movies.Clear();
-            _hasLoadedOnce = false;
 
             // Auto-load today's showtimes so it's consistent with Home showing today's content
             await LoadShowtimesFor(DateTime.Today);
@@ -80,47 +68,14 @@ namespace KinoAppWeb.Pages
             _movies.Clear();
             await InvokeAsync(StateHasChanged);
 
-            var utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+            var utcDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
 
-            List<VorstellungDTO>? vorstellungen = null;
+            // Single call – just like admin
+            var vorstellungen = await VorstellungService
+                .GetVorstellungVonTagAsync(utcDate, CancellationToken.None)
+                ?? new List<VorstellungDTO>();
 
-            for (var attempt = 1; attempt <= MaxRetryAttempts; attempt++)
-            {
-                try
-                {
-                    vorstellungen = await VorstellungService
-                        .GetVorstellungVonTagAsync(utcDate, CancellationToken.None)
-                        ?? new List<VorstellungDTO>();
-                }
-                catch
-                {
-                    // treat as "no data yet" and retry
-                    vorstellungen = new List<VorstellungDTO>();
-                }
-
-                if (vorstellungen.Count > 0)
-                {
-                    // success – break the retry loop
-                    break;
-                }
-
-                if (attempt < MaxRetryAttempts)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(RetryDelaySeconds));
-                }
-            }
-
-            _hasLoadedOnce = true;
-
-            if (vorstellungen == null || vorstellungen.Count == 0)
-            {
-                // no data after all retries -> show "No screenings planned"
-                _isLoading = false;
-                await InvokeAsync(StateHasChanged);
-                return;
-            }
-
-            // 2) Group by Film (FilmDto.Id) making sure Film is not null
+            // Group by Film
             var grouped = vorstellungen
                 .Where(v => v.Film != null)
                 .GroupBy(v => v.Film!.Id);
@@ -130,11 +85,15 @@ namespace KinoAppWeb.Pages
 
             foreach (var group in grouped)
             {
-                var first = group.FirstOrDefault();
-                if (first?.Film == null)
-                    continue;
+                var first = group.First();
+                var film = first.Film!;
 
-                var film = first.Film; // FilmDto
+                // Normalize runtime: seconds → minutes if needed
+                var durationMinutes = film.Dauer ?? 0;
+                if (durationMinutes > 180)
+                {
+                    durationMinutes /= 60;
+                }
 
                 var showtimes = group
                     .OrderBy(v => v.Datum)
@@ -147,14 +106,7 @@ namespace KinoAppWeb.Pages
                     })
                     .ToList();
 
-                // Normalize runtime similar to Home
-                var durationMinutes = film.Dauer ?? 0;
-                if (durationMinutes > 180) // assume > 3h means it's in seconds
-                {
-                    durationMinutes /= 60;
-                }
-
-                var movie = new MovieShowtimeDto
+                movies.Add(new MovieShowtimeDto
                 {
                     Id = uiId++,                            // local UI id
                     Title = film.Titel ?? string.Empty,
@@ -165,16 +117,21 @@ namespace KinoAppWeb.Pages
                     AgeRating = film.Fsk.HasValue ? $"FSK {film.Fsk.Value}" : "FSK",
                     Genres = film.Genre ?? string.Empty,
                     Showtimes = showtimes
-                };
-
-
-                movies.Add(movie);
+                });
             }
 
-            _movies = movies;
+            // Order like admin
+            _movies = movies
+                .OrderBy(m => m.Title)
+                .ToList();
+
             _isLoading = false;
+            _hasLoadedOnce = true;
+
+            await RefreshAnimations();        // keep your JS animation
             await InvokeAsync(StateHasChanged);
         }
+
 
         // ------------------------------------------------------------
         // DATE CONTROLS

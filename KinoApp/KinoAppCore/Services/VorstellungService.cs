@@ -213,5 +213,14 @@ namespace KinoAppCore.Services
             await _repoVorstellung.SaveAsync(ct);
             return true;
         }
+
+        public async Task<List<VorstellungDTO>> GetAlleVorstellungenAsync(CancellationToken ct)
+        {
+            var data = await BaseQuery()
+                .OrderBy(v => v.Datum)
+                .ToListAsync();
+
+            return _mapper.Map<List<VorstellungDTO>>(data);
+        }
     }
 }

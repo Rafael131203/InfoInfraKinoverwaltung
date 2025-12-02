@@ -129,20 +129,21 @@
     justify-content: flex-end;
 }
 
-/* Chips (reuse global chip class from earlier answer) */
+/* Chips – align more with admin chips */
 
 .chip {
     border-radius: var(--radius-pill);
     border: 1px solid var(--border-soft);
     background: rgba(8, 8, 18, 0.96);
-    padding: 0.25rem 0.9rem;
-    font-size: 0.78rem;
+    padding-block: 0.35rem;
+    padding-inline: 0.95rem;
+    font-size: var(--font-size-small);
     color: var(--text-muted);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.12s ease;
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.12s ease, box-shadow 0.12s ease;
 }
 
     .chip:hover {
@@ -155,6 +156,7 @@
     border-color: var(--accent);
     background: radial-gradient(circle at top left, rgba(255, 204, 85, 0.35), #0a0a16);
     color: #fff;
+    box-shadow: 0 0 14px rgba(255, 204, 85, 0.4);
 }
 
 /* Ribbon */
@@ -241,18 +243,18 @@
     }
 
 /* ===============================
-   MOVIE CARD
+   MOVIE CARD – closer to admin card
 =============================== */
 
 .movie-card {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 1.3rem;
-    background: radial-gradient(circle at top left, #171728, #11111a);
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.1rem 1.3rem;
     border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top left, rgba(255,255,255,0.03), transparent 70%), var(--bg-card-soft);
     box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    padding: 1rem 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.04);
     position: relative;
     overflow: hidden;
     cursor: pointer;
@@ -310,7 +312,7 @@
     border-radius: var(--radius-md);
     object-fit: cover;
     aspect-ratio: 2 / 3;
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.9);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
     animation: filmFlickerSoft 6s infinite alternate;
 }
 
@@ -409,23 +411,24 @@
     gap: 0.45rem;
 }
 
-/* Showtime chip */
+/* Showtime chip – styled like admin-showtime-pill */
 
 .showtime-chip {
     border-radius: var(--radius-pill);
-    border: 1px solid var(--border-soft);
-    background: var(--bg-chip);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: linear-gradient( 135deg, rgba(255, 204, 85, 0.1), rgba(255, 138, 214, 0.25) );
     padding: 0.28rem 0.8rem;
     display: inline-flex;
-    align-items: baseline;
-    gap: 0.35rem;
+    align-items: center;
+    gap: 0.4rem;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: var(--font-size-small);
     color: #ffffff;
     transition: border-color 0.16s ease, background 0.16s ease, transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .showtime-chip__time {
+    width: 70px;
     font-weight: 600;
 }
 
@@ -435,10 +438,10 @@
 }
 
 .showtime-chip:hover {
-    border-color: var(--accent-blue);
-    background: radial-gradient(circle at top, rgba(118, 199, 255, 0.22), #050509);
+    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-pink));
     transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.85);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
 }
 
 /* ===============================

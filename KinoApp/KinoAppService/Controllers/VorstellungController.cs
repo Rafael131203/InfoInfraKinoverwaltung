@@ -115,5 +115,14 @@ namespace KinoAppService.Controllers
 
                 return new OkResult();
             }, ct);
+
+        [AllowAnonymous]
+        [HttpGet("Alle")]
+        public Task<IActionResult> GetAlleVorstellungen(CancellationToken ct) =>
+            ExecuteAsync(async token =>
+            {
+                var vorstellungen = await _vorstellungService.GetAlleVorstellungenAsync(token);
+                return new OkObjectResult(vorstellungen);
+            }, ct);
     }
 }

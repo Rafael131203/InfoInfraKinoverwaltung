@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @using Microsoft.AspNetCore.Components.Routing
 @inject KinoAppWeb.Services.UserSession UserSession
 @inject NavigationManager Navigation
@@ -86,21 +87,26 @@
                 </ul>
             </nav>
 
+            <div class="site-header__actions">
+                <button class="header-cart @(UserSession.CartCount > 0 ? "header-cart--visible" : "header-cart--hidden")"
+                        type="button"
+                        @onclick="@(() => Navigation.NavigateTo("/cart"))">
+                    <span class="header-cart__icon">🛒</span>
+                    <span class="header-cart__badge">@UserSession.CartCount</span>
+                </button>
 
+                <button class="header-cta" type="button">
+                    <span class="header-cta__dot"></span>
+                    <span class="header-cta__label">Tickets</span>
+                    <span class="header-cta__sub">Tonight</span>
+                </button>
 
-            <!-- Tickets CTA -->
-            <button class="header-cta" type="button">
-                <span class="header-cta__dot"></span>
-                <span class="header-cta__label">Tickets</span>
-                <span class="header-cta__sub">Tonight</span>
-            </button>
-
-            <!-- Mobile Menu -->
-            <button class="burger" type="button" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="burger__line"></span>
-                <span class="burger__line"></span>
-                <span class="burger__line"></span>
-            </button>
+                <button class="burger" type="button" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="burger__line"></span>
+                    <span class="burger__line"></span>
+                    <span class="burger__line"></span>
+                </button>
+            </div>
 
         </div>
     </header>
@@ -154,6 +160,15 @@
     {
         // Ensure we load session from sessionStorage once
         await UserSession.InitializeAsync();
+
+        // 🔔 subscribe to cart changes
+        UserSession.CartChanged += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        // We’re in a service callback – marshal to UI thread
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task Logout()
@@ -161,5 +176,12 @@
         await UserSession.LogoutAsync();
         Navigation.NavigateTo("/");
     }
+
+    public void Dispose()
+    {
+        // 🔔 unsubscribe to avoid memory leaks
+        UserSession.CartChanged -= OnCartChanged;
+    }
 }
+
 

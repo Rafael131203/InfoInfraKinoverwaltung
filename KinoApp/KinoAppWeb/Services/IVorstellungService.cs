@@ -12,5 +12,8 @@ namespace KinoAppWeb.Services
         Task<List<VorstellungDTO>> GetVorstellungVonKinosaalUndTagAsync(DateTime datum, long KinosaalId, CancellationToken ct);
         Task<List<VorstellungDTO>> GetVorstellungVonFilm(string filmId, CancellationToken ct);
         Task<bool> DeleteVorstellungAsync(long id, CancellationToken ct);
+
+        Task<List<VorstellungDTO>> GetAlleVorstellungenAsync();
+
     }
 }

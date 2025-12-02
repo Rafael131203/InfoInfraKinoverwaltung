@@ -892,3 +892,43 @@ main {
     background: linear-gradient(90deg, var(--accent), var(--accent-pink));
 }
 
+
+.header-cart {
+    position: relative;
+    margin-right: 0.75rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: radial-gradient(circle at top left, rgba(118, 199, 255, 0.18), transparent 60%), rgba(5, 5, 16, 0.96);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    color: #f7f7ff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+    font-size: 0.9rem;
+}
+
+.header-cart__icon {
+    font-size: 1.05rem;
+}
+
+.header-cart__badge {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    background: var(--accent-pink);
+    color: #050509;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-cart:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 16px rgba(118, 199, 255, 0.6), 0 8px 20px rgba(0, 0, 0, 0.85);
+    transform: translateY(-1px);
+}

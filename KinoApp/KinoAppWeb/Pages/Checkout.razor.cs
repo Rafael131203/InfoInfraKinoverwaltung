@@ -39,11 +39,14 @@ namespace KinoAppWeb.Pages
             var s = UserSession.SelectedShowtime;
 
             // 🔥 use Cart, but only seats for this showtime
-            Seats = UserSession.Cart
-                .Where(x => x.VorstellungId == s.Showtime!.Id)
-                .OrderBy(x => x.RowLabel)
-                .ThenBy(x => x.SeatNumber)
+            Seats = UserSession.CartItems
+                .Where(x => x.Showtime.Id == s.Showtime!.Id)
+                .OrderBy(x => x.Seat.RowLabel)
+                .ThenBy(x => x.Seat.SeatNumber)
+                .Select(x => x.Seat)                 // 🔥 convert to SelectedSeatClientDto
                 .ToList();
+
+
 
             Total = Seats.Sum(x => x.Price);
 
