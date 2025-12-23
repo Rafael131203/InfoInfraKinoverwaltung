@@ -113,7 +113,7 @@ namespace KinoAppCore.Entities
         [CategoryAttribute("Film")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
-        string Id
+        Nullable<int> Id
         {
             get;
             set;
