@@ -1,14 +1,16 @@
 ﻿using KinoAppDB.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppDB.Repository
 {
-    public class PreisZuKategorieRepository : Repository<PreisZuKategorieEntity>,IPreisZuKategorieRepository
+    /// <summary>
+    /// EF-backed repository implementation for <see cref="PreisZuKategorieEntity"/>.
+    /// </summary>
+    public class PreisZuKategorieRepository : Repository<PreisZuKategorieEntity>, IPreisZuKategorieRepository
     {
+        /// <summary>
+        /// Creates a new <see cref="PreisZuKategorieRepository"/>.
+        /// </summary>
+        /// <param name="scope">Database context scope used to access the current <see cref="KinoAppDbContext"/>.</param>
         public PreisZuKategorieRepository(KinoAppDbContextScope scope) : base(scope) { }
     }
 }

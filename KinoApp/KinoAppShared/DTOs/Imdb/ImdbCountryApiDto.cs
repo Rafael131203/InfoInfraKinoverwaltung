@@ -1,9 +1,18 @@
-﻿// ImdbCountryApiDto.cs
-namespace KinoAppShared.DTOs.Imdb
+﻿namespace KinoAppShared.DTOs.Imdb
 {
+    /// <summary>
+    /// Country information as returned by the IMDb API.
+    /// </summary>
     public class ImdbCountryApiDto
     {
-        public string? Code { get; set; }   // e.g. "DE"
-        public string? Name { get; set; }   // e.g. "Germany"
+        /// <summary>
+        /// ISO country code (e.g. "DE").
+        /// </summary>
+        public string? Code { get; set; }
+
+        /// <summary>
+        /// Human-readable country name (e.g. "Germany").
+        /// </summary>
+        public string? Name { get; set; }
     }
 }

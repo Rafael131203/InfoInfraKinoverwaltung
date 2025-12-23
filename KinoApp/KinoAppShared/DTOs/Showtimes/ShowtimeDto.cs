@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KinoAppShared.DTOs.Showtimes
+﻿namespace KinoAppShared.DTOs.Showtimes
 {
     public class ShowtimeDto
     {

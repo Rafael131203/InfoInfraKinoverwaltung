@@ -1,43 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace KinoAppShared.Messaging
 {
+    /// <summary>
+    /// Event published when a new user has been registered.
+    /// </summary>
     public record KundeRegistered
-    (
-    long KundeId,   // später Ändern in GUID?
-    string Email,
-    string Vorname,
-    string Nachname,
-    DateTime RegisteredAtUtc,
-    string Role
-    );
-
-    public record ShowCreated
-    (
-      long ShowId,    // später Ändern in GUID?
-      int FilmId,
-      int KinosaalId,
-      DateTime StartTimeUtc,
-      int AvailableSeats
-    );
-
-    public record TicketSold
-    (
-        long TicketId,  // später Ändern in GUID?
-        long ShowId,
-        int Quantity,
-        decimal TotalPrice,
-        DateTime SoldAtUtc
-    );
-
-    public record TicketCancelled(
-    long TicketId,
-    long ShowId,
-    decimal AmountToRefund, // Der Betrag, der abgezogen wird
-    DateTime CancelledAtUtc
-    );
+    (long KundeId, string Email,string Vorname,string Nachname,DateTime RegisteredAtUtc,string Role);
+    /// <summary>
+    /// Event published when a new showtime is created.
+    /// </summary>
+    public record ShowCreated(long ShowId,int FilmId,int KinosaalId,DateTime StartTimeUtc,int AvailableSeats);
+    /// <summary>
+    /// Event published when one or more tickets are sold.
+    /// </summary>
+    public record TicketSold(long TicketId, long ShowId,int Quantity,decimal TotalPrice,DateTime SoldAtUtc);
+    /// <summary>
+    /// Event published when a ticket is cancelled.
+    /// </summary>
+    public record TicketCancelled(long TicketId,long ShowId,decimal AmountToRefund, DateTime CancelledAtUtc);
 }

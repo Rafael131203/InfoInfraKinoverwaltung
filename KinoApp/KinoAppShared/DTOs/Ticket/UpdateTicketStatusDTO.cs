@@ -1,10 +1,23 @@
 ﻿namespace KinoAppShared.DTOs.Ticket
 {
+    /// <summary>
+    /// Request DTO for updating the status of a ticket.
+    /// </summary>
     public class UpdateTicketStatusDTO
     {
+        /// <summary>
+        /// Ticket identifier.
+        /// </summary>
         public long TicketId { get; set; }
-        public string Status { get; set; } = default!;
-        public long? UserId { get; set; }  // optional, for admin override / reassign
-    }
 
+        /// <summary>
+        /// Target status as a string (e.g. "free", "reserved", "booked").
+        /// </summary>
+        public string Status { get; set; } = default!;
+
+        /// <summary>
+        /// Optional user assignment or override.
+        /// </summary>
+        public long? UserId { get; set; }
+    }
 }

@@ -1,26 +1,29 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;       // Sitzplatz (NMF model)
-using KinoAppDB.Entities;        // SitzplatzEntity (EF entity)
+using KinoAppCore.Entities;
+using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
 
 namespace KinoAppCore.Mappings
 {
+    /// <summary>
+    /// AutoMapper profile for mapping seat (Sitzplatz) models between DTOs, domain models, and database entities.
+    /// </summary>
     public class SitzplatzMappingProfile : Profile
     {
+        /// <summary>
+        /// Initializes the mappings for seat models.
+        /// </summary>
         public SitzplatzMappingProfile()
         {
-            // 1) DTO -> domain model (Sitzplatz)
-            //    DTO likely has: Reihe, Nummer, Typ, etc.
-            //    Id is DB-generated, so ignore it.
+            // DTO -> domain
             CreateMap<SitzplatzDTO, Sitzplatz>()
                 .ForMember(s => s.Id, opt => opt.Ignore());
 
-            // 2) Domain model -> EF entity
+            // Domain -> EF entity
             CreateMap<Sitzplatz, SitzplatzEntity>()
-                .ForMember(e => e.Id,
-                    opt => opt.MapFrom(src => src.Id ?? 0));  // NMF Id may be nullable
+                .ForMember(e => e.Id, opt => opt.MapFrom(src => src.Id ?? 0));
 
-            // 3) EF entity -> DTO (for reading back)
+            // EF entity -> DTO
             CreateMap<SitzplatzEntity, SitzplatzDTO>();
         }
     }

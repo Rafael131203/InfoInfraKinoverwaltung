@@ -1,30 +1,32 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;      // Kinosaal (NMF Domain)
-using KinoAppDB.Entities;        // KinosaalEntity (EF)
+using KinoAppCore.Entities;
+using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
 
 namespace KinoAppCore.Mappings
 {
+    /// <summary>
+    /// AutoMapper profile for mapping auditorium (Kinosaal) models between DTOs, domain models, and database entities.
+    /// </summary>
     public class KinosaalMappingProfile : Profile
     {
+        /// <summary>
+        /// Initializes the mappings for auditorium models.
+        /// </summary>
         public KinosaalMappingProfile()
         {
-            // DTO -> Domain
             CreateMap<CreateKinosaalDTO, Kinosaal>()
-                .ForMember(x => x.Id, opt => opt.Ignore()); // Domain ID handled elsewhere
+                .ForMember(x => x.Id, opt => opt.Ignore());
 
-            // Domain -> Entity
             CreateMap<Kinosaal, KinosaalEntity>()
                 .ForMember(e => e.Id, opt => opt.MapFrom(src => src.Id ?? 0));
 
-            // Entity -> DTO (reading data)
             CreateMap<KinosaalEntity, CreateKinosaalDTO>();
 
             CreateMap<CreateKinosaalDTO, KinosaalEntity>()
                 .ForMember(e => e.Id, opt => opt.Ignore());
 
             CreateMap<KinosaalDTO, KinosaalEntity>().ReverseMap();
-
         }
     }
 }

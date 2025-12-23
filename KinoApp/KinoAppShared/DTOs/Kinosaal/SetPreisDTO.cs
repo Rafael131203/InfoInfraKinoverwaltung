@@ -1,16 +1,20 @@
 ﻿using KinoAppShared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppShared.DTOs.Kinosaal
 {
-        public class SetPreisDTO
-        {
-            public SitzreihenKategorie Kategorie { get; set; }
-            public decimal Preis { get; set; }
-        }
+    /// <summary>
+    /// Request DTO for defining or updating a price per seating category.
+    /// </summary>
+    public class SetPreisDTO
+    {
+        /// <summary>
+        /// Seating category.
+        /// </summary>
+        public SitzreihenKategorie Kategorie { get; set; }
 
+        /// <summary>
+        /// Price assigned to the category.
+        /// </summary>
+        public decimal Preis { get; set; }
+    }
 }

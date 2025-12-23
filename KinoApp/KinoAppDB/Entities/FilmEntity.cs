@@ -38,8 +38,16 @@ namespace KinoAppDB.Entities
         /// </summary>
         public string? Genre { get; set; }
 
+
+        /// <summary>
+        /// Image url to call from online 
+        /// </summary>
         public string? ImageURL { get; set; }
 
+
+        /// <summary>
+        /// Multiples vorstellungs will show one film
+        /// </summary>
         public ICollection<VorstellungEntity> Vorstellungen { get; set; } = new List<VorstellungEntity>();
     }
 }

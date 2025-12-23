@@ -1,17 +1,17 @@
 using AutoMapper;
-using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Kinosaal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppCore.Mappings
 {
+    /// <summary>
+    /// AutoMapper profile for mapping price category assignments.
+    /// </summary>
     public class PreisMappingProfile : Profile
     {
+        /// <summary>
+        /// Initializes the mappings for price models.
+        /// </summary>
         public PreisMappingProfile()
         {
             CreateMap<SetPreisDTO, PreisZuKategorieEntity>().ReverseMap();

@@ -1,15 +1,20 @@
 ﻿using KinoAppShared.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppShared.DTOs.Kinosaal
 {
+    /// <summary>
+    /// Request DTO for changing the category of a seat row.
+    /// </summary>
     public class ChangeKategorieSitzreiheDTO
     {
+        /// <summary>
+        /// Identifier of the seat row.
+        /// </summary>
         public long Id { get; set; }
-        public SitzreihenKategorie Kategorie{ get; set; }
+
+        /// <summary>
+        /// New seating category.
+        /// </summary>
+        public SitzreihenKategorie Kategorie { get; set; }
     }
 }

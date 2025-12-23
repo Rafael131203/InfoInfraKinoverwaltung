@@ -1,33 +1,30 @@
 ﻿using AutoMapper;
-using KinoAppCore.Entities;          // NMF Kunde
-using KinoAppDB.Entities;            // EF KundeEntity
-using KinoAppShared.DTOs;
+using KinoAppCore.Entities;
+using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Authentication;
-// using KinoAppShared.DTOs.Kinosaal; // Evtl. nicht gebraucht
 
 namespace KinoAppCore.Mappings
 {
+    /// <summary>
+    /// AutoMapper profile for mapping user/customer models between domain objects, EF entities, and authentication DTOs.
+    /// </summary>
+    /// <remarks>
+    /// Password hashing is handled outside of AutoMapper; therefore password fields are intentionally ignored
+    /// where appropriate.
+    /// </remarks>
     public class UserMappingProfile : Profile
     {
+        /// <summary>
+        /// Initializes the user mappings.
+        /// </summary>
         public UserMappingProfile()
         {
-
-            // 2) Domain <-> Entity
-
-            // Kunde (domain) -> KundeEntity (EF)
-            // WICHTIG: Keine Warenkorb-Mappings mehr!
             CreateMap<Kunde, UserEntity>();
-
-            // KundeEntity (EF) -> Kunde (domain)
             CreateMap<UserEntity, Kunde>();
 
-            // 3) Registration flow
-
-            // RegisterRequestDTO -> KundeEntity
             CreateMap<RegisterRequestDTO, UserEntity>()
                 .ForMember(dest => dest.Passwort, opt => opt.Ignore());
 
-            // KundeEntity -> RegisterResponseDTO
             CreateMap<UserEntity, RegisterResponseDTO>();
         }
     }

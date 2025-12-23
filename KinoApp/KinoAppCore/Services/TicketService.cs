@@ -8,9 +8,20 @@ using KinoAppShared.Enums;
 using KinoAppShared.Messaging;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace KinoAppCore.Services
 {
+    /// <summary>
+    /// Ticket service responsible for reservations, purchases, cancellations, and ticket queries.
+    /// </summary>
+    /// <remarks>
+    /// Ticket state transitions are enforced as follows:
+    /// <list type="bullet">
+    /// <item><description><see cref="TicketStatus.Free"/> → <see cref="TicketStatus.Reserved"/> via <see cref="ReserveTicketsAsync"/></description></item>
+    /// <item><description><see cref="TicketStatus.Reserved"/> → <see cref="TicketStatus.Booked"/> via <see cref="BuyTicketsAsync"/></description></item>
+    /// <item><description>Any state → <see cref="TicketStatus.Free"/> via <see cref="CancelTicketsAsync"/></description></item>
+    /// </list>
+    /// The service publishes events to the message bus to support downstream projections and statistics.
+    /// </remarks>
     public class TicketService : ITicketService
     {
         private readonly ITicketRepository _ticketRepo;
@@ -18,6 +29,9 @@ namespace KinoAppCore.Services
         private readonly IMessageBus _messageBus;
         private readonly IMapper _mapper;
 
+        /// <summary>
+        /// Creates a new <see cref="TicketService"/>.
+        /// </summary>
         public TicketService(
             ITicketRepository ticketRepo,
             ISitzplatzRepository sitzplatzRepo,
@@ -30,41 +44,34 @@ namespace KinoAppCore.Services
             _mapper = mapper;
         }
 
-        // ---------------- BUY = from Reserved -> Booked ----------------
+        /// <inheritdoc />
         public async Task<List<BuyTicketDTO>> BuyTicketsAsync(BuyTicketDTO request, long? userId)
         {
-            // Load tickets for this Vorstellung + seats
             var tickets = await _ticketRepo.Query(false)
                 .Where(t => t.VorstellungId == request.VorstellungId &&
                             request.SitzplatzIds.Contains(t.SitzplatzId))
                 .Include(t => t.Sitzplatz)
                 .ToListAsync();
 
-            // Ensure all requested seats exist
             if (tickets.Count != request.SitzplatzIds.Count)
                 throw new ArgumentException("Einer oder mehrere Sitzplätze sind für diese Vorstellung nicht vorhanden.");
 
-            // All must currently be RESERVED
             if (tickets.Any(t => t.Status != (int)TicketStatus.Reserved))
                 throw new InvalidOperationException("Einer der gewählten Plätze ist nicht (mehr) reserviert.");
 
-            // Optional: ensure the same logged-in user is buying their own reservation
             if (userId.HasValue && tickets.Any(t => t.UserId != userId))
                 throw new InvalidOperationException("Einer der gewählten Plätze ist nicht mehr für Sie reserviert.");
 
-            // Book them
             foreach (var ticket in tickets)
             {
                 ticket.Status = (int)TicketStatus.Booked;
-                ticket.UserId = userId;  // keep/assign owner
+                ticket.UserId = userId;
             }
 
             await _ticketRepo.SaveAsync();
 
-            // Pricing
             var gesamtPreis = tickets.Sum(t => t.Sitzplatz?.Preis ?? 0m);
 
-            // Event senden (z.B. erste TicketId als Ref)
             await _messageBus.PublishAsync(new TicketSold(
                 tickets[0].Id,
                 request.VorstellungId,
@@ -76,10 +83,9 @@ namespace KinoAppCore.Services
             return _mapper.Map<List<BuyTicketDTO>>(tickets);
         }
 
-        // ---------------- RESERVE = from Free -> Reserved ---------------
+        /// <inheritdoc />
         public async Task ReserveTicketsAsync(ReserveTicketDTO request, long? userId, CancellationToken ct)
         {
-            // Load tickets for this Vorstellung + seats
             var tickets = await _ticketRepo.Query(false)
                 .Where(t => t.VorstellungId == request.VorstellungId &&
                             request.SitzplatzIds.Contains(t.SitzplatzId))
@@ -88,20 +94,19 @@ namespace KinoAppCore.Services
             if (tickets.Count != request.SitzplatzIds.Count)
                 throw new ArgumentException("Einer oder mehrere Sitzplätze sind für diese Vorstellung nicht vorhanden.");
 
-            // Only FREE seats can be reserved
             if (tickets.Any(t => t.Status != (int)TicketStatus.Free))
                 throw new InvalidOperationException("Einer der gewählten Plätze ist bereits reserviert oder gebucht.");
 
             foreach (var ticket in tickets)
             {
                 ticket.Status = (int)TicketStatus.Reserved;
-                ticket.UserId = userId; // null for guests, or actual user if logged-in
+                ticket.UserId = userId;
             }
 
             await _ticketRepo.SaveAsync(ct);
         }
 
-        // ---------------- CANCEL = back to Free -------------------------
+        /// <inheritdoc />
         public async Task CancelTicketsAsync(List<long> ticketIds)
         {
             var ticketsToCancel = await _ticketRepo.Query(false)
@@ -111,7 +116,6 @@ namespace KinoAppCore.Services
 
             foreach (var ticket in ticketsToCancel)
             {
-                // mark as free again
                 ticket.Status = (int)TicketStatus.Free;
                 ticket.UserId = null;
 
@@ -126,26 +130,36 @@ namespace KinoAppCore.Services
             await _ticketRepo.SaveAsync();
         }
 
+        /// <inheritdoc />
         public async Task<BuyTicketDTO> GetTicketAsync(long ticketId)
         {
             var ticket = await _ticketRepo.GetByIdAsync(ticketId);
-            if (ticket == null) return null;
+            if (ticket == null)
+                return null;
 
             return _mapper.Map<BuyTicketDTO>(ticket);
         }
 
+        /// <inheritdoc />
         public async Task<List<BuyTicketDTO>> GetTicketsByUserIdAsync(long userId)
         {
             var userTickets = await _ticketRepo.GetTicketsByUserIdAsync(userId);
             return _mapper.Map<List<BuyTicketDTO>>(userTickets);
         }
 
+        /// <inheritdoc />
         public async Task<List<BuyTicketDTO>> GetAllAsync()
         {
             var allTickets = await _ticketRepo.Query().ToListAsync();
             return _mapper.Map<List<BuyTicketDTO>>(allTickets);
         }
 
+        /// <summary>
+        /// Parses a ticket status string into a <see cref="TicketStatus"/> value.
+        /// </summary>
+        /// <param name="status">Status string (case-insensitive).</param>
+        /// <returns>The parsed <see cref="TicketStatus"/>.</returns>
+        /// <exception cref="ArgumentException">Thrown when the status is empty or unknown.</exception>
         private static TicketStatus ParseStatus(string status)
         {
             if (string.IsNullOrWhiteSpace(status))
@@ -161,14 +175,13 @@ namespace KinoAppCore.Services
             };
         }
 
+        /// <inheritdoc />
         public async Task CreateTicketsForVorstellungAsync(long vorstellungId, long? kinosaalId, CancellationToken ct)
         {
             var sitzplaetze = await _sitzplatzRepo.Query()
                 .Include(s => s.Sitzreihe)
                 .Where(s => s.Sitzreihe.KinosaalId == kinosaalId)
                 .ToListAsync(ct);
-
-            var tickets = new List<TicketEntity>();
 
             foreach (var platz in sitzplaetze)
             {
@@ -180,18 +193,19 @@ namespace KinoAppCore.Services
                     Status = (int)TicketStatus.Free
                 };
 
-                tickets.Add(ticket);
                 await _ticketRepo.AddAsync(ticket, ct);
             }
 
             await _ticketRepo.SaveAsync(ct);
         }
 
+        /// <inheritdoc />
         public Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct)
         {
             return _ticketRepo.GetFreeSeatCountAsync(vorstellungId, ct);
         }
 
+        /// <inheritdoc />
         public async Task UpdateTicketStatusAsync(UpdateTicketStatusDTO dto, CancellationToken ct)
         {
             var ticket = await _ticketRepo.Query(false)

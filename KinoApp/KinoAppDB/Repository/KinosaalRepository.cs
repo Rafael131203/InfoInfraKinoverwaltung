@@ -1,14 +1,18 @@
 ﻿using KinoAppDB.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppDB.Repository
 {
+    /// <summary>
+    /// EF-backed repository implementation for <see cref="KinosaalEntity"/>.
+    /// </summary>
     public class KinosaalRepository : Repository<KinosaalEntity>, IKinosaalRepository
     {
-        public KinosaalRepository(KinoAppDbContextScope scope) : base(scope) { }
+        /// <summary>
+        /// Creates a new <see cref="KinosaalRepository"/>.
+        /// </summary>
+        /// <param name="scope">Database context scope used to access the current <c>DbContext</c>.</param>
+        public KinosaalRepository(KinoAppDbContextScope scope) : base(scope)
+        {
+        }
     }
 }

@@ -3,11 +3,17 @@ using KinoAppCore.Abstractions;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Authentication;
-using KinoAppShared.Messaging;   // für KundeRegistered
-
+using KinoAppShared.Messaging;
 
 namespace KinoAppCore.Services
 {
+    /// <summary>
+    /// Default implementation of <see cref="ILoginService"/> using repository-backed user storage and token services.
+    /// </summary>
+    /// <remarks>
+    /// Password hashing is delegated to <see cref="IPasswordHasher"/> and token issuance/validation is delegated to
+    /// <see cref="ITokenService"/>. A successful registration publishes a <see cref="KundeRegistered"/> event.
+    /// </remarks>
     public class LoginService : ILoginService
     {
         private readonly IUserRepository _repo;
@@ -16,7 +22,15 @@ namespace KinoAppCore.Services
         private readonly IPasswordHasher _hasher;
         private readonly IMessageBus _bus;
 
-        public LoginService(IUserRepository repo, ITokenService tokenService, IPasswordHasher hasher, IMapper mapper, IMessageBus bus)
+        /// <summary>
+        /// Creates a new <see cref="LoginService"/>.
+        /// </summary>
+        public LoginService(
+            IUserRepository repo,
+            ITokenService tokenService,
+            IPasswordHasher hasher,
+            IMapper mapper,
+            IMessageBus bus)
         {
             _repo = repo;
             _tokenService = tokenService;
@@ -25,10 +39,12 @@ namespace KinoAppCore.Services
             _bus = bus;
         }
 
+        /// <inheritdoc />
         public async Task<LoginResponseDTO?> AuthenticateAsync(LoginRequestDTO request, CancellationToken ct = default)
         {
             var kunde = await _repo.FindByEmailAsync(request.Email, ct);
-            if (kunde == null) return null;
+            if (kunde == null)
+                return null;
 
             if (!_hasher.Verify(request.Passwort, kunde.Passwort))
                 return null;
@@ -38,8 +54,8 @@ namespace KinoAppCore.Services
 
             return new LoginResponseDTO
             {
-                Token = _tokenService.GenerateAccessToken(kunde.Id, kunde.Email, kunde.Vorname, kunde.Nachname, kunde.Role),
-                RefreshToken = _tokenService.GenerateRefreshToken(kunde.Id, kunde.Email),
+                Token = access,
+                RefreshToken = refresh,
                 Email = kunde.Email,
                 Vorname = kunde.Vorname,
                 Nachname = kunde.Nachname,
@@ -47,6 +63,7 @@ namespace KinoAppCore.Services
             };
         }
 
+        /// <inheritdoc />
         public async Task<LoginResponseDTO?> RefreshAsync(string refreshToken, CancellationToken ct = default)
         {
             var payload = _tokenService.ValidateRefreshToken(refreshToken);
@@ -73,24 +90,20 @@ namespace KinoAppCore.Services
             };
         }
 
+        /// <inheritdoc />
         public async Task<RegisterResponseDTO> RegisterAsync(RegisterRequestDTO dto, CancellationToken ct = default)
         {
-            // 1. Email check
             var existing = await _repo.FindByEmailAsync(dto.Email);
             if (existing != null)
                 throw new InvalidOperationException("Email already registered.");
 
-            // 2. Map → Kunde entity
             var entity = _mapper.Map<UserEntity>(dto);
 
-            // 3. Hash password AFTER mapping
             entity.Passwort = _hasher.Hash(dto.Passwort);
 
-            // 4. Save to DB
             await _repo.AddAsync(entity, ct);
             await _repo.SaveAsync(ct);
 
-            // 5. Event für den Message Broker publishen
             var @event = new KundeRegistered(
                 entity.Id,
                 entity.Email,
@@ -102,7 +115,6 @@ namespace KinoAppCore.Services
 
             await _bus.PublishAsync(@event, ct);
 
-            // 6. Map → DTO response
             return _mapper.Map<RegisterResponseDTO>(entity);
         }
     }

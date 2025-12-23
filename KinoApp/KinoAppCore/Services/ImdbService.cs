@@ -1,25 +1,39 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text;
-using System.Linq;                         // <== needed for LINQ
+using System.Linq;
 using AutoMapper;
 using KinoAppCore.Components;
-using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
 using KinoAppShared.DTOs.Imdb;
 
 namespace KinoAppCore.Services
 {
+    /// <summary>
+    /// IMDb API client and local film catalog synchronizer.
+    /// </summary>
+    /// <remarks>
+    /// This service queries the configured IMDb-compatible API for title search and listing, and can optionally
+    /// import or refresh titles in the local database. It relies on AutoMapper for API-to-entity mapping and uses
+    /// certificates data to derive an FSK value where available.
+    /// </remarks>
     public class ImdbService : IImdbService
     {
         private readonly HttpClient _httpClient;
         private readonly IMapper _mapper;
         private readonly IFilmRepository _filmRepository;
 
-        // how many movies to import when no count is specified
+        /// <summary>
+        /// Default number of titles imported when a caller does not provide an explicit import count.
+        /// </summary>
         private const int DefaultImportCount = 50;
 
+        /// <summary>
+        /// Creates a new <see cref="ImdbService"/>.
+        /// </summary>
+        /// <param name="httpClient">HTTP client configured for the IMDb API base address.</param>
+        /// <param name="mapper">Mapper used to convert API DTOs to local entities and DTOs.</param>
+        /// <param name="filmRepository">Repository used to persist and query local films.</param>
         public ImdbService(HttpClient httpClient, IMapper mapper, IFilmRepository filmRepository)
         {
             _httpClient = httpClient;
@@ -27,7 +41,12 @@ namespace KinoAppCore.Services
             _filmRepository = filmRepository;
         }
 
-        // --- search/titles?query=... (no DB import here) ---
+        /// <summary>
+        /// Searches titles via <c>/search/titles</c> without importing results into the local catalog.
+        /// </summary>
+        /// <param name="query">Search query text.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A read-only list of matching titles (may be empty).</returns>
         public async Task<IReadOnlyList<ImdbMovieSearchResult>> SearchMoviesAsync(string query, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync(
@@ -48,44 +67,56 @@ namespace KinoAppCore.Services
                 .ToList();
         }
 
-        // --- list/filter movies via GET /titles (imports DefaultImportCount movies) ---
+        /// <summary>
+        /// Lists titles via <c>/titles</c> and imports a default number of results into the local catalog.
+        /// </summary>
+        /// <param name="request">Filter request for title listing.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A read-only list of titles returned by the API (may be empty).</returns>
         public Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesAsync(ImdbListTitlesRequest request, CancellationToken cancellationToken = default)
         {
-            // always import some movies by default
             return ListMoviesInternalAsync(request, DefaultImportCount, cancellationToken);
         }
 
-        // --- list/filter movies via GET /titles AND import N movies into DB ---
+        /// <summary>
+        /// Lists titles via <c>/titles</c> and imports up to <paramref name="importCount"/> results into the local catalog.
+        /// </summary>
+        /// <param name="request">Filter request for title listing.</param>
+        /// <param name="importCount">Maximum number of titles from the response to import.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A read-only list of titles returned by the API (may be empty).</returns>
         public Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesAsync(ImdbListTitlesRequest request, int importCount, CancellationToken cancellationToken = default)
         {
             return ListMoviesInternalAsync(request, importCount, cancellationToken);
         }
 
-        // shared implementation
+        /// <summary>
+        /// Shared implementation for title listing, normalization of request parameters, and optional import.
+        /// </summary>
+        /// <param name="request">Filter request for title listing.</param>
+        /// <param name="importCount">Maximum number of titles to import.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>A read-only list of titles returned by the API (may be empty).</returns>
+        /// <exception cref="ArgumentNullException">Thrown when <paramref name="request"/> is <c>null</c>.</exception>
         private async Task<IReadOnlyList<ImdbMovieSearchResult>> ListMoviesInternalAsync(ImdbListTitlesRequest request, int importCount, CancellationToken cancellationToken)
         {
             if (request == null)
                 throw new ArgumentNullException(nameof(request));
 
-            // sanitize importCount
-            if (importCount < 0) importCount = 0;
+            if (importCount < 0)
+                importCount = 0;
 
-            // Force movie type as default
             if (request.Types == null || request.Types.Count == 0)
                 request.Types = new List<string> { "MOVIE" };
 
-            // IGNORE incoming pageToken
             request.PageToken = null;
 
-            // FORCE limit=20 on first page only
             const int maxLimit = 50;
             var queryString = BuildTitlesQueryString(request);
 
-            // Add limit if not present
             if (!queryString.Contains("limit="))
                 queryString += (queryString.Contains("?") ? "&" : "?") + "limit=" + maxLimit;
 
-            // --- Fetch FIRST PAGE ONLY ---
             var response = await _httpClient.GetAsync($"/titles{queryString}", cancellationToken);
             if (!response.IsSuccessStatusCode)
                 return Array.Empty<ImdbMovieSearchResult>();
@@ -96,13 +127,11 @@ namespace KinoAppCore.Services
             if (listResponse?.Titles == null || listResponse.Titles.Count == 0)
                 return Array.Empty<ImdbMovieSearchResult>();
 
-            // Convert API → search result (max 20 movies)
             var results = listResponse.Titles
                 .Take(maxLimit)
                 .Select(MapTitleToSearchResult)
                 .ToList();
 
-            // --- Import logic (ALWAYS possible, importCount controls HOW MANY) ---
             if (importCount > 0)
             {
                 int toImport = Math.Min(importCount, maxLimit);
@@ -116,11 +145,14 @@ namespace KinoAppCore.Services
             return results;
         }
 
-        // helper: convert ImdbTitleApiDto -> ImdbMovieSearchResult
+        /// <summary>
+        /// Converts an API title DTO into the search/list result model used by the application.
+        /// </summary>
+        /// <param name="t">Title DTO returned by the API.</param>
+        /// <returns>Mapped search result model.</returns>
         private static ImdbMovieSearchResult MapTitleToSearchResult(ImdbTitleApiDto t) =>
             new ImdbMovieSearchResult
             {
-                // this Id is the IMDb id (e.g. "tt30144839")
                 Id = t.Id,
                 Type = t.Type,
                 Title = t.PrimaryTitle ?? string.Empty,
@@ -136,13 +168,20 @@ namespace KinoAppCore.Services
                 PosterHeight = t.PrimaryImage?.Height
             };
 
-        // --- import one movie into DB using AutoMapper + certificates (age rating) ---
+        /// <summary>
+        /// Imports a single title into the local catalog if it does not already exist.
+        /// </summary>
+        /// <param name="movie">The title to import.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <remarks>
+        /// The import derives <c>Fsk</c> from certificate data when available. If no certificate is found,
+        /// <c>Fsk</c> remains <c>null</c>.
+        /// </remarks>
         private async Task ImportFilmAsync(ImdbMovieSearchResult movie, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(movie.Id))
                 return;
 
-            // avoid duplicates by IMDb id
             bool exists = await _filmRepository.AnyAsync(
                 f => f.Id == movie.Id,
                 cancellationToken);
@@ -150,13 +189,13 @@ namespace KinoAppCore.Services
             if (exists)
                 return;
 
-            // get certificates for FSK
             var certsResponse = await GetTitleCertificatesAsync(movie.Id, cancellationToken);
-            var deCertificate = certsResponse?.Certificates?.FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase)) ?? certsResponse?.Certificates?.FirstOrDefault();
+            var deCertificate =
+                certsResponse?.Certificates?.FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase))
+                ?? certsResponse?.Certificates?.FirstOrDefault();
 
             var fsk = MapCertificateToFsk(deCertificate);
 
-            // direct mapping IMDb -> FilmEntity
             var entity = _mapper.Map<FilmEntity>(movie);
             entity.Fsk = fsk;
 
@@ -164,8 +203,11 @@ namespace KinoAppCore.Services
             await _filmRepository.SaveAsync(cancellationToken);
         }
 
-
-        // simple mapping from IMDb rating string -> FSK (age)
+        /// <summary>
+        /// Extracts an FSK age value from a certificate rating string by parsing digits.
+        /// </summary>
+        /// <param name="cert">Certificate DTO.</param>
+        /// <returns>The parsed age rating, or <c>null</c> if parsing is not possible.</returns>
         private static int? MapCertificateToFsk(ImdbCertificateApiDto? cert)
         {
             if (cert?.Rating == null)
@@ -178,7 +220,11 @@ namespace KinoAppCore.Services
             return null;
         }
 
-        // helper to build query string in "multi" format for arrays
+        /// <summary>
+        /// Builds a query string for the <c>/titles</c> endpoint using a repeated-key format for list parameters.
+        /// </summary>
+        /// <param name="r">Request object containing filters and sort parameters.</param>
+        /// <returns>A query string beginning with <c>?</c>, or an empty string if no parameters are set.</returns>
         private static string BuildTitlesQueryString(ImdbListTitlesRequest r)
         {
             var parts = new List<string>();
@@ -235,7 +281,12 @@ namespace KinoAppCore.Services
             return "?" + string.Join("&", parts);
         }
 
-        // existing detail endpoint
+        /// <summary>
+        /// Retrieves movie details via <c>/titles/{imdbId}</c>.
+        /// </summary>
+        /// <param name="imdbId">The IMDb title ID.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The movie details if available; otherwise <c>null</c>.</returns>
         public async Task<ImdbMovieDetails?> GetMovieByImdbIdAsync(string imdbId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync($"/titles/{imdbId}", cancellationToken);
@@ -259,6 +310,12 @@ namespace KinoAppCore.Services
             };
         }
 
+        /// <summary>
+        /// Retrieves title certificate information via <c>/titles/{imdbId}/certificates</c>.
+        /// </summary>
+        /// <param name="imdbId">The IMDb title ID.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        /// <returns>The certificate response DTO if available; otherwise <c>null</c>.</returns>
         public async Task<ListTitleCertificatesApiResponseDto?> GetTitleCertificatesAsync(string imdbId, CancellationToken cancellationToken = default)
         {
             var response = await _httpClient.GetAsync($"/titles/{imdbId}/certificates", cancellationToken);
@@ -270,7 +327,12 @@ namespace KinoAppCore.Services
                 cancellationToken: cancellationToken);
         }
 
-        // helper: raw /titles/{id} call that returns the API DTO
+        /// <summary>
+        /// Calls <c>/titles/{imdbId}</c> and returns the raw API DTO.
+        /// </summary>
+        /// <param name="imdbId">The IMDb title ID.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The raw title DTO if available; otherwise <c>null</c>.</returns>
         private async Task<ImdbTitleApiDto?> GetTitleApiAsync(string imdbId, CancellationToken ct)
         {
             var response = await _httpClient.GetAsync($"/titles/{imdbId}", ct);
@@ -281,10 +343,16 @@ namespace KinoAppCore.Services
                 cancellationToken: ct);
         }
 
-        // PUBLIC: refresh all films currently in DB
+        /// <summary>
+        /// Refreshes all films currently stored in the local database using the latest external title data.
+        /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <remarks>
+        /// This method updates the mutable film fields (title, plot, runtime, genre, image) and recalculates <c>Fsk</c>
+        /// from certificate data. Changes are persisted in a single save operation at the end.
+        /// </remarks>
         public async Task RefreshAllFilmsAsync(CancellationToken ct = default)
         {
-            // get all films currently stored in DB
             var films = await _filmRepository.GetAllAsync(ct);
 
             foreach (var filmEntity in films)
@@ -292,25 +360,21 @@ namespace KinoAppCore.Services
                 if (string.IsNullOrWhiteSpace(filmEntity.Id))
                     continue;
 
-                // 1) get latest movie info from IMDb
                 var apiDto = await GetTitleApiAsync(filmEntity.Id, ct);
                 if (apiDto == null)
                     continue;
 
-                // 2) map API dto -> FilmEntity (using AutoMapper)
                 var refreshed = _mapper.Map<FilmEntity>(apiDto);
 
-                // copy fields you want to keep up-to-date
                 filmEntity.Titel = refreshed.Titel;
                 filmEntity.Beschreibung = refreshed.Beschreibung;
                 filmEntity.Dauer = refreshed.Dauer;
                 filmEntity.Genre = refreshed.Genre;
                 filmEntity.ImageURL = refreshed.ImageURL;
 
-                // 3) refresh FSK via certificates
                 var certsResponse = await GetTitleCertificatesAsync(filmEntity.Id, ct);
-                var deCertificate = certsResponse?.Certificates?
-                    .FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase))
+                var deCertificate =
+                    certsResponse?.Certificates?.FirstOrDefault(c => string.Equals(c.Country?.Code, "DE", StringComparison.OrdinalIgnoreCase))
                     ?? certsResponse?.Certificates?.FirstOrDefault();
 
                 filmEntity.Fsk = MapCertificateToFsk(deCertificate);
@@ -318,10 +382,14 @@ namespace KinoAppCore.Services
                 await _filmRepository.UpdateAsync(filmEntity, ct);
             }
 
-            // one SaveChanges at the end
             await _filmRepository.SaveAsync(ct);
         }
 
+        /// <summary>
+        /// Returns all films currently stored in the local database mapped to <see cref="FilmDto"/>.
+        /// </summary>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A read-only list of film DTOs.</returns>
         public async Task<IReadOnlyList<FilmDto>> GetAllLocalFilmsAsync(CancellationToken ct = default)
         {
             var films = await _filmRepository.GetAllAsync(ct);
@@ -329,6 +397,13 @@ namespace KinoAppCore.Services
             return dto;
         }
 
+        /// <summary>
+        /// Adds a film entity to the local database if it does not already exist.
+        /// </summary>
+        /// <param name="movie">Film entity to insert.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>The inserted entity, or the provided entity if a record with the same ID already exists.</returns>
+        /// <exception cref="ArgumentException">Thrown when <paramref name="movie"/> has an empty ID.</exception>
         public async Task<FilmEntity> AddMovieAsync(FilmEntity movie, CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(movie.Id))
@@ -343,6 +418,12 @@ namespace KinoAppCore.Services
             return movie;
         }
 
+        /// <summary>
+        /// Deletes a film from the local database by its identifier.
+        /// </summary>
+        /// <param name="movieId">Film identifier (typically the IMDb title ID).</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns><c>true</c> if a film was deleted; otherwise <c>false</c>.</returns>
         public async Task<bool> DeleteMovieAsync(string movieId, CancellationToken ct = default)
         {
             var film = await _filmRepository.GetByIdAsync(movieId, ct);
@@ -353,8 +434,5 @@ namespace KinoAppCore.Services
             await _filmRepository.SaveAsync(ct);
             return true;
         }
-
-
-
     }
 }

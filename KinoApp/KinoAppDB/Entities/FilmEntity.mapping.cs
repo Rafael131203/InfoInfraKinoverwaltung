@@ -4,16 +4,19 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace KinoAppDB.Entities
 {
     /// <summary>
-    /// EF Core configuration for FilmEntity.
+    /// EF Core configuration for <see cref="FilmEntity"/>.
     /// </summary>
+    /// <remarks>
+    /// Defines table mapping, column constraints, and the relationship between films and showings
+    /// (<see cref="VorstellungEntity"/>).
+    /// </remarks>
     public class FilmEntityConfig : IEntityTypeConfiguration<FilmEntity>
     {
+        /// <inheritdoc />
         public void Configure(EntityTypeBuilder<FilmEntity> builder)
         {
-            // Table
             builder.ToTable("Film");
 
-            // Key
             builder.HasKey(f => f.Id);
 
             builder.Property(f => f.Id)
@@ -47,7 +50,6 @@ namespace KinoAppDB.Entities
                    .WithOne(v => v.Film)
                    .HasForeignKey(v => v.FilmId)
                    .OnDelete(DeleteBehavior.Cascade);
-
         }
     }
 }

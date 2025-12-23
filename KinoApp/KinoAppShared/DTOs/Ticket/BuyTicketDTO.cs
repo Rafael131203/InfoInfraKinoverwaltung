@@ -1,21 +1,32 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic; // Für List<>
 
 namespace KinoAppShared.DTOs
 {
+    /// <summary>
+    /// Request DTO for buying one or more tickets.
+    /// </summary>
     public class BuyTicketDTO
     {
+        /// <summary>
+        /// Showtime identifier.
+        /// </summary>
         public long VorstellungId { get; set; }
 
+        /// <summary>
+        /// Identifiers of the selected seats.
+        /// </summary>
         [Required]
         [MinLength(1, ErrorMessage = "Mindestens ein Sitzplatz muss gewählt werden.")]
         public List<long> SitzplatzIds { get; set; } = new();
 
+        /// <summary>
+        /// Optional email address for guest purchases.
+        /// </summary>
         public string? GastEmail { get; set; }
 
-        // --- HIER DEN TRICK EINFÜGEN ---
-        // Das berechnet die Anzahl automatisch, damit der Controller nicht meckert.
-        // (Wird nicht in der Datenbank gespeichert, ist nur ein Helfer)
+        /// <summary>
+        /// Number of selected seats.
+        /// </summary>
         public int Anzahl => SitzplatzIds.Count;
     }
 }

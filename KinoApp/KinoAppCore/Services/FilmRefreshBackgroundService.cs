@@ -13,14 +13,31 @@ using Microsoft.Extensions.Logging;
 
 namespace KinoAppCore.Services
 {
+    /// <summary>
+    /// Periodically refreshes the film catalog from IMDb and seeds initial showings (Vorstellungen).
+    /// </summary>
+    /// <remarks>
+    /// The service runs as a hosted background service. Film refresh and Vorstellung seeding are split into two
+    /// transactional phases so that seeding operates on a committed film set.
+    /// </remarks>
     public class FilmRefreshBackgroundService : BackgroundService
     {
         private readonly ILogger<FilmRefreshBackgroundService> _logger;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        // to make sure we only seed once per process
+        /// <summary>
+        /// Indicates whether Vorstellung seeding has already been executed in the current process.
+        /// </summary>
+        /// <remarks>
+        /// This is an in-memory guard only. If you need cross-process or cross-instance safety, persist this state.
+        /// </remarks>
         private bool _hasSeeded = false;
 
+        /// <summary>
+        /// Creates a new instance of the background service.
+        /// </summary>
+        /// <param name="logger">Logger used for operational and diagnostic messages.</param>
+        /// <param name="scopeFactory">Factory used to create DI scopes for scoped services.</param>
         public FilmRefreshBackgroundService(
             ILogger<FilmRefreshBackgroundService> logger,
             IServiceScopeFactory scopeFactory)
@@ -29,18 +46,19 @@ namespace KinoAppCore.Services
             _scopeFactory = scopeFactory;
         }
 
+        /// <summary>
+        /// Executes the background loop until the host is shutting down.
+        /// </summary>
+        /// <param name="stoppingToken">Token that is signaled when the host is stopping.</param>
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // simple loop – adjust delay if you want
             while (!stoppingToken.IsCancellationRequested)
             {
                 _logger.LogInformation("Refreshing films from IMDb...");
 
                 try
                 {
-                    // ------------------------------
-                    // PHASE 1: Refresh films & COMMIT
-                    // ------------------------------
+                    // Phase 1: Refresh films and commit.
                     using (var scope = _scopeFactory.CreateScope())
                     {
                         var imdbService = scope.ServiceProvider.GetRequiredService<IImdbService>();
@@ -57,14 +75,12 @@ namespace KinoAppCore.Services
                                 new ImdbListTitlesRequest(),
                                 stoppingToken);
 
-                            // If the API returned 0 films → load fallback instead
                             if (importedMovies == null || importedMovies.Count == 0)
                             {
                                 _logger.LogWarning("IMDb API returned no movies — using fallback top 10 films.");
                                 await AddFallbackFilms(scope.ServiceProvider, stoppingToken);
                             }
 
-                            // ✅ commit film changes first
                             await dbScope.CommitAsync(stoppingToken);
                         }
                         catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
@@ -79,14 +95,12 @@ namespace KinoAppCore.Services
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error while refreshing films from IMDb (phase 1), rolling back.");
+                            _logger.LogError(ex, "Error while refreshing films from IMDb, rolling back.");
                             await dbScope.RollbackAsync(CancellationToken.None);
                         }
                     }
 
-                    // ------------------------------
-                    // PHASE 2: Seed Vorstellungen ONCE (uses committed films)
-                    // ------------------------------
+                    // Phase 2: Seed Vorstellungen once, based on committed films.
                     if (!_hasSeeded && !stoppingToken.IsCancellationRequested)
                     {
                         using var scope = _scopeFactory.CreateScope();
@@ -110,7 +124,7 @@ namespace KinoAppCore.Services
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogError(ex, "Error while seeding Vorstellungen (phase 2), rolling back.");
+                            _logger.LogError(ex, "Error while seeding Vorstellungen, rolling back.");
                             await dbScope2.RollbackAsync(CancellationToken.None);
                         }
                     }
@@ -120,33 +134,36 @@ namespace KinoAppCore.Services
                     _logger.LogError(ex, "Error in FilmRefreshBackgroundService main loop.");
                 }
 
-                // wait 1 day before next refresh
                 try
                 {
                     await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
                 }
                 catch (TaskCanceledException)
                 {
-                    // service is stopping
+                    // Host is stopping.
                 }
             }
         }
 
-        // --------------------------------------------------------------------
-        // VORSTELLUNG SEEDING
-        // --------------------------------------------------------------------
+        /// <summary>
+        /// Seeds showings (Vorstellungen) for the next few days, ensuring a minimum number of showings per hall.
+        /// </summary>
+        /// <param name="sp">Service provider used to resolve repositories and domain services.</param>
+        /// <param name="ct">Cancellation token for the operation.</param>
+        /// <remarks>
+        /// The seeding logic operates on UTC timestamps and avoids scheduling the same film in overlapping time
+        /// windows across halls by using an in-memory plan per day.
+        /// </remarks>
         private async Task SeedVorstellungenAsync(IServiceProvider sp, CancellationToken ct)
         {
             var kinoRepo = sp.GetRequiredService<IKinosaalRepository>();
             var filmRepo = sp.GetRequiredService<IFilmRepository>();
             var vorstellungService = sp.GetRequiredService<IVorstellungService>();
 
-            // Load all halls
             var halls = await kinoRepo.GetAllAsync(ct);
             if (halls.Count == 0)
-                return; // nothing to seed
+                return;
 
-            // Load films (take 5 max)
             var films = (await filmRepo.GetAllAsync(ct))
                 .Take(5)
                 .ToList();
@@ -157,10 +174,8 @@ namespace KinoAppCore.Services
                 return;
             }
 
-            // ---- use UTC dates here ----
             var todayUtc = DateTime.UtcNow.Date;
 
-            // Days to seed: today, tomorrow, day after tomorrow (all UTC)
             var days = new[]
             {
                 todayUtc,
@@ -170,10 +185,8 @@ namespace KinoAppCore.Services
 
             var nowUtc = DateTime.UtcNow;
 
-            // In-memory schedule per day: all showings (existing + planned)
             var dayPlans = new Dictionary<DateTime, List<PlannedShow>>();
 
-            // Preload existing Vorstellungen per day
             foreach (var day in days)
             {
                 var shows = await vorstellungService.GetVorstellungVonTagAsync(day, ct);
@@ -197,11 +210,10 @@ namespace KinoAppCore.Services
             {
                 foreach (var day in days)
                 {
-                    // Check if this hall already has at least 5 shows that day
                     var existingForHall = await vorstellungService.GetVorstellungVonKinosaalUndTagAsync(day, hall.Id, ct);
                     var already = existingForHall.Count;
                     if (already >= 5)
-                        continue; // already done
+                        continue;
 
                     var toCreate = 5 - already;
                     if (toCreate <= 0)
@@ -209,7 +221,6 @@ namespace KinoAppCore.Services
 
                     var plan = dayPlans[day];
 
-                    // First show time for this day
                     DateTime startTimeUtc;
                     if (day == todayUtc)
                     {
@@ -217,14 +228,9 @@ namespace KinoAppCore.Services
                     }
                     else
                     {
-                        // default: 14:00 UTC for non-today
-                        startTimeUtc = new DateTime(
-                            day.Year, day.Month, day.Day,
-                            14, 0, 0,
-                            DateTimeKind.Utc);
+                        startTimeUtc = new DateTime(day.Year, day.Month, day.Day, 14, 0, 0, DateTimeKind.Utc);
                     }
 
-                    // If this hall already has shows, continue after the last one
                     if (existingForHall.Any())
                     {
                         var last = existingForHall.OrderBy(v => v.Datum).Last();
@@ -232,13 +238,12 @@ namespace KinoAppCore.Services
                         startTimeUtc = RoundToNextQuarter(last.Datum.AddMinutes(lastRuntime));
                     }
 
-                    // Create up to "toCreate" Vorstellungen for this hall/day
                     for (int slot = 0; slot < toCreate; slot++)
                     {
-                        // hard safety: if we somehow ended up more than 24h after the day start, stop
-                        if (startTimeUtc > day.AddDays(1).AddHours(6)) // e.g. after next day 06:00
+                        if (startTimeUtc > day.AddDays(1).AddHours(6))
                         {
-                            _logger.LogWarning("Stopping seeding for hall {HallId} on {Day} because startTimeUtc={Start}",
+                            _logger.LogWarning(
+                                "Stopping seeding for hall {HallId} on {Day} because startTimeUtc={Start}",
                                 hall.Id, day, startTimeUtc);
                             break;
                         }
@@ -246,7 +251,6 @@ namespace KinoAppCore.Services
                         FilmEntity? selectedFilm = null;
                         int selectedRuntime = 0;
 
-                        // Pick first film that isn't already running at this time (any hall)
                         foreach (var candidate in films)
                         {
                             var runtime = GetRuntimeMinutes(candidate.Dauer);
@@ -258,7 +262,6 @@ namespace KinoAppCore.Services
                             }
                         }
 
-                        // Fallback: if somehow none fit, just take the first
                         if (selectedFilm == null)
                         {
                             selectedFilm = films[0];
@@ -267,7 +270,7 @@ namespace KinoAppCore.Services
 
                         var dto = new CreateVorstellungDTO
                         {
-                            Datum = startTimeUtc,  // already UTC
+                            Datum = startTimeUtc,
                             FilmId = selectedFilm.Id,
                             KinosaalId = hall.Id,
                             Status = VorstellungStatus.GEPLANT
@@ -277,7 +280,6 @@ namespace KinoAppCore.Services
                         {
                             await vorstellungService.CreateVorstellungAsync(dto, ct);
 
-                            // Add to in-memory plan so later halls/slots see it
                             plan.Add(new PlannedShow
                             {
                                 FilmId = selectedFilm.Id,
@@ -287,24 +289,27 @@ namespace KinoAppCore.Services
                         }
                         catch (Exception ex)
                         {
-                            _logger.LogWarning($"Skipping Vorstellung due to conflict: {ex.Message}");
+                            _logger.LogWarning("Skipping Vorstellung due to conflict: {Message}", ex.Message);
                         }
 
-                        // Move to next slot in this hall
                         startTimeUtc = RoundToNextQuarter(startTimeUtc.AddMinutes(selectedRuntime));
                     }
                 }
             }
         }
 
-        // --------------------------------------------------------------------
-        // FALLBACK FILMS
-        // --------------------------------------------------------------------
+        /// <summary>
+        /// Seeds a small, predefined film catalog if the IMDb refresh produced no results and the database is empty.
+        /// </summary>
+        /// <param name="sp">Service provider used to resolve repositories.</param>
+        /// <param name="ct">Cancellation token for the operation.</param>
+        /// <remarks>
+        /// This method only inserts films when the film table is empty to avoid polluting an already populated catalog.
+        /// </remarks>
         private async Task AddFallbackFilms(IServiceProvider sp, CancellationToken ct)
         {
             var repo = sp.GetRequiredService<IFilmRepository>();
 
-            // 1) Check if the entire film table is empty
             var hasAny = await repo.Query().AnyAsync(ct);
             if (hasAny)
             {
@@ -312,7 +317,6 @@ namespace KinoAppCore.Services
                 return;
             }
 
-            // 2) Fallback dataset: Top 10 movies (basic info)
             var fallback = new List<FilmEntity>
             {
                 new FilmEntity
@@ -417,7 +421,6 @@ namespace KinoAppCore.Services
                 }
             };
 
-            // 3) Insert fallback films (DB is known to be empty)
             foreach (var film in fallback)
             {
                 bool exists = await repo.AnyAsync(f => f.Id == film.Id, ct);
@@ -430,54 +433,62 @@ namespace KinoAppCore.Services
             _logger.LogInformation("Fallback film data seeded successfully.");
         }
 
-        // --------------------------------------------------------------------
-        // HELPER METHODS & TYPES
-        // --------------------------------------------------------------------
-
         /// <summary>
-        /// Dauer is intended to be in minutes, but imported IMDb data may be in seconds.
-        /// If the value is very large, treat it as seconds and convert to minutes.
+        /// Normalizes a runtime value to minutes.
         /// </summary>
+        /// <param name="dauer">
+        /// The runtime value as stored on the film. Values may be minutes or seconds depending on the source.
+        /// </param>
+        /// <returns>The runtime in minutes.</returns>
+        /// <remarks>
+        /// The domain intends <c>Dauer</c> to be minutes. Imported IMDb data may be provided in seconds.
+        /// Values that look unrealistic for minutes are treated as seconds and converted.
+        /// </remarks>
         private static int GetRuntimeMinutes(int? dauer)
         {
             if (!dauer.HasValue)
-                return 120; // default 2h
+                return 120;
 
             var d = dauer.Value;
 
-            // If it looks like seconds (e.g. 5400), convert to minutes.
-            if (d > 300) // > 5h as minutes is unrealistic
+            if (d > 300)
                 return d / 60;
 
-            return d; // already minutes
+            return d;
         }
 
         /// <summary>
-        /// Round up to the next :00 / :15 / :30 / :45, keeping DateTimeKind.Utc.
+        /// Rounds a timestamp up to the next quarter-hour boundary (:00, :15, :30, :45).
         /// </summary>
+        /// <param name="dt">The timestamp to round.</param>
+        /// <returns>The rounded timestamp, preserving the original <see cref="DateTime.Kind"/>.</returns>
         private static DateTime RoundToNextQuarter(DateTime dt)
         {
-            var kind = dt.Kind; // keep Local/Utc/Unspecified
+            var kind = dt.Kind;
 
             int minutes = dt.Minute;
             int nextQuarter = ((minutes / 15) + 1) * 15;
 
-            // if we roll over to the next hour (or beyond), move dt forward by that hour
             if (nextQuarter >= 60)
             {
-                // move dt to the next whole hour, this will correctly roll over day/month/year
                 dt = dt.AddHours(1);
                 nextQuarter = 0;
             }
 
-            // rebuild with correct date/time and original Kind
             return new DateTime(
                 dt.Year, dt.Month, dt.Day,
                 dt.Hour, nextQuarter, 0,
                 kind);
         }
 
-
+        /// <summary>
+        /// Determines whether the specified film overlaps an existing planned showing within the given schedule.
+        /// </summary>
+        /// <param name="filmId">The film identifier to check.</param>
+        /// <param name="startUtc">Proposed start time (UTC).</param>
+        /// <param name="durationMinutes">Proposed duration in minutes.</param>
+        /// <param name="plan">Existing planned showings for the day.</param>
+        /// <returns><c>true</c> if an overlap exists; otherwise <c>false</c>.</returns>
         private static bool IsFilmRunningAtTime(string filmId, DateTime startUtc, int durationMinutes, List<PlannedShow> plan)
         {
             var endUtc = startUtc.AddMinutes(durationMinutes);
@@ -492,10 +503,24 @@ namespace KinoAppCore.Services
             return false;
         }
 
+        /// <summary>
+        /// In-memory representation of a scheduled showing used to prevent overlaps during seeding.
+        /// </summary>
         private sealed class PlannedShow
         {
+            /// <summary>
+            /// The film identifier.
+            /// </summary>
             public string FilmId { get; set; } = string.Empty;
+
+            /// <summary>
+            /// The showing start time (UTC).
+            /// </summary>
             public DateTime StartUtc { get; set; }
+
+            /// <summary>
+            /// The showing duration in minutes.
+            /// </summary>
             public int DurationMinutes { get; set; }
         }
     }

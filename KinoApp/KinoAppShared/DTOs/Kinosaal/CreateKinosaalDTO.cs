@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KinoAppShared.DTOs.Kinosaal
+﻿namespace KinoAppShared.DTOs.Kinosaal
 {
+    /// <summary>
+    /// Request DTO for creating a new auditorium.
+    /// </summary>
     public class CreateKinosaalDTO
     {
-        public string Name { get; set; }
+        /// <summary>
+        /// Display name of the auditorium.
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
     }
 }

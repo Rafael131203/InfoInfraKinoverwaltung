@@ -1,14 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KinoAppShared.DTOs.Vorstellung
+﻿namespace KinoAppShared.DTOs.Vorstellung
 {
+    /// <summary>
+    /// Result DTO describing a showtime update operation.
+    /// </summary>
     public class UpdateVorstellungResultDTO
     {
-        public VorstellungDTO VorstellungAlt { get; set; }
-        public VorstellungDTO VorstellungNeu { get; set; }
+        /// <summary>
+        /// State of the showtime before the update.
+        /// </summary>
+        public VorstellungDTO VorstellungAlt { get; set; } = default!;
+
+        /// <summary>
+        /// State of the showtime after the update.
+        /// </summary>
+        public VorstellungDTO VorstellungNeu { get; set; } = default!;
     }
 }

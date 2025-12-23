@@ -1,54 +1,59 @@
 ﻿using System;
-using KinoAppCore.Documents;
 using System.Threading.Tasks;
+using KinoAppCore.Documents;
 using KinoAppShared.Messaging;
 using MassTransit;
 using MongoDB.Driver;
 
-namespace KinoAppService.Messaging;
-
-public sealed class KundeRegisteredConsumer : IConsumer<KundeRegistered>
+namespace KinoAppService.Messaging
 {
-    private readonly IMongoCollection<KundeRegistrationProjection> _col;
-
-    public KundeRegisteredConsumer(IMongoClient client)
+    /// <summary>
+    /// MassTransit consumer that projects <see cref="KundeRegistered"/> events into MongoDB.
+    /// </summary>
+    /// <remarks>
+    /// Uses an upsert operation to make the projection idempotent in case the event is delivered more than once.
+    /// </remarks>
+    public sealed class KundeRegisteredConsumer : IConsumer<KundeRegistered>
     {
-        _col = client.GetDatabase("stats")
-                     .GetCollection<KundeRegistrationProjection>("registered_customers");
-    }
+        private readonly IMongoCollection<KundeRegistrationProjection> _col;
 
-    public async Task Consume(ConsumeContext<KundeRegistered> ctx)
-    {
-        var e = ctx.Message;
-
-        var doc = new KundeRegistrationProjection
+        /// <summary>
+        /// Creates a new <see cref="KundeRegisteredConsumer"/>.
+        /// </summary>
+        /// <param name="client">MongoDB client used to access the projections database.</param>
+        public KundeRegisteredConsumer(IMongoClient client)
         {
-            KundeId = e.KundeId,
-            Email = e.Email,
-            Vorname = e.Vorname,
-            Nachname = e.Nachname,
-            RegisteredAtUtc = e.RegisteredAtUtc
-        };
-
-        // upsert, falls mehrmals dasselbe Event kommt
-        try
-        {
-            // Wir warten explizit auf das Speichern
-            await _col.ReplaceOneAsync(
-                f => f.KundeId == e.KundeId,
-                doc,
-                new ReplaceOptions { IsUpsert = true }
-            );
-
-            
-            // DEBUG Console.WriteLine($" ERFOLGREICH: Kunde {e.KundeId} in MongoDB gespeichert!");
+            _col = client.GetDatabase("stats")
+                         .GetCollection<KundeRegistrationProjection>("registered_customers");
         }
-        catch (Exception ex)
+
+        /// <inheritdoc />
+        public async Task Consume(ConsumeContext<KundeRegistered> ctx)
         {
-            
-            Console.WriteLine($" MONGO-FEHLER: {ex.Message}");
-            // Fehler weiterwerfen, damit MassTransit es merkt und ggf. wiederholt
-            throw;
+            var e = ctx.Message;
+
+            var doc = new KundeRegistrationProjection
+            {
+                KundeId = e.KundeId,
+                Email = e.Email,
+                Vorname = e.Vorname,
+                Nachname = e.Nachname,
+                RegisteredAtUtc = e.RegisteredAtUtc
+            };
+
+            try
+            {
+                await _col.ReplaceOneAsync(
+                    f => f.KundeId == e.KundeId,
+                    doc,
+                    new ReplaceOptions { IsUpsert = true }
+                );
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($" MONGO-FEHLER: {ex.Message}");
+                throw;
+            }
         }
     }
 }

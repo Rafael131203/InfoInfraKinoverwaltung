@@ -9,7 +9,6 @@ using KinoAppDB.Repository;                    // Repositories
 using KinoAppService.Messaging;                // IMessageBus adapter
 using KinoAppService.Security;
 using KinoAppShared.Messaging;
-// JwtTokenService
 using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -24,37 +23,48 @@ using System.Text;
 
 namespace KinoAppService
 {
+    /// <summary>
+    /// Central service and middleware wiring for the KinoApp service host.
+    /// </summary>
+    /// <remarks>
+    /// The project uses a minimal hosting entry point (<c>Program.cs</c>) that delegates to this class.
+    /// This keeps infrastructure concerns (EF, MongoDB, MassTransit/Kafka, JWT, Swagger, CORS) in one place.
+    /// </remarks>
     internal static class Startup
     {
+        /// <summary>
+        /// Registers application services and infrastructure dependencies.
+        /// </summary>
+        /// <param name="services">Service collection for dependency injection.</param>
+        /// <param name="configuration">Application configuration (appsettings, env vars, user secrets, etc.).</param>
         public static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
         {
-            // optional: load docker overrides
             var config = configuration;
 
-            // NEW: read current environment once
             var environmentName =
                 config["ASPNETCORE_ENVIRONMENT"] ??
                 Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
                 "Production";
 
-            Console.WriteLine($"[Startup] ASPNETCORE_ENVIRONMENT = '{environmentName}'"); // NEW (for debugging)
+            Console.WriteLine($"[Startup] ASPNETCORE_ENVIRONMENT = '{environmentName}'");
 
-            // CORS for Blazor WASM
+            // -------------------- CORS (Blazor WASM UI) --------------------
             services.AddCors(o => o.AddPolicy("ui", p => p.WithOrigins(
-                        "https://localhost:7268",  // Blazor dev server (https profile)
-                        "http://localhost:5143"    // Blazor dev server (http profile)
+                        "https://localhost:7268",
+                        "http://localhost:5143"
                     ).AllowAnyHeader().AllowAnyMethod()
             ));
 
-
+            // -------------------- AutoMapper --------------------
+            // Scans loaded assemblies for Profile classes (Core mappings live in KinoAppCore.Mappings).
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-            // ---------- PostgreSQL / EF Core ----------
+            // -------------------- PostgreSQL / EF Core --------------------
             services.AddDbContextFactory<KinoAppDbContext>(o =>
                 o.UseNpgsql(config.GetConnectionString("Postgres")));
 
-            // ---------- MongoDB (local / Docker) ----------
-            // Priority: env var "Mongo" → connection string "Mongo" → default localhost
+            // -------------------- MongoDB --------------------
+            // Priority: env var "Mongo" -> connection string "Mongo" -> default localhost.
             var mongoConnectionString =
                 config["Mongo"] ??
                 config.GetConnectionString("Mongo") ??
@@ -63,23 +73,27 @@ namespace KinoAppService
             var mongoDatabaseName =
                 config["MongoDatabase"] ?? "kino";
 
-            services.AddSingleton<IMongoClient>(_ =>
-                new MongoClient(mongoConnectionString));
+            services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
 
-            // ---------- MassTransit + Redpanda (Kafka) ----------
+            services.AddSingleton<IMongoDatabase>(sp =>
+            {
+                var client = sp.GetRequiredService<IMongoClient>();
+                return client.GetDatabase(mongoDatabaseName);
+            });
+
+            // -------------------- MassTransit + Kafka (Redpanda) --------------------
             services.AddMassTransit(x =>
             {
-                // Hauptbus: InMemory (wir nutzen den Kafka-Rider)
+                // Main bus is in-memory; Kafka is configured through the rider.
                 x.UsingInMemory((ctx, cfg) => cfg.ConfigureEndpoints(ctx));
 
                 x.AddRider(r =>
                 {
-                    // Consumers registrieren
+                    // Consumers
                     r.AddConsumer<TicketSoldProjectionConsumer>();
                     r.AddConsumer<KundeRegisteredConsumer>();
-                    
 
-                    // Producer registrieren (für IMessageBus)
+                    // Producers (IMessageBus publishes via these topic producers)
                     r.AddProducer<TicketSold>("ticket-sold");
                     r.AddProducer<KundeRegistered>("kunde-registered");
                     r.AddProducer<ShowCreated>("show-created");
@@ -87,31 +101,22 @@ namespace KinoAppService
 
                     r.UsingKafka((ctx, k) =>
                     {
-                        // NEW: decide brokers based on environment
                         string brokers;
                         if (string.Equals(environmentName, "Docker", StringComparison.OrdinalIgnoreCase))
                         {
-                            // inside Docker network -> redpanda is resolvable
                             brokers = config["Kafka:BootstrapServers"] ?? "redpanda:9092";
                         }
                         else
                         {
-                            // local dev (Development / anything else) -> always localhost
                             brokers = "localhost:19092";
-                            //brokers = "localhost:9092";
                         }
 
-                        // original:
                         var groupId = config["Kafka:ConsumerGroup"] ?? "kinoapp-service";
-
-                        // testing: unique group id each run, to always get all created messages
-                        // var groupId = "kinoapp-debug-" + Guid.NewGuid().ToString();
 
                         Console.WriteLine($"[Kafka] Env='{environmentName}', BootstrapServers='{brokers}', GroupId='{groupId}'");
 
                         k.Host(brokers);
 
-                        // TicketSold -> TicketSoldProjectionConsumer
                         k.TopicEndpoint<TicketSold>("ticket-sold", groupId, e =>
                         {
                             e.AutoOffsetReset = AutoOffsetReset.Earliest;
@@ -119,7 +124,6 @@ namespace KinoAppService
                             e.CreateIfMissing();
                         });
 
-                        // KundeRegistered -> KundeRegisteredConsumer
                         k.TopicEndpoint<KundeRegistered>("kunde-registered", groupId, e =>
                         {
                             e.AutoOffsetReset = AutoOffsetReset.Earliest;
@@ -127,33 +131,25 @@ namespace KinoAppService
                             e.CreateIfMissing();
                         });
 
-                        // NEU: Storno-Event registrieren
                         k.TopicEndpoint<TicketCancelled>("ticket-cancelled", groupId, e =>
                         {
                             e.AutoOffsetReset = AutoOffsetReset.Earliest;
-                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx); // <--- Derselbe Consumer!
+                            e.ConfigureConsumer<TicketSoldProjectionConsumer>(ctx);
                             e.CreateIfMissing();
                         });
                     });
                 });
             });
 
-            // IMessageBus-Wrapper
+            // Message bus adapter used by Core services.
             services.AddScoped<IMessageBus, MassTransitKafkaMessageBus>();
-            // ----------------------------------------------------
 
-            // JWT auth (remove if not needed yet)
-            services.AddSingleton<IMongoDatabase>(sp =>
-            {
-                var client = sp.GetRequiredService<IMongoClient>();
-                return client.GetDatabase(mongoDatabaseName);
-            });
-
-            // Our Mongo-based services
+            // Mongo-backed services
             services.AddScoped<TicketService>();
             services.AddScoped<StatsService>();
 
-            // ---------- JWT (optional – leave here if you need it) ----------
+            // -------------------- JWT Authentication / Authorization --------------------
+            // NOTE: JwtTokenService enforces a stronger key requirement; this fallback is kept for local dev.
             var keyString = config["Jwt:SigningKey"] ?? "dev-change-me";
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 
@@ -175,7 +171,7 @@ namespace KinoAppService
 
             services.AddAuthorization();
 
-            // ---------- Swagger ----------
+            // -------------------- Swagger --------------------
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(c =>
             {
@@ -187,21 +183,29 @@ namespace KinoAppService
                     Name = "Authorization",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement {
-                    { new OpenApiSecurityScheme {
-                        Reference = new OpenApiReference {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    }, new List<string>() }
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new List<string>()
+                    }
                 });
             });
 
-            // ---------- Controllers & API Versioning ----------
+            // -------------------- Controllers & API Versioning --------------------
             services.AddControllers();
+
             services.AddApiVersioning(o =>
             {
                 o.DefaultApiVersion = new ApiVersion(1, 0);
@@ -209,41 +213,46 @@ namespace KinoAppService
                 o.ReportApiVersions = true;
             }).AddMvc();
 
-            // ---------- Core + DB Repos ----------
+            // -------------------- Core wiring --------------------
             services.AddKinoAppCore();
 
-            // IMDb API config
             services.Configure<ApiOptions>(config.GetSection(ApiOptions.SectionName));
 
-            // Typed HttpClient for IImdbService
             services.AddHttpClient<IImdbService, ImdbService>((sp, client) =>
             {
                 var options = sp.GetRequiredService<IOptions<ApiOptions>>().Value;
 
                 if (!string.IsNullOrWhiteSpace(options.BaseUrl))
-                {
                     client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/'));
-                }
+
                 client.Timeout = TimeSpan.FromSeconds(10);
             });
 
-            // Bind Core ports to infra implementations  // from KinoAppDB
-            services.AddScoped<KinoAppDbContextScope>(); // concrete
-            services.AddScoped((Func<IServiceProvider, IKinoAppDbContextScope>)(sp => sp.GetRequiredService<KinoAppDbContextScope>()));
+            // -------------------- Infrastructure bindings (DB + Security) --------------------
+            services.AddScoped<KinoAppDbContextScope>();
+            services.AddScoped<IKinoAppDbContextScope>(sp => sp.GetRequiredService<KinoAppDbContextScope>());
+
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IUserRepository, UserRepository>();  // from KinoAppDB
-            services.AddScoped<IKinosaalRepository, KinosaalRepository>();  // from KinoAppDB
-            services.AddScoped<ISitzreiheRepository, SitzreiheRepository>();  // from KinoAppDB
-            services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();  // from KinoAppDB
-            services.AddScoped<IVorstellungRepository, VorstellungRepository>();  // from KinoAppDB
-            services.AddScoped<IFilmRepository, FilmRepository>();  // from KinoAppDB
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IKinosaalRepository, KinosaalRepository>();
+            services.AddScoped<ISitzreiheRepository, SitzreiheRepository>();
+            services.AddScoped<ISitzplatzRepository, SitzplatzRepository>();
+            services.AddScoped<IVorstellungRepository, VorstellungRepository>();
+            services.AddScoped<IFilmRepository, FilmRepository>();
+            services.AddScoped<ITicketRepository, TicketRepository>();
+
             services.AddScoped<ITicketService, TicketService>();
             services.AddScoped<ITokenService, JwtTokenService>();
-            services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
+
             services.AddHostedService<FilmRefreshBackgroundService>();
         }
 
+        /// <summary>
+        /// Configures the HTTP middleware pipeline for the application.
+        /// </summary>
+        /// <param name="app">Web application instance.</param>
         public static void Configure(WebApplication app)
         {
             app.UseCors("ui");
@@ -251,7 +260,6 @@ namespace KinoAppService
             app.UseSwagger();
             app.UseSwaggerUI();
 
-            // Uncomment once you actually secure endpoints
             app.UseAuthentication();
             app.UseAuthorization();
 

@@ -1,26 +1,58 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace KinoAppDB;
-
-public class KinoAppDbContext : DbContext
+namespace KinoAppDB
 {
-    public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
-
-    // DbSets
-    public DbSet<Entities.UserEntity> Kunden => Set<Entities.UserEntity>();
-    public DbSet<Entities.TicketEntity> Tickets => Set<Entities.TicketEntity>();
-    public DbSet<Entities.KinosaalEntity> Kinosaal => Set<Entities.KinosaalEntity>();
-    public DbSet<Entities.SitzreiheEntity> Sitzreihe => Set<Entities.SitzreiheEntity>();
-    public DbSet<Entities.SitzplatzEntity> Sitzplatz => Set<Entities.SitzplatzEntity>();
-    public DbSet<Entities.FilmEntity> Film => Set<Entities.FilmEntity>();
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    /// <summary>
+    /// EF Core database context for the KinoApp application.
+    /// </summary>
+    /// <remarks>
+    /// This context aggregates all relational entities and applies configuration classes
+    /// using EF Core's assembly scanning mechanism.
+    /// </remarks>
+    public class KinoAppDbContext : DbContext
     {
-        base.OnModelCreating(modelBuilder);
+        /// <summary>
+        /// Creates a new <see cref="KinoAppDbContext"/>.
+        /// </summary>
+        /// <param name="options">EF Core context options.</param>
+        public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
 
-        // Das hier ist der wichtigste Befehl:
-        // Er sucht automatisch nach deinen Klassen "TicketEntityConfig" und "KundeEntityConfig"
-        // und wendet die Regeln an, die wir dort gerade korrigiert haben.
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinoAppDbContext).Assembly);
+        /// <summary>
+        /// Users registered in the system.
+        /// </summary>
+        public DbSet<Entities.UserEntity> Kunden => Set<Entities.UserEntity>();
+
+        /// <summary>
+        /// Tickets for all showings and seats.
+        /// </summary>
+        public DbSet<Entities.TicketEntity> Tickets => Set<Entities.TicketEntity>();
+
+        /// <summary>
+        /// Auditoriums available in the cinema.
+        /// </summary>
+        public DbSet<Entities.KinosaalEntity> Kinosaal => Set<Entities.KinosaalEntity>();
+
+        /// <summary>
+        /// Seat rows belonging to auditoriums.
+        /// </summary>
+        public DbSet<Entities.SitzreiheEntity> Sitzreihe => Set<Entities.SitzreiheEntity>();
+
+        /// <summary>
+        /// Individual seats.
+        /// </summary>
+        public DbSet<Entities.SitzplatzEntity> Sitzplatz => Set<Entities.SitzplatzEntity>();
+
+        /// <summary>
+        /// Films available for scheduling.
+        /// </summary>
+        public DbSet<Entities.FilmEntity> Film => Set<Entities.FilmEntity>();
+
+        /// <inheritdoc />
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinoAppDbContext).Assembly);
+        }
     }
 }

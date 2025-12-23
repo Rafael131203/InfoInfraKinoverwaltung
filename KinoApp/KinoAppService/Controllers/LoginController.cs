@@ -6,18 +6,34 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace KinoAppService.Controllers
 {
+    /// <summary>
+    /// Authentication endpoints for login, token refresh, and user registration.
+    /// </summary>
+    /// <remarks>
+    /// The API issues access and refresh tokens. Logout is handled client-side by discarding tokens.
+    /// </remarks>
     [Route("api/[controller]")]
     [ApiController]
     public class LoginController : BaseController
     {
         private readonly ILoginService _loginService;
 
+        /// <summary>
+        /// Creates a new <see cref="LoginController"/>.
+        /// </summary>
+        /// <param name="loginService">Service used to authenticate and register users.</param>
+        /// <param name="scope">Database scope used for transactional execution.</param>
         public LoginController(ILoginService loginService, IKinoAppDbContextScope scope)
             : base(scope)
         {
             _loginService = loginService;
         }
 
+        /// <summary>
+        /// Authenticates a user using email and password and returns access/refresh tokens.
+        /// </summary>
+        /// <param name="request">Login request.</param>
+        /// <param name="ct">Cancellation token.</param>
         [AllowAnonymous]
         [HttpPost]
         public Task<IActionResult> Login([FromBody] LoginRequestDTO request, CancellationToken ct) =>
@@ -33,6 +49,11 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(result);
             }, ct);
 
+        /// <summary>
+        /// Exchanges a refresh token for a new access/refresh token pair.
+        /// </summary>
+        /// <param name="request">Refresh request containing the refresh token.</param>
+        /// <param name="ct">Cancellation token.</param>
         [Authorize]
         [HttpPost("refresh")]
         public Task<IActionResult> Refresh([FromBody] RefreshRequestDTO request, CancellationToken ct) =>
@@ -48,6 +69,11 @@ namespace KinoAppService.Controllers
                 return new OkObjectResult(result);
             }, ct);
 
+        /// <summary>
+        /// Registers a new user account.
+        /// </summary>
+        /// <param name="dto">Registration request.</param>
+        /// <param name="ct">Cancellation token.</param>
         [AllowAnonymous]
         [HttpPost("register")]
         public Task<IActionResult> Register([FromBody] RegisterRequestDTO dto, CancellationToken ct) =>
@@ -60,12 +86,9 @@ namespace KinoAppService.Controllers
                     return new BadRequestObjectResult("Email and password are required.");
                 }
 
-                // ONLY allow User or Admin
                 var allowedRoles = new[] { "User", "Admin" };
                 if (!allowedRoles.Contains(dto.Role, StringComparer.OrdinalIgnoreCase))
-                {
                     return new BadRequestObjectResult("Invalid role. Allowed roles: User, Admin.");
-                }
 
                 try
                 {
@@ -78,13 +101,17 @@ namespace KinoAppService.Controllers
                 }
             }, ct);
 
+        /// <summary>
+        /// Logout endpoint for symmetry with client flows.
+        /// </summary>
+        /// <remarks>
+        /// With stateless JWTs there is nothing to revoke server-side in this project. Clients log out by deleting
+        /// locally stored tokens. If a refresh-token store is introduced later, this endpoint can revoke tokens.
+        /// </remarks>
         [Authorize]
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            // With stateless JWT there is nothing to revoke server-side in this project.
-            // "Logout" is handled by the client deleting its tokens.
-            // If you later add a refresh-token store, you can mark tokens as revoked here.
             return NoContent();
         }
     }

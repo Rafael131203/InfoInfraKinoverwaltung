@@ -1,19 +1,23 @@
 ﻿using KinoAppDB.Entities;
 using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KinoAppDB.Repository
 {
+    /// <summary>
+    /// EF-backed repository implementation for <see cref="TicketEntity"/> including ticket-specific query helpers.
+    /// </summary>
     public sealed class TicketRepository : Repository<TicketEntity>, ITicketRepository
     {
+        /// <summary>
+        /// Creates a new <see cref="TicketRepository"/>.
+        /// </summary>
+        /// <param name="scope">Database context scope used to access the current <see cref="KinoAppDbContext"/>.</param>
         public TicketRepository(KinoAppDbContextScope scope) : base(scope)
         {
         }
 
+        /// <inheritdoc />
         public Task<List<TicketEntity>> GetTicketsByUserIdAsync(long userId, CancellationToken ct = default)
         {
             return Query()
@@ -21,6 +25,7 @@ namespace KinoAppDB.Repository
                 .ToListAsync(ct);
         }
 
+        /// <inheritdoc />
         public Task<List<TicketEntity>> GetTicketsByVorstellungIdAsync(long vorstellungId, CancellationToken ct = default)
         {
             return Query()
@@ -28,7 +33,7 @@ namespace KinoAppDB.Repository
                 .ToListAsync(ct);
         }
 
-        // KORREKTUR: Rückgabetyp ist jetzt Task<List<long>>
+        /// <inheritdoc />
         public Task<List<long>> GetBookedSeatIdsAsync(long vorstellungId, CancellationToken ct = default)
         {
             int booked = (int)TicketStatus.Booked;
@@ -41,6 +46,7 @@ namespace KinoAppDB.Repository
                 .ToListAsync(ct);
         }
 
+        /// <inheritdoc />
         public Task<int> GetFreeSeatCountAsync(long vorstellungId, CancellationToken ct = default)
         {
             int free = (int)TicketStatus.Free;

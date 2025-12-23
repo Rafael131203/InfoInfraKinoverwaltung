@@ -1,6 +1,5 @@
-﻿using System.Globalization;
-using KinoAppShared.DTOs;
-using KinoAppShared.DTOs.Showtimes;
+﻿using KinoAppShared.DTOs;
+using KinoAppShared.DTOs.Kinosaal;
 using KinoAppWeb.Services;
 using Microsoft.AspNetCore.Components;
 
