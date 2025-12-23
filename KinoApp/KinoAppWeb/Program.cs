@@ -37,7 +37,7 @@ namespace KinoAppWeb
 
             builder.Services.AddHttpClient<Services.IVorstellungService, Services.VorstellungService>(client =>
             {
-                client.BaseAddress = new Uri("http://localhost:5170/"); // Deine API-URL
+                client.BaseAddress = new Uri("http://localhost:5170/");
             })
             .AddHttpMessageHandler<JwtAuthHandler>();
 
@@ -46,9 +46,6 @@ namespace KinoAppWeb
                 client.BaseAddress = new Uri("http://localhost:5170/");
             })
             .AddHttpMessageHandler<JwtAuthHandler>();
-
-
-
 
             await builder.Build().RunAsync();
         }

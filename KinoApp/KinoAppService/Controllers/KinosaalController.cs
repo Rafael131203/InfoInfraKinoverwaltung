@@ -1,13 +1,8 @@
 ﻿using KinoAppCore.Services;
 using KinoAppDB;
-using KinoAppDB.Entities;
-using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Principal;
-using System.Threading.RateLimiting;
 
 namespace KinoAppService.Controllers
 {

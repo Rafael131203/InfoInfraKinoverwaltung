@@ -1,5 +1,4 @@
-﻿using KinoAppDB.Entities;
-using KinoAppShared.DTOs.Vorstellung;
+﻿using KinoAppShared.DTOs.Vorstellung;
 
 namespace KinoAppWeb.Services
 {

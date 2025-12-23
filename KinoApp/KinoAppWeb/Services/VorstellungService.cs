@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using KinoAppDB.Entities;
 using KinoAppShared.DTOs.Vorstellung;
 
 namespace KinoAppWeb.Services

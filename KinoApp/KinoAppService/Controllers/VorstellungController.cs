@@ -1,7 +1,5 @@
 ﻿using KinoAppCore.Services;
 using KinoAppDB;
-using KinoAppDB.Entities;
-using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.DTOs.Vorstellung;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +31,6 @@ namespace KinoAppService.Controllers
                 }
                 catch (InvalidOperationException ex) when (ex.Message.Contains("überschneidet"))
                 {
-                    // Überschneidung -> 400 Bad Request
                     return new BadRequestObjectResult(new { error = ex.Message });
                 }
             }, ct);
@@ -44,9 +41,6 @@ namespace KinoAppService.Controllers
             ExecuteAsync(async token =>
             {
                 var vorstellungen = await _vorstellungService.GetVorstellungVonTagAsync(datum, token);
-
-                //if (!vorstellungen.Any())
-                //    return new NotFoundObjectResult($"Keine Vorstellungen am {datum:yyyy-MM-dd} gefunden.");
 
                 return new OkObjectResult(vorstellungen);
             }, ct);

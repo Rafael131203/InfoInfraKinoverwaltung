@@ -1,10 +1,4 @@
-﻿using KinoAppDB.Entities;
-using KinoAppShared.DTOs.Vorstellung;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using KinoAppShared.DTOs.Vorstellung;
 
 namespace KinoAppCore.Services
 {
