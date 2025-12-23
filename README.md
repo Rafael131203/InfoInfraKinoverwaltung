@@ -32,7 +32,7 @@ The application depends on several infrastructure services that are provided via
 From the root of the repository, start all containers:
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
 On startup, Docker will:
