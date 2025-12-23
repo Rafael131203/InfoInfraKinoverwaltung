@@ -1,20 +1,21 @@
-﻿using KinoAppCore.Abstractions;
-using KinoAppCore.Entities;
+﻿using KinoAppDB.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace KinoAppDB.Repository;
-
-public sealed class UserRepository : IUserRepository
+namespace KinoAppDB.Repository
 {
-    private readonly KinoAppDbContext _db;
-    public UserRepository(KinoAppDbContext db) => _db = db;
+    /// <summary>
+    /// EF-backed repository implementation for <see cref="UserEntity"/>.
+    /// </summary>
+    public sealed class UserRepository : Repository<UserEntity>, IUserRepository
+    {
+        /// <summary>
+        /// Creates a new <see cref="UserRepository"/>.
+        /// </summary>
+        /// <param name="scope">Database context scope used to access the current <see cref="KinoAppDbContext"/>.</param>
+        public UserRepository(KinoAppDbContextScope scope) : base(scope) { }
 
-    public Task<bool> ExistsAsync(string username, CancellationToken ct)
-        => _db.Users.AnyAsync(u => u.Username == username, ct);
-
-    public Task<User?> FindAsync(string username, CancellationToken ct)
-        => _db.Users.FirstOrDefaultAsync(u => u.Username == username, ct);
-
-    public async Task AddAsync(User user, CancellationToken ct) => await _db.Users.AddAsync(user, ct);
-    public Task SaveAsync(CancellationToken ct) => _db.SaveChangesAsync(ct);
+        /// <inheritdoc />
+        public Task<UserEntity?> FindByEmailAsync(string email, CancellationToken ct = default)
+            => Query().FirstOrDefaultAsync(k => k.Email == email, ct);
+    }
 }

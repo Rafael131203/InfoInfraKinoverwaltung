@@ -1,0 +1,81 @@
+﻿@page "/login"
+
+<PageTitle>Login</PageTitle>
+
+<div class="auth-page">
+    <!-- soft floating gradient blobs -->
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+
+    <div class="auth-card" data-animate="in">
+        <div class="auth-card-header">
+            <div class="auth-logo-dot"></div>
+            <span class="auth-logo-text">Ticket Portal</span>
+        </div>
+
+        <div class="auth-card-body">
+            <h1 class="auth-title">Willkommen zurück</h1>
+            <p class="auth-subtitle">
+                Melde dich an, um deine Buchungen und Tickets zu verwalten.
+            </p>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="auth-alert auth-alert-danger">
+                    @_errorMessage
+                </div>
+            }
+
+            <div class="auth-field-group">
+                <label for="email" class="auth-label">E-Mail</label>
+                <div class="auth-input-wrapper">
+                    <span class="auth-input-icon">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                    <input id="email"
+                           class="auth-input"
+                           @bind="_email"
+                           @bind:event="oninput"
+                           autocomplete="email" />
+                </div>
+            </div>
+
+            <div class="auth-field-group">
+                <label for="password" class="auth-label">Passwort</label>
+                <div class="auth-input-wrapper">
+                    <span class="auth-input-icon">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    <input id="password"
+                           type="password"
+                           class="auth-input"
+                           @bind="_password"
+                           @bind:event="oninput"
+                           autocomplete="current-password" />
+                </div>
+            </div>
+
+            <div class="auth-meta-row">
+                <label class="auth-checkbox">
+                    <input type="checkbox" />
+                    <span>Angemeldet bleiben</span>
+                </label>
+                <a href="#" class="auth-link-small">Passwort vergessen?</a>
+            </div>
+
+            <button type="button"
+                    class="auth-btn-primary"
+                    @onclick="OnSubmit"
+                    disabled="@_isBusy">
+                <span class="auth-btn-label">
+                    @(_isBusy ? "Wird angemeldet…" : "Login")
+                </span>
+            </button>
+
+            <p class="auth-footer">
+                Noch kein Konto?
+                <a href="/register" class="auth-link">Jetzt registrieren</a>
+            </p>
+        </div>
+    </div>
+</div>

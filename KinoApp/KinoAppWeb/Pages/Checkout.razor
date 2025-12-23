@@ -1,0 +1,273 @@
+﻿@page "/checkout"
+<PageTitle>Checkout</PageTitle>
+
+<div class="page-shell checkout-page">
+    @if (_isSuccess)
+    {
+        <!-- SUCCESS STATE -->
+        <section class="checkout-card checkout-success-card">
+            <div class="checkout-success-icon">🎉</div>
+            <h1 class="checkout-title">Booking confirmed</h1>
+            <p class="checkout-text">
+                Your tickets have been successfully booked.
+                We’ve sent a confirmation to
+                <strong>@(UserSession.IsAuthenticated? UserSession.Current?.Email : GuestEmail)</strong>.
+            </p>
+
+            <div class="checkout-actions checkout-actions--center">
+                <button type="button"
+                        class="btn btn--neon"
+                        @onclick="@(() => Nav.NavigateTo("/"))">
+                    Back to movies
+                </button>
+            </div>
+        </section>
+    }
+    else if (UserSession.SelectedShowtime is null || Seats.Count == 0)
+    {
+        <!-- EMPTY STATE -->
+        <section class="checkout-card checkout-empty-card">
+            <h1 class="checkout-title">No tickets in your basket</h1>
+            <p class="checkout-text">
+                You don’t have any selected seats yet.
+                Go back to the <a href="/showtimes">showtimes</a> page to pick a session.
+            </p>
+
+            <div class="checkout-actions checkout-actions--center">
+                <button type="button"
+                        class="btn btn--ghost"
+                        @onclick="@(() => Nav.NavigateTo("/showtimes"))">
+                    Browse showtimes
+                </button>
+            </div>
+        </section>
+    }
+    else
+    {
+        var s = UserSession.SelectedShowtime!;
+
+        <!-- MAIN CHECKOUT LAYOUT -->
+        <section class="checkout-layout">
+            <!-- LEFT: CONTACT + PAYMENT -->
+            <div class="checkout-card checkout-main">
+                <div class="checkout-toprow">
+                    <button type="button"
+                            class="btn btn--navback"
+                            @onclick="BackToSeats"
+                            disabled="@_isBusy">
+                        Back to seats
+                    </button>
+
+                    <span class="checkout-step-label">
+                        Step 2 of 2 · Payment
+                    </span>
+                </div>
+
+                <header class="checkout-header">
+                    @if (!string.IsNullOrWhiteSpace(s.PosterUrl))
+                    {
+                        <img src="@s.PosterUrl"
+                             alt="@s.MovieTitle"
+                             class="checkout-poster-thumb" />
+                    }
+
+                    <div class="checkout-meta">
+                        <h1 class="checkout-title">@s.MovieTitle</h1>
+                        <p class="checkout-subtitle">
+                            @s.Showtime!.StartsAt.ToString("dddd, dd.MM.yyyy HH:mm")
+                            @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
+                            {
+                                <span> · @s.Showtime.KinosaalName</span>
+                            }
+                        </p>
+                    </div>
+                </header>
+
+                @if (_errorMessage is not null)
+                {
+                    <div class="checkout-error">
+                        ⚠️ @_errorMessage
+                    </div>
+                }
+
+                <div class="checkout-form-grid">
+                    <!-- CONTACT / EMAIL -->
+                    <div class="checkout-section">
+                        <h2 class="checkout-section__title">Contact details</h2>
+                        <p class="checkout-section__hint">
+                            We’ll send your tickets and QR codes here.
+                        </p>
+
+                        @if (UserSession.IsAuthenticated)
+                        {
+                            <div class="checkout-pill">
+                                <span class="checkout-pill__label">Signed in as</span>
+                                <span class="checkout-pill__value">
+                                    @UserSession.Current?.Email
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="checkout-field">
+                                <label for="guestEmail">Email address</label>
+                                <input type="email"
+                                       id="guestEmail"
+                                       class="checkout-input"
+                                       placeholder="name@example.com"
+                                       @bind="GuestEmail" />
+                                <p class="checkout-field__hint">
+                                    Checking out as a guest – your tickets will be sent to this email.
+                                </p>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- PAYMENT FORM -->
+                    <div class="checkout-section">
+                        <h2 class="checkout-section__title">Payment method</h2>
+                        <p class="checkout-section__hint">
+                            Secure card payment · no real charge in this demo.
+                        </p>
+
+                        <div class="checkout-field">
+                            <label for="cardName">Name on card</label>
+                            <input id="cardName"
+                                   class="checkout-input"
+                                   placeholder="Full name on card" />
+                        </div>
+
+                        <div class="checkout-field">
+                            <label for="cardNumber">Card number</label>
+                            <div class="checkout-input checkout-input--card">
+                                <input id="cardNumber"
+                                       class="checkout-input__inner"
+                                       placeholder="1234 5678 9012 3456"
+                                       inputmode="numeric" />
+                                <span class="checkout-cardbrand">VISA · MC</span>
+                            </div>
+                        </div>
+
+                        <div class="checkout-field checkout-field--inline">
+                            <div>
+                                <label for="cardExpiry">Expiry</label>
+                                <input id="cardExpiry"
+                                       class="checkout-input"
+                                       placeholder="MM / YY"
+                                       inputmode="numeric" />
+                            </div>
+                            <div>
+                                <label for="cardCvc">CVC</label>
+                                <input id="cardCvc"
+                                       class="checkout-input"
+                                       placeholder="123"
+                                       inputmode="numeric" />
+                            </div>
+                        </div>
+
+                        <div class="checkout-field checkout-field--inline">
+                            <div>
+                                <label for="billingCountry">Country</label>
+                                <input id="billingCountry"
+                                       class="checkout-input"
+                                       placeholder="Germany" />
+                            </div>
+                            <div>
+                                <label for="billingZip">ZIP / Postcode</label>
+                                <input id="billingZip"
+                                       class="checkout-input"
+                                       placeholder="12345" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkout-actions checkout-actions--main">
+                    <div class="checkout-actions__left">
+                        <p class="checkout-secure-text">
+                            🔒 Payment details are transmitted over a secure connection.
+                        </p>
+                    </div>
+                    <div class="checkout-actions__right">
+                        <div class="checkout-total-inline">
+                            <span>Total</span>
+                            <strong>@Total.ToString("0.00") €</strong>
+                        </div>
+
+                        <button type="button"
+                                class="btn btn--neon"
+                                @onclick="Confirm"
+                                disabled="@_isBusy">
+                            @if (_isBusy)
+                            {
+                                <span>Processing…</span>
+                            }
+                            else
+                            {
+                                <span>Pay @Total.ToString("0.00") €</span>
+                            }
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: ORDER SUMMARY -->
+            <aside class="checkout-card checkout-summary">
+                <h2 class="checkout-summary__title">Order summary</h2>
+
+                <div class="checkout-summary__chips">
+                    <span class="checkout-tag">
+                        @Seats.Count ticket@(Seats.Count == 1 ? "" : "s")
+                    </span>
+                    <span class="checkout-tag">
+                        @s.Showtime!.StartsAt.ToString("dd.MM.yyyy")
+                    </span>
+                    @if (!string.IsNullOrWhiteSpace(s.Showtime.KinosaalName))
+                    {
+                        <span class="checkout-tag">@s.Showtime.KinosaalName</span>
+                    }
+                </div>
+
+                <div class="checkout-seats">
+                    @foreach (var seat in Seats)
+                    {
+                        <div class="checkout-seatline">
+                            <span class="checkout-seatline__seat">
+                                @seat.RowLabel@seat.SeatNumber
+                            </span>
+                            <span class="checkout-seatline__price">
+                                @seat.Price.ToString("0.00") €
+                            </span>
+                        </div>
+                    }
+                </div>
+
+                <div class="checkout-summary__footer">
+                    <div class="checkout-summary__row">
+                        <span>Tickets subtotal</span>
+                        <span>@Total.ToString("0.00") €</span>
+                    </div>
+                    <div class="checkout-summary__row checkout-summary__row--muted">
+                        <span>Booking fee</span>
+                        <span>0.00 €</span>
+                    </div>
+                    <hr class="checkout-divider" />
+                    <div class="checkout-summary__row checkout-summary__row--strong">
+                        <span>Total due</span>
+                        <span>@Total.ToString("0.00") €</span>
+                    </div>
+                </div>
+
+                <div class="checkout-cardmock">
+                    <div class="checkout-cardmock__chip"></div>
+                    <div class="checkout-cardmock__brand">KINO PASS</div>
+                    <div class="checkout-cardmock__number">•••• •••• •••• 4242</div>
+                    <div class="checkout-cardmock__meta">
+                        <span>VALID THRU 12/29</span>
+                        <span>GUEST ADMIT ONE</span>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    }
+</div>

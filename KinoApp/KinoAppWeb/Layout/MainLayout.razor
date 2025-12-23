@@ -1,16 +1,187 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+@implements IDisposable
+@using Microsoft.AspNetCore.Components.Routing
+@inject KinoAppWeb.Services.UserSession UserSession
+@inject NavigationManager Navigation
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+<!-- BACKGROUND -->
+<div class="bg-stars"></div>
+<div class="bg-glow bg-glow--left"></div>
+<div class="bg-glow bg-glow--right"></div>
+
+<div class="app-root">
+    <header class="site-header">
+        <div class="site-header__inner">
+
+            <!-- Logo -->
+            <NavLink href="" Match="NavLinkMatch.All" class="logo">
+                <span class="logo__icon">🎬</span>
+                <span class="logo__text">SeeSharper</span>
+            </NavLink>
+
+            <!-- NAVIGATION -->
+            <nav class="main-nav" aria-label="Main">
+                <ul class="main-nav__list">
+
+                    <li class="main-nav__item">
+                        <NavLink href="" Match="NavLinkMatch.All" class="main-nav__link">Home</NavLink>
+                    </li>
+
+                    <li class="main-nav__item">
+                        <NavLink href="showtimes" class="main-nav__link">Now Showing</NavLink>
+                    </li>
+
+                    <li class="main-nav__item">
+                        <a href="#coming-soon" class="main-nav__link">Coming Soon</a>
+                    </li>
+
+                    @* Special Events + About: only when NOT admin *@
+                    @if (!UserSession.IsAdmin)
+                    {
+                        <li class="main-nav__item">
+                            <a href="#special-events" class="main-nav__link">Special Events</a>
+                        </li>
+
+                        <li class="main-nav__item">
+                            <a href="#about" class="main-nav__link">About</a>
+                        </li>
+                    }
+
+                    @if (UserSession.IsAuthenticated)
+                    {
+                        @* Dashboard only for normal users, not admins *@
+                        @if (!UserSession.IsAdmin)
+                        {
+                            <li class="main-nav__item">
+                                <NavLink href="dashboard" class="main-nav__link">Dashboard</NavLink>
+                            </li>
+                        }
+
+                        @* ADMIN-ONLY STUFF *@
+                        @if (UserSession.IsAdmin)
+                        {
+                            <li class="main-nav__item">
+                                <NavLink href="admin/films" class="main-nav__link">Manage Films</NavLink>
+                            </li>
+                            <li class="main-nav__item">
+                                <NavLink href="admin/showtimes" class="main-nav__link">Manage Showtimes</NavLink>
+                            </li>
+                        }
+
+                        @* Logout / user name *@
+                        <li class="main-nav__item">
+                            <button class="main-nav__link main-nav__link--button"
+                                    type="button"
+                                    @onclick="Logout">
+                                Logout (@UserSession.DisplayName)
+                            </button>
+                        </li>
+                    }
+                    else
+                    {
+                        @* Only when NOT logged in *@
+                        <li class="main-nav__item">
+                            <NavLink href="login" class="main-nav__link">Login</NavLink>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+            <div class="site-header__actions">
+                <button class="header-cart @(UserSession.CartCount > 0 ? "header-cart--visible" : "header-cart--hidden")"
+                        type="button"
+                        @onclick="@(() => Navigation.NavigateTo("/cart"))">
+                    <span class="header-cart__icon">🛒</span>
+                    <span class="header-cart__badge">@UserSession.CartCount</span>
+                </button>
+
+                <button class="header-cta" type="button">
+                    <span class="header-cta__dot"></span>
+                    <span class="header-cta__label">Tickets</span>
+                    <span class="header-cta__sub">Tonight</span>
+                </button>
+
+                <button class="burger" type="button" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="burger__line"></span>
+                    <span class="burger__line"></span>
+                    <span class="burger__line"></span>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <main id="top">
+        @Body
+    </main>
+
+
+    <!-- Footer´-->
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div class="site-footer__column">
+                <p class="site-footer__logo">KinoApp</p>
+                <p class="site-footer__text">
+                    A retro-inspired cinema interface prototype. Built for film nights, premieres
+                    and everything in between.
+                </p>
+            </div>
+
+            <div class="site-footer__column">
+                <h3 class="site-footer__heading">Contact</h3>
+                <ul class="site-footer__list">
+                    <li>Example Street 7, 12345 Berlin</li>
+                    <li>+49 (0) 123 456 789</li>
+                    <li>info@kinoapp.example</li>
+                </ul>
+            </div>
+
+            <div class="site-footer__column">
+                <h3 class="site-footer__heading">Info</h3>
+                <ul class="site-footer__list">
+                    <li><a href="#">Imprint</a></li>
+                    <li><a href="#">Data protection</a></li>
+                    <li><a href="#">Terms &amp; conditions</a></li>
+                </ul>
+            </div>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+        <div class="site-footer__bottom">
+            <p class="site-footer__copy">
+                © <span data-year>2025</span> KinoApp. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
 </div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Ensure we load session from sessionStorage once
+        await UserSession.InitializeAsync();
+
+        // 🔔 subscribe to cart changes
+        UserSession.CartChanged += OnCartChanged;
+    }
+
+    private void OnCartChanged()
+    {
+        // We’re in a service callback – marshal to UI thread
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Logout()
+    {
+        await UserSession.LogoutAsync();
+        Navigation.NavigateTo("/");
+    }
+
+    public void Dispose()
+    {
+        // 🔔 unsubscribe to avoid memory leaks
+        UserSession.CartChanged -= OnCartChanged;
+    }
+}
+
+

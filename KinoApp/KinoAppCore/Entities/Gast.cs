@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     
@@ -218,7 +218,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveWarenkorbReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Gast.ClassInstance)).Resolve("warenkorb")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Gast.ClassInstance)).Resolve("warenkorb")));
         }
         
         /// <summary>

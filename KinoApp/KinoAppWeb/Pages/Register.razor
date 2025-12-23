@@ -1,0 +1,102 @@
+﻿@page "/register"
+
+<PageTitle>Registrieren</PageTitle>
+
+<div class="auth-page">
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+
+    <div class="auth-card" data-animate="in">
+        <div class="auth-card-header">
+            <div class="auth-logo-dot"></div>
+            <span class="auth-logo-text">Ticket Portal</span>
+        </div>
+
+        <div class="auth-card-body">
+            <h1 class="auth-title">Registrieren</h1>
+            <p class="auth-subtitle">
+                Erstelle dein Konto, speichere deine Tickets und behalte deine Buchungen im Blick.
+            </p>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="auth-alert auth-alert-danger">
+                    @_errorMessage
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_successMessage))
+            {
+                <div class="auth-alert auth-alert-success">
+                    @_successMessage
+                </div>
+            }
+
+            <!-- Vorname + Nachname side-by-side on desktop -->
+            <div class="auth-row">
+                <div class="auth-col">
+                    <div class="auth-field-group">
+                        <label for="vorname" class="auth-label">Vorname</label>
+                        <div class="auth-input-wrapper">
+                            <input id="vorname"
+                                   class="auth-input"
+                                   @bind="_model.Vorname"
+                                   @bind:event="oninput"
+                                   autocomplete="given-name" />
+                        </div>
+                    </div>
+                </div>
+                <div class="auth-col">
+                    <div class="auth-field-group">
+                        <label for="nachname" class="auth-label">Nachname</label>
+                        <div class="auth-input-wrapper">
+                            <input id="nachname"
+                                   class="auth-input"
+                                   @bind="_model.Nachname"
+                                   @bind:event="oninput"
+                                   autocomplete="family-name" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-field-group">
+                <label for="email" class="auth-label">E-Mail</label>
+                <div class="auth-input-wrapper">
+                    <input id="email"
+                           type="email"
+                           class="auth-input"
+                           @bind="_model.Email"
+                           @bind:event="oninput"
+                           autocomplete="email" />
+                </div>
+            </div>
+
+            <div class="auth-field-group">
+                <label for="password" class="auth-label">Passwort</label>
+                <div class="auth-input-wrapper">
+                    <input id="password"
+                           type="password"
+                           class="auth-input"
+                           @bind="_model.Passwort"
+                           @bind:event="oninput"
+                           autocomplete="new-password" />
+                </div>
+            </div>
+
+            <button class="auth-btn-primary"
+                    type="button"
+                    @onclick="HandleRegister"
+                    disabled="@_isBusy">
+                <span class="auth-btn-label">
+                    @(_isBusy ? "Wird registriert…" : "Konto erstellen")
+                </span>
+            </button>
+
+            <p class="auth-footer">
+                Schon ein Konto?
+                <a href="/login" class="auth-link">Jetzt einloggen</a>
+            </p>
+        </div>
+    </div>
+</div>

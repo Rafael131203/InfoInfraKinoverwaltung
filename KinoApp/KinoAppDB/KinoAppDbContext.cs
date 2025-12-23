@@ -1,58 +1,58 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using KinoAppCore.Entities;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // <-- needed for UseXminAsConcurrencyToken()
 
-namespace KinoAppDB;
-
-public class KinoAppDbContext : DbContext
+namespace KinoAppDB
 {
-    public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
-
-    public DbSet<Booking> Bookings => Set<Booking>();
-    public DbSet<Show> Shows => Set<Show>();
-    public DbSet<Ticket> Tickets => Set<Ticket>();
-    public DbSet<User> Users => Set<User>();
-
-    protected override void OnModelCreating(ModelBuilder b)
+    /// <summary>
+    /// EF Core database context for the KinoApp application.
+    /// </summary>
+    /// <remarks>
+    /// This context aggregates all relational entities and applies configuration classes
+    /// using EF Core's assembly scanning mechanism.
+    /// </remarks>
+    public class KinoAppDbContext : DbContext
     {
-        base.OnModelCreating(b);
+        /// <summary>
+        /// Creates a new <see cref="KinoAppDbContext"/>.
+        /// </summary>
+        /// <param name="options">EF Core context options.</param>
+        public KinoAppDbContext(DbContextOptions<KinoAppDbContext> options) : base(options) { }
 
-        // Unique seat per show
-        b.Entity<Ticket>()
-            .HasIndex(x => new { x.ShowId, x.SeatId })
-            .IsUnique();
+        /// <summary>
+        /// Users registered in the system.
+        /// </summary>
+        public DbSet<Entities.UserEntity> Kunden => Set<Entities.UserEntity>();
 
-        // PostgreSQL optimistic concurrency on xmin
-        b.Entity<Ticket>()
-            .Property(nameof(Ticket.xmin))
-            .IsRowVersion()
-            .HasColumnName("xmin")
-            .ValueGeneratedOnAddOrUpdate();
+        /// <summary>
+        /// Tickets for all showings and seats.
+        /// </summary>
+        public DbSet<Entities.TicketEntity> Tickets => Set<Entities.TicketEntity>();
 
-        // Relationships
-        b.Entity<Ticket>()
-            .HasOne(t => t.Show)
-            .WithMany(s => s.Tickets)
-            .HasForeignKey(t => t.ShowId)
-            .OnDelete(DeleteBehavior.Cascade);
+        /// <summary>
+        /// Auditoriums available in the cinema.
+        /// </summary>
+        public DbSet<Entities.KinosaalEntity> Kinosaal => Set<Entities.KinosaalEntity>();
 
-        // Constraints
-        b.Entity<Show>()
-            .Property(s => s.Title)
-            .IsRequired()
-            .HasMaxLength(200);
+        /// <summary>
+        /// Seat rows belonging to auditoriums.
+        /// </summary>
+        public DbSet<Entities.SitzreiheEntity> Sitzreihe => Set<Entities.SitzreiheEntity>();
 
-        b.Entity<User>(e =>
+        /// <summary>
+        /// Individual seats.
+        /// </summary>
+        public DbSet<Entities.SitzplatzEntity> Sitzplatz => Set<Entities.SitzplatzEntity>();
+
+        /// <summary>
+        /// Films available for scheduling.
+        /// </summary>
+        public DbSet<Entities.FilmEntity> Film => Set<Entities.FilmEntity>();
+
+        /// <inheritdoc />
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            e.HasIndex(x => x.Username).IsUnique();
-            e.Property(x => x.Username).HasMaxLength(100).IsRequired();
-            e.Property(x => x.PasswordHash).IsRequired();
-        });
+            base.OnModelCreating(modelBuilder);
 
-        b.Entity<Booking>(e =>
-        {
-            e.HasKey(x => x.Id);
-            e.Property(x => x.AmountPaid).HasPrecision(10, 2);
-        });
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(KinoAppDbContext).Assembly);
+        }
     }
 }

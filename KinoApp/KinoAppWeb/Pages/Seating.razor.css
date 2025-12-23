@@ -1,0 +1,772 @@
+﻿/* -------------------------
+   Layout + screen + legend
+------------------------- */
+
+.seating-page {
+    max-width: var(--page-max-width);
+    margin: 2rem auto 0;
+    padding: 0 var(--page-gutter) 2.5rem;
+}
+
+.seating-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.8rem;
+    margin: 1.8rem 1.6rem 0;
+    flex-direction: column;
+}
+
+/* back button stays its normal width, content takes remaining space */
+.seating-header__info {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-;
+    gap: 2.5rem;
+    width:100%;
+}
+
+.seating-header__titleblock {
+    flex: 1 1 auto;
+}
+
+.seating-header__subtitle {
+    margin: 0.35rem 0 2rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+.seating-header__details {
+    flex: 0 0 auto;
+    max-width: 28rem;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.seating-header__info h1 {
+    margin: 0 0 0.25rem;
+    font-size: 1.7rem;
+}
+
+.seating-header__meta {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.seating-header__divider {
+    width: 70px;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    margin: 0.5rem 0 0.7rem;
+    opacity: 0.9;
+}
+
+.seating-header__hint {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    max-width: 32rem;
+}
+
+.seating-layout {
+    padding: 1.4rem 1.6rem 2rem;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top, rgba(84, 98, 190, 0.15), transparent 60%), rgba(5, 5, 16, 0.96);
+    box-shadow: var(--shadow-soft);
+}
+
+
+/* Screen bar with glow */
+
+.seating-screen {
+    max-width: 520px;
+    width:100%;
+    margin: 0 auto 1.4rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f3f4ff, #ffffff);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 0 18px 45px rgba(0, 0, 0, 0.85);
+    position: relative;
+}
+
+.seating-screen__label {
+    display: block;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: #1b1b2d;
+}
+
+/* Legend */
+
+.seating-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem 1.6rem;
+    margin-bottom: 1.4rem;
+    font-size: 0.83rem;
+    color: var(--text-muted);
+}
+
+.seating-legend__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.legend-pill {
+    width: 16px;
+    height: 16px;
+    border-radius: 6px;
+    position: relative;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
+}
+
+/* legend colours use same palette */
+
+.legend-pill--parkett {
+    background: var(--seat-parkett-edge);
+}
+
+.legend-pill--loge {
+    background: var(--seat-loge-edge);
+}
+
+.legend-pill--logeplus {
+    background: var(--seat-logeplus-edge);
+}
+
+.legend-pill--taken {
+    background: linear-gradient(135deg, #55566f, #303040);
+}
+
+/* -------------------------
+   Seat grid
+------------------------- */
+
+/* wrapper for all rows */
+.seating-grid-wrapper {
+    margin-top: 1.5rem;
+    padding: 1.4rem 1.6rem 1.8rem;
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top, rgba(40, 40, 70, 0.8), rgba(10, 10, 20, 0.96));
+    box-shadow: var(--shadow-soft);
+    /* THIS is the important bit: stack rows vertically */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+/* one cinema row (label + seats) */
+.seating-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* the seats within a row */
+.seating-row__seats {
+    display: flex;
+    gap: 0.4rem;
+}
+
+
+/* subtle colour tint per row category */
+
+.seating-row--parkett .seating-row__label {
+    color: #9cf8e0;
+}
+
+.seating-row--loge .seating-row__label {
+    color: #ffb3c0;
+}
+
+.seating-row--logeplus .seating-row__label {
+    color: #ffe7a5;
+}
+
+/* row label (A, B, C…) */
+.seating-row__label {
+    width: 18px;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    opacity: 0.9;
+}
+
+
+/* ============================
+   SEAT – 3-part “chair” model
+   ============================ */
+
+/* ------------------------------------------------------------------
+   SEAT – base button
+------------------------------------------------------------------- */
+
+.seat {
+    --seat-color: #6f7cff; /* default fallback colour */
+    --seat-color-edge: #3b3f8e;
+    position: relative;
+    width: 32px;
+    height: 30px;
+    border-radius: 11px;
+    border: 1px solid rgba(0, 0, 0, 0.7);
+    background: transparent;
+    padding: 0;
+    display: inline-flex;
+    align-items: flex-end;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, filter 0.16s ease-out, border-color 0.16s ease-out;
+    box-shadow: 0 8px 14px rgba(0, 0, 0, 0.65);
+    overflow: visible;
+}
+
+/* container for back/neck/base */
+.seat__shape {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    pointer-events: none;
+    padding: 3px 3px 4px;
+}
+
+/* backrest */
+.seat__back {
+    width: 70%;
+    height: 55%;
+    border-radius: 40% 40% 30% 30%;
+    background: radial-gradient(circle at 30% 20%, #fffefc, var(--seat-color));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* little neck / gap */
+.seat__neck {
+    width: 76%;
+    height: 16%;
+    margin-top: -4px;
+    border-radius: 0 0 14px 14px;
+    background: radial-gradient(circle at 50% 0, var(--seat-color), var(--seat-color-edge));
+    box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* bottom cushion */
+.seat__base {
+    width: 100%;
+    height: 30%;
+    margin-top: -3px;
+    border-radius: 40% 40% 26% 26%;
+    background: linear-gradient(180deg, var(--seat-color), var(--seat-color-edge));
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+/* seat number */
+.seat__number {
+    position: relative;
+    z-index: 1;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #121323;
+    margin-bottom: 2px;
+}
+
+/* ------------------------------------------------------------------
+   CATEGORY COLOURS (rows can swap, colours stay consistent)
+------------------------------------------------------------------- */
+
+.seat--parkett {
+    --seat-color: #3be5ff;
+    --seat-color-edge: #0094c7;
+}
+
+.seat--loge {
+    --seat-color: #ff7aa6;
+    --seat-color-edge: #c7336b;
+}
+
+.seat--logeplus {
+    --seat-color: #ffd96a;
+    --seat-color-edge: #f39a30;
+}
+
+/* ------------------------------------------------------------------
+   STATE – free / selected / taken
+------------------------------------------------------------------- */
+
+.seat--free {
+    filter: brightness(0.97);
+}
+
+.seat--selected {
+    border-color: #ffffff;
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6), 0 14px 26px rgba(0, 0, 0, 0.9);
+}
+
+.seat--taken {
+    --seat-color: #4b4b64;
+    --seat-color-edge: #303047;
+    border-color: #202034;
+    filter: grayscale(0.2) brightness(0.75);
+    cursor: default;
+}
+
+    .seat--taken .seat__number {
+        color: rgba(220, 220, 240, 0.55);
+    }
+
+/* hover – only for seats that are not taken */
+.seat:not(.seat--taken):hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.95), 0 0 14px rgba(118, 199, 255, 0.75);
+}
+
+/* optional intro / click animations if you’re using them in JS */
+@keyframes seatPopIn {
+    0% {
+        transform: scale(0.4) translateY(12px);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.05) translateY(-2px);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes seatClick {
+    0% {
+        transform: translateY(-2px) scale(1.02);
+    }
+
+    50% {
+        transform: translateY(0) scale(0.96);
+    }
+
+    100% {
+        transform: translateY(-2px) scale(1.02);
+    }
+}
+
+.seat--intro {
+    animation: seatPopIn 0.4s cubic-bezier(0.19, 1, 0.22, 1) both;
+}
+
+.seat--clickflash {
+    animation: seatClick 0.25s ease-out;
+}
+
+
+/* ------------- CATEGORY COLOURS ------------- */
+/* these only set --seat-color so swapping / re-ordering rows
+   will still keep colours perfectly consistent */
+
+.seat--parkett {
+    --seat-color: #38e3ff; /* bright cyan / standard */
+}
+
+.seat--loge {
+    --seat-color: #ff5c7a; /* vivid red / premium */
+}
+
+.seat--logeplus {
+    --seat-color: #ffb347; /* amber / luxury */
+}
+
+/* Hide seats whose status is "Nothing" (0) */
+.seat--hidden {
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+
+/* -------------------------
+   Animations
+------------------------- */
+
+@keyframes seatPopIn {
+    0% {
+        transform: translateY(8px) scale(0.7);
+        opacity: 0;
+    }
+
+    60% {
+        transform: translateY(-2px) scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes seatClick {
+    0% {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 26px rgba(0, 0, 0, 0.9), 0 0 12px rgba(255, 255, 255, 0.7);
+    }
+
+    100% {
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* -------------------------
+   Footer panel + hover card
+   (based on your version, slightly tweaked)
+------------------------- */
+
+.seating-footer-panel {
+    display: flex;
+    gap: 1.75rem;
+    margin-top: 2rem;
+    padding: 1.4rem 1.6rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, rgba(9, 9, 22, 0.95), rgba(12, 12, 30, 0.98));
+    box-shadow: var(--shadow-soft);
+    justify-content: flex-start;
+    flex-direction: row;
+}
+
+.seating-footer-panel__copy h3 {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+}
+
+.seating-footer-panel__divider {
+    width: 120px;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--accent), var(--accent-blue));
+    margin-bottom: 0.5rem;
+}
+
+/* hover info card */
+
+.seating-hoverinfo {
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top left, rgba(118, 199, 255, 0.12), transparent 55%), radial-gradient(circle at bottom right, rgba(255, 204, 85, 0.08), transparent 55%), #111120;
+    padding: 1.1rem 1.4rem;
+    width: 40%;
+    height: 100px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.seating-hoverinfo__headline {
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+}
+
+.seating-hoverinfo__text {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+}
+
+.seating-hoverinfo__row {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+    width:80%;
+    justify-content: space-between
+}
+
+.seating-hoverinfo__label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 0.15rem;
+}
+
+.seating-hoverinfo__value {
+    font-size: 0.92rem;
+}
+
+.seating-hoverinfo__value--code {
+    font-size: 1.05rem;
+    font-weight: 400;
+}
+
+.seating-hoverinfo__status {
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.seating-hoverinfo__status--taken {
+    color: var(--danger);
+}
+
+.seating-hoverinfo__status--free {
+    color: var(--accent-soft);
+}
+
+.seating-hoverinfo__status--selected {
+    color: var(--success);
+}
+
+seating-hoverinfo__content {
+    width: 100%;
+    display: block!important;
+}
+/* -------------------------
+   Ticket bar (your block, tuned)
+------------------------- */
+.seating-ticketbar {
+    margin-top: 1.6rem;
+    padding: 1rem 1.4rem 1.2rem;
+    border-radius: var(--radius-lg);
+    background: rgba(5, 5, 14, 0.95);
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    align-items: center;
+}
+
+.seating-ticketbar__empty {
+    font-size: 0.9rem;
+}
+
+.seating-ticketbar__hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.seating-ticketbar__summary {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    width: 100%;
+    gap: 1.5rem;
+}
+
+.seating-ticketbar__left {
+    flex: 1 1 auto;
+}
+
+.seating-ticketbar__title {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+}
+
+total-price-strong {
+    font-size: 22px;
+}
+
+.seating-ticketbar__divider {
+    width: 40px;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--accent-pink), var(--accent-blue));
+    margin-bottom: 0.45rem;
+}
+
+.seating-ticketbar__categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+    flex-direction: column;
+}
+
+.ticket-category {
+    padding: 0.55rem 0.8rem 0.65rem;
+    border-radius: 14px;
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.04), transparent 60%), rgba(16, 16, 32, 0.95);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.7);
+}
+
+.ticket-category__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.ticket-category__label {
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+.ticket-category__meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.ticket-category__count {
+    color: var(--accent-soft);
+}
+
+.ticket-category__subtotal {
+    color: var(--text-muted);
+}
+
+.ticket-chip {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(18, 18, 32, 0.95);
+    font-size: 0.8rem;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+    animation: ticketFloat 5s ease-in-out infinite;
+}
+
+.ticket-chip__seat {
+    font-weight: 500;
+}
+
+/* tiny divider under the header */
+.ticket-category__divider {
+    width: 100%;
+    height: 2px;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, rgb(167 167 167 / 42%), rgb(255 255 255 / 68%));
+    margin-bottom: 0.35rem;
+}
+
+.ticket-category__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.ticket-chip__price {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+}
+
+.seating-ticketbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    align-self: flex-end;
+}
+
+.seating-ticketbar__total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 0.85rem;
+}
+
+/* ---------------------------------------------
+   UNIVERSAL BUTTON BASE
+--------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.55rem 1.3rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: transform 0.18s cubic-bezier(0.19,1,0.22,1), box-shadow 0.18s ease-out, background 0.18s ease-out, filter 0.2s ease-out;
+    position: relative;
+    overflow: hidden;
+}
+
+    /* Press-down effect */
+    .btn:active {
+        transform: scale(0.97);
+        filter: brightness(0.92);
+    }
+
+/* ---------------------------------------------
+   GHOST BUTTON — sleek, minimal outline
+--------------------------------------------- */
+.btn--ghost {
+    background: rgba(40, 40, 60, 0.4);
+    border: 1px solid rgba(180, 190, 255, 0.35);
+    color: #dfe7ff;
+    backdrop-filter: blur(4px);
+    box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.06), 0 4px 14px rgba(0, 0, 0, 0.55);
+}
+
+    /* Hover effect */
+    .btn--ghost:hover {
+        border-color: rgba(255, 255, 255, 0.75);
+        background: rgba(80, 90, 130, 0.45);
+        box-shadow: 0 0 14px rgba(118, 199, 255, 0.55), 0 0 22px rgba(118, 199, 255, 0.32), inset 0 0 10px rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+    }
+
+/* ---------------------------------------------
+   NEON BUTTON — cinema glow highlight
+--------------------------------------------- */
+.btn--neon {
+    background: linear-gradient( 135deg, rgba(255, 200, 120, 0.95), rgba(255, 160, 70, 1) );
+    color: #1a1a24;
+    box-shadow: 0 0 14px rgba(255, 180, 80, 0.65), 0 6px 22px rgba(0, 0, 0, 0.55);
+}
+
+    /* Hover = radiant glow */
+    .btn--neon:hover {
+        background: linear-gradient( 135deg, rgba(255, 220, 160, 1), rgba(255, 180, 95, 1) );
+        box-shadow: 0 0 22px rgba(255, 200, 120, 0.9), 0 0 34px rgba(255, 180, 80, 0.7), 0 8px 26px rgba(0, 0, 0, 0.85);
+        transform: translateY(-2px) scale(1.03);
+    }
+
+/* ---------------------------------------------
+   MATCHED PAIR SPACING
+--------------------------------------------- */
+
+.seating-ticketbar__actions .btn {
+    min-width: 150px;
+}
+
+/* gentle float on the mini chips */
+
+@keyframes ticketFloat {
+    0% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-2px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* small-screen tweaks */
+
+@media (max-width: 880px) {
+    .seating-footer-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .seating-ticketbar__summary {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .seating-ticketbar__actions {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+}

@@ -1,0 +1,122 @@
+﻿@page "/cart"
+
+<PageTitle>Cart</PageTitle>
+
+<div class="page-shell cart-page">
+
+    @if (IsEmpty)
+    {
+        <section class="cart-card cart-card--empty">
+            <h1>Your cart is empty</h1>
+            <p>
+                You haven’t added any seats yet.  
+                Go to the <a href="/showtimes">showtimes</a> page to pick a session.
+            </p>
+
+            <div class="checkout-actions checkout-actions--center">
+                <button class="btn btn--ghost"
+                        @onclick="GoToShowtimes">
+                    Browse showtimes
+                </button>
+            </div>
+        </section>
+    }
+    else
+    {
+        <!-- PAGE HEADER -->
+        <div class="cart-page__header">
+            <button class="btn btn--navback"
+                    @onclick="GoToShowtimes">
+                Back to showtimes
+            </button>
+
+            <h1 class="cart-page__title">Your cart</h1>
+        </div>
+
+        <!-- LOOP ALL GROUPED VORSTELLUNGEN -->
+        @foreach (var g in Groups)
+        {
+            <section class="cart-group">
+
+                <!-- HEADER with POSTER + TITLE -->
+                <div class="cart-group__top">
+
+                    <div class="cart-poster">
+                        @if (!string.IsNullOrWhiteSpace(g.PosterUrl))
+                        {
+                            <img src="@g.PosterUrl" alt="@g.MovieTitle" />
+                        }
+                    </div>
+
+                    <div class="cart-meta">
+                        <h2 class="cart-meta__title">@g.MovieTitle</h2>
+
+                        <p class="cart-meta__showtime">
+                            @g.StartTimeString
+                            @if (!string.IsNullOrWhiteSpace(g.KinosaalName))
+                            {
+                                <span>· @g.KinosaalName</span>
+                            }
+                        </p>
+
+                        <p class="cart-meta__tagline">
+                            @g.Seats.Count seat@(g.Seats.Count == 1 ? "" : "s") selected
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- BODY: Seats -->
+                <div class="cart-group__body">
+
+                    <div class="cart-seats">
+                        @foreach (var seat in g.Seats)
+                        {
+                            <div class="cart-seatline">
+                                <div class="cart-seatline__seat">
+                                    @seat.RowLabel@seat.SeatNumber
+                                </div>
+
+                                <div class="cart-seatline__price">
+                                    @seat.Price.ToString("0.00") €
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Subtotal -->
+                    <div class="cart-group__total">
+                        <span class="cart-group__total-label">Subtotal</span>
+                        <span class="cart-group__total-value">
+                            @g.Total.ToString("0.00") €
+                        </span>
+                    </div>
+
+                </div>
+
+            </section>
+        }
+
+        <!-- OVERALL SUMMARY -->
+        <section class="cart-footer">
+
+            <div class="cart-footer__summary">
+                <span>Total</span>
+                <strong>@OverallTotal.ToString("0.00") €</strong>
+            </div>
+
+            <div class="cart-footer__actions">
+                <button class="btn btn--ghost"
+                        @onclick="GoToShowtimes">
+                    Continue browsing
+                </button>
+
+                <button class="btn btn--neon"
+                        @onclick="GoToCheckout">
+                    Proceed to checkout
+                </button>
+            </div>
+
+        </section>
+    }
+</div>

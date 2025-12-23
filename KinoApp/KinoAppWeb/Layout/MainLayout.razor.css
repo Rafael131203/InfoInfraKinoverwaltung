@@ -8,6 +8,56 @@ main {
     flex: 1;
 }
 
+.site-header__inner {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 0.7rem var(--page-gutter);
+    /* Use grid: logo | nav | actions */
+    display: grid;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    column-gap: 1.5rem;
+}
+
+/* Right side: cart + CTA + burger in a fixed-width area */
+.site-header__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    /* reserve enough space so nav never shifts */
+    min-width: 11rem; /* tweak if needed */
+}
+
+/* Cart visibility control WITHOUT affecting layout */
+.header-cart {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(5, 5, 15, 0.96);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.18s ease, visibility 0.18s ease, transform 0.12s ease;
+}
+
+.header-cart--hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.header-cart--visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* keep the rest of your header-cart styles (icon/badge) as they are */
+
+
 .sidebar {
     background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
 }

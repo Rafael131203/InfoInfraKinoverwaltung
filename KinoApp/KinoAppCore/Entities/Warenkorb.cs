@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Linq;
 
 
-namespace SeeSharper.Models.Kino
+namespace KinoAppCore.Entities
 {
     
     
@@ -243,7 +243,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveGesamtpreisAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Warenkorb.ClassInstance)).Resolve("gesamtpreis")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Warenkorb.ClassInstance)).Resolve("gesamtpreis")));
         }
         
         /// <summary>
@@ -274,7 +274,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveZahlungsmittelAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Warenkorb.ClassInstance)).Resolve("Zahlungsmittel")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Warenkorb.ClassInstance)).Resolve("Zahlungsmittel")));
         }
         
         /// <summary>
@@ -336,7 +336,7 @@ namespace SeeSharper.Models.Kino
         
         private static ITypedElement RetrieveTicketReference()
         {
-            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Warenkorb.ClassInstance)).Resolve("ticket")));
+            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Warenkorb.ClassInstance)).Resolve("ticket")));
         }
         
         /// <summary>

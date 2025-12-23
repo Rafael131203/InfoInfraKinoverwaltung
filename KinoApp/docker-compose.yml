@@ -1,4 +1,3 @@
-version: "3.9"
 name: kinoapp-stack
 
 services:
@@ -15,6 +14,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-kinoapp}"]
       interval: 5s
@@ -22,29 +22,14 @@ services:
       retries: 20
     networks: [kino-net]
 
-  # Optional: pgAdmin
-  pgadmin:
-    image: dpage/pgadmin4:8
-    container_name: kinoapp-pgadmin
-    restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@local.test}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
-    ports:
-      - "${PGADMIN_PORT:-8080}:80"
-    networks: [kino-net]
-
-  # ---------- MongoDB (aggregates / stats) ----------
+  # ---------- MongoDB ----------
   mongodb:
     image: mongo:7
     container_name: kinoapp-mongodb
     restart: unless-stopped
-    command: ["--replSet", "rs0", "--bind_ip_all"]
+    command: ["--bind_ip_all"]
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "27018:27017"
     volumes:
       - mongodata:/data/db
     healthcheck:
@@ -54,43 +39,11 @@ services:
       retries: 30
     networks: [kino-net]
 
-  # one-time RS initialization
-  mongo-rs-init:
-    image: mongo:7
-    container_name: kinoapp-mongo-rs-init
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    entrypoint: ["/bin/bash","-lc"]
-    command: >
-      "
-      mongosh --host mongodb:27017 --eval
-      'rs.initiate({_id:\"rs0\", members:[{_id:0, host:\"mongodb:27017\"}]});
-       rs.status();'
-      "
-    restart: "no"
-    networks: [kino-net]
-
-  # Optional: Mongo Express
-  mongo-express:
-    image: mongo-express:1.0.2-20
-    container_name: kinoapp-mongo-express
-    restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017
-      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-admin}
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-admin}
-    ports:
-      - "${MONGO_EXPRESS_PORT:-8082}:8081"
-    networks: [kino-net]
-
-  # ---------- Redpanda (Kafka-compatible) ----------
+  # ---------- Redpanda (Kafka-compatible broker) ----------
   redpanda:
     image: docker.redpanda.com/redpandadata/redpanda:v24.2.11
     container_name: kinoapp-redpanda
+    hostname: redpanda
     command:
       - redpanda start
       - --overprovisioned
@@ -99,18 +52,19 @@ services:
       - --reserve-memory=0M
       - --node-id=0
       - --check=false
-      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
-      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+      # Internal Listener für Docker (9092), External Listener für Windows (19092)
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr=internal://0.0.0.0:8082,external://0.0.0.0:8083
+      - --advertise-pandaproxy-addr=internal://redpanda:8082,external://localhost:8083
       - --rpc-addr=0.0.0.0:33145
       - --advertise-rpc-addr=redpanda:33145
-      - --pandaproxy-addr=0.0.0.0:8082
-      - --advertise-pandaproxy-addr=redpanda:8082
-      - --schema-registry-addr=0.0.0.0:8081
     ports:
-      - "${REDPANDA_KAFKA_PORT:-9092}:9092"
+      # Mapping für externen Zugriff (Visual Studio)
+      - "19092:19092"
+      # Admin Ports
       - "${REDPANDA_ADMIN_PORT:-9644}:9644"
-      - "${REDPANDA_PROXY_PORT:-8083}:8082"
-      - "${REDPANDA_SCHEMA_PORT:-18081}:8081"   # host 18081 -> container 8081
+      - "${REDPANDA_SCHEMA_PORT:-18081}:8081"
     volumes:
       - redpanda-data:/var/lib/redpanda/data
     healthcheck:
@@ -120,66 +74,35 @@ services:
       retries: 30
     networks: [kino-net]
 
-  redpanda-console:
-    image: docker.redpanda.com/redpandadata/console:v2.5.1
-    container_name: kinoapp-redpanda-console
-    restart: unless-stopped
-    depends_on:
-      redpanda:
-        condition: service_healthy
-    environment:
-      KAFKA_BROKERS: redpanda:9092
-      SCHEMAREGISTRY_ENABLED: "true"
-      SCHEMAREGISTRY_URL: http://redpanda:8081
-      SERVER_LISTENPORT: 8080
-    ports:
-      - "${REDPANDA_CONSOLE_PORT:-8081}:8080"
-    networks: [kino-net]
-
-  # Optional: topic bootstrap
-  topics-init:
-    image: docker.redpanda.com/redpandadata/redpanda:v24.2.11
-    container_name: kinoapp-topics-init
-    depends_on:
-      redpanda:
-        condition: service_healthy
-    entrypoint: ["/bin/bash","-lc"]
-    command: >
-      "
-      set -e
-      rpk topic create ticket-sold --brokers redpanda:9092 || true
-      echo 'Topics ready.'
-      "
-    networks: [kino-net]
-
-  # ---------- KinoApp API (applies EF migrations at startup) ----------
-  kinoapp-api:
-    build:
-      context: .
-      dockerfile: ./KinoAppService/Dockerfile
-    container_name: kinoapp-api
-    restart: unless-stopped
-    env_file: [.env]
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      mongo-rs-init:
-        condition: service_completed_successfully
-      redpanda:
-        condition: service_healthy
-    environment:
-      ASPNETCORE_URLS: http://+:5000
-      ASPNETCORE_ENVIRONMENT: Docker
-    ports:
-      - "${APP_PORT:-5000}:5000"
-    healthcheck:
-      test: ["CMD-SHELL","wget -qO- http://localhost:5000/health || exit 1"]
-      interval: 10s
-      timeout: 3s
-      retries: 10
-    networks: [kino-net]
+  # ---------- KinoApp API (.NET backend) ----------
+  # kinoapp-api:
+  #   build:
+  #     context: .
+  #     dockerfile: ./KinoAppService/Dockerfile
+  #   container_name: kinoapp-api
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     mongodb:
+  #       condition: service_healthy
+  #     redpanda:
+  #       condition: service_healthy
+  #   environment:
+  #     ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:5000}
+  #     ASPNETCORE_ENVIRONMENT: Docker
+  #     # Verbindung innerhalb des Docker-Netzwerks über den internen Namen und Port
+  #     Kafka__BootstrapServers: "redpanda:9092"
+  #   ports:
+  #     - "${APP_PORT:-5000}:5000"
+  #   healthcheck:
+  #     test: ["CMD-SHELL","wget -qO- http://localhost:5000/health || exit 1"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 10
+  #   networks: [kino-net]
 
 networks:
   kino-net:
