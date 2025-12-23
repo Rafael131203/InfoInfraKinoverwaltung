@@ -9,15 +9,159 @@ It includes **JWT authentication**, **role-based authorization**, **EF Core + Po
 
 ---
 
-# 1. Application & Deployment Setup
+# KinoApp – Local Development & Running the Project
 
-## **Docker Environment**
-- Runs the entire application inside containers for reliable, reproducible builds.
-- Enables automated EF Core **database migrations** without risking data loss.
-- Provides a stable runtime environment across different machines.
-- Allows seamless schema updates with full version control.
+## Prerequisites
+
+Before running the project, make sure the following tools are installed and available on your system:
+
+* **Docker Desktop** (must be running)
+* **.NET SDK** (matching the solution version)
+* Visual Studio, Rider, or VS Code (examples below use Visual Studio)
 
 ---
+
+## 1. Start the Infrastructure (Docker)
+
+The application depends on several infrastructure services that are provided via Docker containers:
+
+* PostgreSQL (relational database, EF Core migrations)
+* MongoDB (statistics & projections)
+* Kafka / Redpanda (event messaging)
+
+From the root of the repository, start all containers:
+
+```bash
+docker compose up -d
+```
+
+On startup, Docker will:
+
+* create all required containers
+* apply EF Core database migrations automatically
+* seed initial application data
+
+The first startup may take longer than usual due to migrations and seeding.
+
+---
+
+## 2. Application Configuration (Ports & appsettings)
+
+If you change ports or service names in `docker-compose.yml`, you **must** update the corresponding values in the application configuration files.
+
+### Example: Container-to-container configuration
+
+Used when services communicate inside the Docker network:
+
+```json
+{
+  "ConnectionStrings": {
+    "Postgres": "Host=postgres;Port=5432;Database=kinoapp;Username=postgres;Password=postgres"
+  },
+  "Mongo": "mongodb://mongodb:27017",
+  "MongoDatabase": "kino",
+  "Kafka": {
+    "BootstrapServers": "redpanda:9092",
+    "ConsumerGroup": "kinoapp-service"
+  }
+}
+```
+
+### Example: Local development configuration
+
+Used when running the API from Visual Studio and connecting to Docker containers:
+
+```json
+{
+  "Jwt": {
+    "Issuer": "theatre.api",
+    "Audience": "theatre.client",
+    "SigningKey": "dev-only-please-change-this-key-1234567890"
+  },
+  "ImdbApi": {
+    "BaseUrl": "https://api.imdbapi.dev"
+  },
+  "ConnectionStrings": {
+    "Postgres": "Host=localhost;Port=5432;Database=kinoapp;Username=postgres;Password=postgres"
+  },
+  "Mongo": "mongodb://localhost:27018",
+  "Kafka": {
+    "BootstrapServers": "localhost:19092",
+    "ConsumerGroup": "kinoapp-service-dev"
+  }
+}
+```
+
+Always verify that:
+
+* database ports match Docker
+* MongoDB port matches the exposed container port
+* Kafka uses the externally exposed broker port
+
+---
+
+## 3. Running Backend and Web App Together (Visual Studio)
+
+For local development, the backend API and the web frontend should be started together.
+
+### Visual Studio setup
+
+1. Right-click the **solution** → **Properties**
+2. Open **Startup Project**
+3. Select **Multiple startup projects**
+4. Configure:
+
+   * **KinoAppService** → `Start`
+   * **KinoAppWeb** → `Start`
+5. Apply changes and run the solution
+
+Ensure Docker Desktop is running **before** starting the solution.
+
+---
+
+## 4. First Startup & Data Seeding
+
+During the first run:
+
+* database schema is created or updated
+* seed data is inserted automatically
+
+If the UI loads before seeding is finished:
+
+* wait a few seconds
+* refresh the browser page
+
+After the initial run, subsequent startups are significantly faster.
+
+---
+
+## Notes & Troubleshooting
+
+* If the API starts but the UI cannot load data:
+
+  * verify Docker containers are healthy
+  * check port mappings in `docker-compose.yml`
+  * confirm `appsettings*.json` values match Docker ports
+
+* If Kafka is unreachable from the host:
+
+  * ensure you are using the **external** Kafka port (e.g. `localhost:19092`)
+
+* If authentication fails:
+
+  * verify JWT settings are consistent between Service and Web projects
+
+---
+
+## Summary
+
+1. Start Docker containers
+2. Verify configuration and ports
+3. Run Service + Web as multiple startup projects
+4. Wait for initial seeding, then refresh
+
+After these steps, the application should be fully operational.
+
 
 # 2. Solution Architecture
 
