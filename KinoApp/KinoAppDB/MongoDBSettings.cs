@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace KinoAppDB
 {
-    // Models/MongoDBSettings.cs
 
     public class MongoDBSettings
     {

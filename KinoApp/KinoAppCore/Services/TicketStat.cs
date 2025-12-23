@@ -1,18 +1,9 @@
 ﻿using KinoAppCore.Entities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace KinoAppCore.Services
 {
-    // KinoAppShared.Messaging/TicketStat.cs
-
     public class TicketStat
     {
         [BsonRepresentation(BsonType.ObjectId)]

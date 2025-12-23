@@ -1,5 +1,4 @@
-﻿// KinoAppDB/KinoAppDbContextFactory.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace KinoAppDB;

@@ -1,8 +1,4 @@
 ﻿using KinoAppDB.Entities;
-using KinoAppShared.DTOs.Ticket;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace KinoAppDB.Repository
 {

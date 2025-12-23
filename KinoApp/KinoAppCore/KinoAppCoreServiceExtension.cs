@@ -1,7 +1,5 @@
 ﻿using KinoAppCore.Abstractions;
 using KinoAppCore.Services;
-
-//using KinoAppCore.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace KinoAppCore;

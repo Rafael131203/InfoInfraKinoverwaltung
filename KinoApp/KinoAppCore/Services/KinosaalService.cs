@@ -1,17 +1,10 @@
 ﻿using AutoMapper;
-using KinoAppCore.Abstractions;
-using KinoAppCore.Entities;
 using KinoAppDB.Entities;
 using KinoAppDB.Repository;
-using KinoAppShared.DTOs.Authentication;
 using KinoAppShared.DTOs.Kinosaal;
 using KinoAppShared.Enums;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace KinoAppCore.Services
 {
@@ -52,10 +45,8 @@ namespace KinoAppCore.Services
 
                 for (int seatIndex = 0; seatIndex < groesseSitzreihen; seatIndex++)
                 {
-                    // 1. Preis laden
                     var preisZuKategorie = await _preisService.GetPreisAsync(sitzreihe.Kategorie, ct);
 
-                    // 2. Safety Check (Hier ist dein neuer Code!)
                     if (preisZuKategorie == null)
                     {
                         throw new InvalidOperationException(
@@ -63,11 +54,10 @@ namespace KinoAppCore.Services
                             "Bitte erstelle zuerst Einträge in der Tabelle 'PreisZuKategorie'.");
                     }
 
-                    // 3. Sitzplatz erstellen (Jetzt sicher, da nicht null)
                     var sitzplatz = new SitzplatzEntity
                     {
                         Nummer = countSeat,
-                        Preis = preisZuKategorie.Preis // Sicherer Zugriff
+                        Preis = preisZuKategorie.Preis
                     };
 
                     countSeat++;
@@ -85,7 +75,6 @@ namespace KinoAppCore.Services
 
         public async Task<KinosaalDTO?> GetKinosaalAsync(long id, long? vorstellungId, CancellationToken ct)
         {
-            // 1. Load hall with rows + seats
             var kinosaal = await _repoKinosaal.Query()
                 .Where(k => k.Id == id)
                 .Include(k => k.Sitzreihen)
@@ -95,7 +84,6 @@ namespace KinoAppCore.Services
             if (kinosaal == null)
                 return null;
 
-            // 2. Load tickets for this Vorstellung (if given)
             var ticketsBySeat = new Dictionary<long, TicketEntity>();
 
             if (vorstellungId.HasValue)
@@ -107,7 +95,6 @@ namespace KinoAppCore.Services
                 ticketsBySeat = tickets.ToDictionary(t => t.SitzplatzId);
             }
 
-            // 3. Manually map to DTO so Sitzplätze is ALWAYS filled
             var dto = new KinosaalDTO
             {
                 Id = kinosaal.Id,
@@ -151,7 +138,6 @@ namespace KinoAppCore.Services
 
         public async Task<SitzreiheEntity?> ChangeSitzreiheKategorieAsync(ChangeKategorieSitzreiheDTO dto, CancellationToken ct)
         {
-            // 1. Sitzreihe laden
             var sitzreihe = await _repoSitzreihe.GetByIdAsync(dto.Id, ct);
             if (sitzreihe == null)
                 return null;
@@ -159,7 +145,6 @@ namespace KinoAppCore.Services
             if (!Enum.IsDefined(typeof(SitzreihenKategorie), dto.Kategorie))
                 throw new ArgumentException("Ungültige Kategorie");
 
-            // 2. Alle Sitzplätze der Sitzreihe laden
             var sitzplaetze = await _repoSitzplatz
                 .Query()
                 .Where(s => s.SitzreiheId == sitzreihe.Id)
@@ -167,22 +152,17 @@ namespace KinoAppCore.Services
 
             sitzreihe.Sitzplätze = sitzplaetze;
 
-            // 3. Kategorie ändern
             sitzreihe.Kategorie = dto.Kategorie;
 
-            // 4. Preis der Sitzplätze aktualisieren
             var preisZuKategorie = await _preisService.GetPreisAsync(dto.Kategorie, ct);
             foreach (var platz in sitzreihe.Sitzplätze)
             {
                 platz.Preis = preisZuKategorie.Preis;
             }
 
-
-            // 5. Sitzreihe speichern
             await _repoSitzreihe.UpdateAsync(sitzreihe, ct);
             await _repoSitzreihe.SaveAsync(ct);
 
-            // 6. Ergebnis zurückgeben
             return sitzreihe;
         }
 

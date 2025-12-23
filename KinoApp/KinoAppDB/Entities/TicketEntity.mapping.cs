@@ -12,8 +12,6 @@ public class TicketEntityConfig : IEntityTypeConfiguration<TicketEntity>
 
         b.Property(x => x.Id).HasColumnName("Id").ValueGeneratedOnAdd();
         b.Property(x => x.Status).HasColumnName("Status").IsRequired();
-
-        // WICHTIG: Hier haben wir die Unterstriche entfernt, damit es zur DB passt!
         b.Property(x => x.VorstellungId).HasColumnName("VorstellungId").IsRequired();
         b.Property(x => x.SitzplatzId).HasColumnName("SitzplatzId").IsRequired();
         b.Property(x => x.UserId).HasColumnName("UserId");
