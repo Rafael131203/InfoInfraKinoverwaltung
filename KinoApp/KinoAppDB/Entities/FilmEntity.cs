@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace KinoAppDB.Entities
+﻿namespace KinoAppDB.Entities
 {
     /// <summary>
     /// Database representation of a Film.

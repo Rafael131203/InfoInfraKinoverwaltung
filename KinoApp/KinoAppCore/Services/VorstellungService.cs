@@ -150,7 +150,6 @@ namespace KinoAppCore.Services
             if (vorstellung == null)
                 throw new ArgumentException($"Vorstellung mit Id {dto.Id} existiert nicht.");
 
-            // ALTE VERSION MAPPEN
             var alteVersion = _mapper.Map<VorstellungDTO>(vorstellung);
 
 
@@ -161,15 +160,12 @@ namespace KinoAppCore.Services
                     ? vorstellung.FilmId
                     : dto.FilmId;
 
-            // Film laden
             var film = await _repoFilm.GetByIdAsync(neuerFilmId, ct);
             if (film == null)
                 throw new ArgumentException($"Film mit Id {neuerFilmId} existiert nicht.");
 
-            // Endzeit berechnen
             var endZeit = neuesDatum.AddSeconds(film.Dauer ?? 0);
 
-            // Überschneidungsprüfung
             var existing = (await _repoVorstellung.GetAllAsync(ct))
                 .Where(v => v.KinosaalId == vorstellung.KinosaalId && v.Id != dto.Id);
 
@@ -185,14 +181,12 @@ namespace KinoAppCore.Services
                     throw new InvalidOperationException("Die aktualisierte Vorstellung überschneidet sich mit einer anderen Vorstellung.");
             }
 
-            // ÄNDERUNGEN ÜBERNEHMEN
             vorstellung.Datum = neuesDatum;
             vorstellung.FilmId = neuerFilmId;
 
             await _repoVorstellung.UpdateAsync(vorstellung, ct);
             await _repoVorstellung.SaveAsync(ct);
 
-            // NEUE VERSION MAPPEN (mit geladenem Film/Kinosaal)
             var neueVersion = _mapper.Map<VorstellungDTO>(vorstellung);
 
             return new UpdateVorstellungResultDTO
