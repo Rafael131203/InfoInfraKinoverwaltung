@@ -100,7 +100,7 @@ namespace KinoAppCore.Entities
         [CategoryAttribute("Benutzer")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
-        Nullable <int> Id
+        Nullable<int> Id
         {
             get;
             set;

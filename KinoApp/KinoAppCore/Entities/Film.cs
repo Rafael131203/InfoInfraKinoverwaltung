@@ -85,7 +85,7 @@ namespace KinoAppCore.Entities
         /// The backing field for the Id property
         /// </summary>
         [DebuggerBrowsableAttribute(DebuggerBrowsableState.Never)]
-        private string _id;
+        private Nullable<int> _id;
         
         private static Lazy<ITypedElement> _idAttribute = new Lazy<ITypedElement>(RetrieveIdAttribute);
         
@@ -256,7 +256,7 @@ namespace KinoAppCore.Entities
         [CategoryAttribute("Film")]
         [XmlElementNameAttribute("id")]
         [XmlAttributeAttribute(true)]
-        public string Id
+        public Nullable<int> Id
         {
             get
             {
@@ -266,7 +266,7 @@ namespace KinoAppCore.Entities
             {
                 if ((this._id != value))
                 {
-                    string old = this._id;
+                    Nullable<int> old = this._id;
                     ValueChangedEventArgs e = new ValueChangedEventArgs(old, value);
                     this.OnIdChanging(e);
                     this.OnPropertyChanging("Id", e, _idAttribute);
@@ -538,7 +538,7 @@ namespace KinoAppCore.Entities
         
         private static ITypedElement RetrieveIdAttribute()
         {
-            return ((ITypedElement)(((ModelElement)(KinoAppCore.Entities.Film.ClassInstance)).Resolve("id")));
+            return ((ITypedElement)(((ModelElement)(SeeSharper.Models.Kino.Film.ClassInstance)).Resolve("id")));
         }
         
         /// <summary>
@@ -697,7 +697,7 @@ namespace KinoAppCore.Entities
             }
             if ((feature == "ID"))
             {
-                this.Id = ((string)(value));
+                this.Id = ((int)(value));
                 return;
             }
             base.SetFeature(feature, value);
@@ -1037,7 +1037,7 @@ namespace KinoAppCore.Entities
         /// <summary>
         /// Represents a proxy to represent an incremental access to the id property
         /// </summary>
-        private sealed class IdProxy : ModelPropertyChange<IFilm, string>
+        private sealed class IdProxy : ModelPropertyChange<IFilm, Nullable<int>>
         {
             
             /// <summary>
@@ -1052,7 +1052,7 @@ namespace KinoAppCore.Entities
             /// <summary>
             /// Gets or sets the value of this expression
             /// </summary>
-            public override string Value
+            public override Nullable<int> Value
             {
                 get
                 {
